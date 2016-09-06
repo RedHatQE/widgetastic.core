@@ -68,6 +68,10 @@ class Browser(object):
         self.plugin = plugin_class(self)
 
     @property
+    def handles_alerts(self):
+        return self.selenium.capabilities.get('handlesAlerts', True)
+
+    @property
     def browser(self):
         """Implemented so :py:class:`widgetastic.core.widget.View` does not have to check the
         instance of its parent. This property exists there so here it just stops the chain"""
@@ -103,7 +107,6 @@ class Browser(object):
                 * strings (which are considered as XPath unless they fit the
                     simple ``tag#id.class``, in which case the string is considered as a CSS
                     selector)
-                * tuples (that are like ``('xpath', '//something')``, like selenium takes)
                 * dictionaries - like ``{'xpath': '//something'}``
                 * :py:class:`selenium.webdriver.remote.webelement.WebElement` instances
                 * Any other object that implements ``__locator__`` or ``__element__``
@@ -310,6 +313,8 @@ class Browser(object):
         Raises:
             :py:class:`selenium.common.exceptions.NoAlertPresentException`
         """
+        if not self.handles_alerts:
+            return None
         return self.selenium.switch_to_alert()
 
     @property
@@ -318,6 +323,8 @@ class Browser(object):
 
         Returns:
             :py:class:`bool`."""
+        if not self.handles_alerts:
+            return False
         try:
             self.get_alert().text
         except NoAlertPresentException:
@@ -362,6 +369,8 @@ class Browser(object):
             :py:class:`selenium.common.exceptions.NoAlertPresentException`: If no alert is present
                 when accepting or dismissing the alert.
         """
+        if not self.handles_alerts:
+            return None
         # throws timeout exception if not found
         try:
             if wait:
