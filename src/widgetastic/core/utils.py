@@ -86,7 +86,7 @@ class Version(object):
 
     @classmethod
     def lowest(cls):
-        """Returns a specific ``lowest`` version which always evaluates as newer.
+        """Returns a specific ``lowest`` version which always evaluates as older.
 
         You shall use this value in your :py:class:`VersionPick` dictionaries to match the oldest
         possible version of the product.
@@ -205,7 +205,7 @@ class VersionPick(object):
     Whenever is this instance accessed from an instance, it automatically picks the correct variant
     based on product_version defined in the :py:class:`widgetastic.core.browser.Browser`.
 
-    You can also use this separately using the .pick() method.
+    You can also use this separately using the :py:meth:`pick` method.
 
     Example:
 
