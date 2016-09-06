@@ -72,7 +72,39 @@ def test_element_nonexisting(browser):
         browser.element('#badger', check_visibility=False)
 
 
+def test_move_to_element_option(browser):
+    assert browser.move_to_element('#myoption').tag_name == 'option'
+
+
 def test_click(browser):
     assert len(browser.classes('#a_button')) == 0
     browser.click('#a_button')
     assert 'clicked' in browser.classes('#a_button')
+
+
+def test_tag(browser):
+    assert browser.tag('#hello') == 'h1'
+
+
+def test_text_visible(browser):
+    assert browser.text('#hello') == 'Hello'
+
+
+def test_text_invisible(browser):
+    assert browser.text('#invisible') == 'This is invisible'
+
+
+def test_get_attribute(browser):
+    assert browser.get_attribute('id', '//h1') == 'hello'
+
+
+def test_set_attribute(browser):
+    browser.set_attribute('foo', 'bar', '//h1')
+    assert browser.get_attribute('foo', '//h1') == 'bar'
+
+
+def test_simple_input_send_keys_clear(browser):
+    browser.send_keys('test!', '#input')
+    assert browser.get_attribute('value', '#input') == 'test!'
+    browser.clear('#input')
+    assert browser.get_attribute('value', '#input') == ''

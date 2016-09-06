@@ -217,7 +217,7 @@ class Browser(object):
         el = self.element(locator, *args, **kwargs)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
-            parent = self.element("..", parents=[el])
+            parent = self.element("..", parent=el)
             if parent.tag_name == "select":
                 self.move_to_element(parent)
                 return el
@@ -268,7 +268,18 @@ class Browser(object):
         Returns:
             :py:class:`str` with the text
         """
-        return self.element(*args, **kwargs).text
+        try:
+            text = self.element(*args, **kwargs).text
+        except MoveTargetOutOfBoundsException:
+            text = ''
+
+        if not text:
+            # It is probably invisible
+            return self.execute_script(
+                'return arguments[0].textContent || arguments[0].innerText;',
+                self.element(*args, **kwargs))
+        else:
+            return text
 
     def get_attribute(self, attr, *args, **kwargs):
         return self.element(*args, **kwargs).get_attribute(attr)
