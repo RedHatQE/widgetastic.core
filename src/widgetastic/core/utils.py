@@ -10,7 +10,7 @@ from .widget import WidgetDescriptor
 
 class Version(object):
     """Version class based on :py:class:`distutils.version.LooseVersion`
-    
+
     Has improved handling of the suffixes and such things.
     """
     #: List of possible suffixes
