@@ -130,7 +130,7 @@ class Browser(object):
             result = root_element.find_elements(*locator)
 
         if check_visibility:
-            result = filter(self.is_displayed, result)
+            result = [e for e in result if self.is_displayed(e)]
 
         return result
 
@@ -148,7 +148,7 @@ class Browser(object):
         try:
             elements = self.elements(locator, *args, **kwargs)
             if len(elements) > 1:
-                visible_elements = filter(self.is_displayed, elements)
+                visible_elements = [e for e in elements if self.is_displayed(e)]
                 if visible_elements:
                     return visible_elements[0]
                 else:
