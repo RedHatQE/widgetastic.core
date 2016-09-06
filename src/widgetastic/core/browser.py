@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
 import time
 
 from selenium.webdriver.common.action_chains import ActionChains
@@ -68,14 +69,21 @@ class Browser(object):
 
     @property
     def browser(self):
+        """Implemented so :py:class:`widgetastic.core.widget.View` does not have to check the
+        instance of its parent. This property exists there so here it just stops the chain"""
         return self
 
     @property
     def product_version(self):
+        """In order for :py:class:`widgetastic.core.utils.VersionPick` to work on
+        :py:class:`widgetastic.core.widget.Widget` instances, you need to override this property
+        that will enable this functionality.
+        """
         raise NotImplementedError('You have to implement product_version')
 
     @staticmethod
     def _process_locator(locator):
+        """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
         if isinstance(locator, WebElement):
             return locator
         try:
@@ -87,6 +95,24 @@ class Browser(object):
                 raise
 
     def elements(self, locator, parent=None, check_visibility=False):
+        """Method that resolves locators into selenium webelements.
+
+        Args:
+            locator: A valid locator. Valid locators are:
+
+                * strings (which are considered as XPath unless they fit the
+                    simple ``tag#id.class``, in which case the string is considered as a CSS
+                    selector)
+                * tuples (that are like ``('xpath', '//something')``, like selenium takes)
+                * dictionaries - like ``{'xpath': '//something'}``
+                * :py:class:`selenium.webdriver.remote.webelement.WebElement` instances
+                * Any other object that implements ``__locator__`` or ``__element__``
+            parent: A parent element identificator. Can be any valid locator.
+            check_visibility: If set to ``True`` it will filter out elements that are not visible.
+
+        Returns:
+            A :py:class:`list` of :py:class:`selenium.webdriver.remote.webelement.WebElement`
+        """
         self.plugin.ensure_page_safe()
         locator = self._process_locator(locator)
         # Get result
@@ -95,7 +121,7 @@ class Browser(object):
         else:
             # Get the direct parent object
             if parent:
-                root_element = self.elements(parent)
+                root_element = self.element(parent, check_visibility=check_visibility)
             else:
                 root_element = self.selenium
             result = root_element.find_elements(*locator)
@@ -106,6 +132,16 @@ class Browser(object):
         return result
 
     def element(self, locator, *args, **kwargs):
+        """Returns one :py:class:`selenium.webdriver.remote.webelement.WebElement`
+
+        See: :py:meth:`elements`
+
+        Returns:
+            :py:class:`selenium.webdriver.remote.webelement.WebElement`
+
+        Raises:
+            :py:class:`selenium.common.exceptions.NoSuchElementException`
+        """
         try:
             elements = self.elements(locator, *args, **kwargs)
             if len(elements) > 1:
@@ -124,6 +160,10 @@ class Browser(object):
         ActionChains(self.selenium).click().perform()
 
     def click(self, *args, **kwargs):
+        """Clicks at a specific element using two separate events (mouse move, mouse click).
+
+        Args: See :py:meth:`elements`
+        """
         self.move_to_element(*args, **kwargs)
         # and then click on current mouse position
         self.perform_click()
@@ -133,6 +173,13 @@ class Browser(object):
             pass
 
     def is_displayed(self, locator, *args, **kwargs):
+        """Check if the element represented by the locator is displayed.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            A :py:class:`bool`
+        """
         kwargs['check_visibility'] = False
         retry = True
         tries = 10
@@ -154,6 +201,16 @@ class Browser(object):
         return False
 
     def move_to_element(self, locator, *args, **kwargs):
+        """Moves the mouse cursor to the middle of the element represented by the locator.
+
+        Can handle moving to the ``<option>`` tags or Firefox being pissy and thus making it utilize
+        a JS workaround, ...
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            :py:class:`selenium.webdriver.remote.webelement.WebElement`
+        """
         el = self.element(locator, *args, **kwargs)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
@@ -176,17 +233,38 @@ class Browser(object):
         return el
 
     def execute_script(self, script, *args, **kwargs):
+        """Executes a script."""
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
 
     def classes(self, *args, **kwargs):
-        """Return a list of classes attached to the element."""
+        """Return a list of classes attached to the element.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            A :py:class:`set` of strings with classes.
+        """
         return set(self.execute_script(
             "return arguments[0].classList;", self.element(*args, **kwargs)))
 
     def tag(self, *args, **kwargs):
+        """Returns the tag name of the element represented by the locator passed.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            :py:class:`str` with the tag name
+        """
         return self.element(*args, **kwargs).tag_name
 
     def text(self, *args, **kwargs):
+        """Returns the text inside the element represented by the locator passed.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            :py:class:`str` with the text
+        """
         return self.element(*args, **kwargs).text
 
     def get_attribute(self, attr, *args, **kwargs):
@@ -201,7 +279,14 @@ class Browser(object):
         return self.element(*args, **kwargs).clear()
 
     def send_keys(self, text, *args, **kwargs):
-        text = text or ''
+        """Sends keys to the element. Detects the file inputs automatically.
+
+        Args:
+            text: Text to be inserted to the element.
+            *args: See :py:meth:`elements`
+            **kwargs: See :py:meth:`elements`
+        """
+        text = six.text_type(text) or ''
         file_intercept = False
         # If the element is input type file, we will need to use the file detector
         if self.tag(*args, **kwargs) == 'input':
@@ -220,9 +305,19 @@ class Browser(object):
                 self.selenium.file_detector = UselessFileDetector()
 
     def get_alert(self):
+        """Returns the current alert object.
+
+        Raises:
+            :py:class:`selenium.common.exceptions.NoAlertPresentException`
+        """
         return self.selenium.switch_to_alert()
 
-    def is_alert_present(self):
+    @property
+    def alert_present(self):
+        """Checks whether there is any alert present.
+
+        Returns:
+            :py:class:`bool`."""
         try:
             self.get_alert().text
         except NoAlertPresentException:
@@ -236,10 +331,10 @@ class Browser(object):
         Useful for handling the cases where the alert pops up multiple times.
         """
         try:
-            while self.is_alert_present():
+            while self.alert_present:
                 alert = self.get_alert()
                 alert.dismiss()
-        except NoAlertPresentException:  # Just in case. is_alert_present should be reliable
+        except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
 
     def handle_alert(self, cancel=False, wait=30.0, squash=False, prompt=None, check_present=False):
@@ -257,16 +352,15 @@ class Browser(object):
                 :py:class:`selenium.common.exceptions.NoAlertPresentException`
 
         Returns:
-            True if the alert was handled, False if exceptions were
-            squashed, None if there was no alert.
+            ``True`` if the alert was handled, ``False`` if exceptions were
+            squashed, ``None`` if there was no alert.
 
         No exceptions will be raised if ``squash`` is True and ``check_present`` is False.
 
         Raises:
-            utils.wait.TimedOutError: If the alert popup does not appear
-            selenium.common.exceptions.NoAlertPresentException: If no alert is present when
-                accepting or dismissing the alert.
-
+            :py:class:`wait_for.TimedOutError`: If the alert popup does not appear
+            :py:class:`selenium.common.exceptions.NoAlertPresentException`: If no alert is present
+                when accepting or dismissing the alert.
         """
         # throws timeout exception if not found
         try:
