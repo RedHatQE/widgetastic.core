@@ -35,8 +35,27 @@ def test_view_widget_names():
     assert MyView.widget_names() == ['w1', 'w2']
 
 
-def test_views_no_subviews(browser):
+def test_view_no_subviews(browser):
     class MyView(View):
         w = Widget()
 
     assert not MyView(browser)._views
+
+
+def test_view_with_subviews(browser):
+    class MyView(View):
+        w = Widget()
+
+        class AnotherView(View):
+            another_widget = Widget()
+
+        class Foo(View):
+            bar = Widget()
+
+    view = MyView(browser)
+    assert {type(v).__name__ for v in view._views} == {'AnotherView', 'Foo'}
+    assert isinstance(view.w, Widget)
+    assert isinstance(view.AnotherView, View)
+    assert isinstance(view.Foo, View)
+    assert isinstance(view.AnotherView.another_widget, Widget)
+    assert isinstance(view.Foo.bar, Widget)
