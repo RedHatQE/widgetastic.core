@@ -9,7 +9,8 @@ from threading import Lock
 from wait_for import wait_for
 
 from .browser import Browser
-from .exceptions import NoSuchElementException, LocatorNotImplemented
+from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
+from .xpath import quote
 
 
 class WidgetDescriptor(object):
@@ -145,7 +146,7 @@ class Widget(object):
         """
         return self.browser.move_to_element(self)
 
-    def fill(self):
+    def fill(self, *args, **kwargs):
         """Interactive objects like inputs, selects, checkboxes, et cetera should implement fill.
 
         When you implement this method, it *MUST ALWAYS* return a boolean whether the value
@@ -157,7 +158,7 @@ class Widget(object):
         raise NotImplementedError(
             'Widget {} does not implement fill()!'.format(type(self).__name__))
 
-    def read(self):
+    def read(self, *args, **kwargs):
         """Each object should implement read so it is easy to get the value of such object.
 
         When you implement this method, the exact return value is up to you but it *MUST* be
@@ -350,3 +351,96 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         """Allows iterating over the widgets on the view."""
         for widget_attr in self.widget_names():
             yield getattr(self, widget_attr)
+
+
+class ClickableMixin(object):
+    def click(self):
+        return self.browser.click(self)
+
+
+class Text(Widget):
+    """A widget that an represent anything that can be read from the webpage as a text content of
+    a tag.
+
+    Args:
+        locator: Locator of the object ob the page.
+    """
+    def __init__(self, parent, locator):
+        Widget.__init__(self, parent)
+        self.locator = locator
+
+    def __locator__(self):
+        return self.locator
+
+    def read(self):
+        return self.browser.text(self)
+
+
+class BaseInput(Widget):
+    """This represents the bare minimum to interact with bogo-standard form inputs.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+    """
+    def __init__(self, parent, name=None, id=None):
+        if (name is None and id is None) or (name is not None and id is not None):
+            raise TypeError('TextInput must have either name= or id= specified but also not both.')
+        Widget.__init__(self, parent)
+        self.name = name
+        self.id = id
+
+    def __locator__(self):
+        if self.name is not None:
+            id_attr = '@name={}'.format(quote(self.name))
+        else:
+            id_attr = '@id={}'.format(quote(self.id))
+        return './/*[(self::input or self::textarea) and {}]'.format(id_attr)
+
+
+class TextInput(BaseInput):
+    """This represents the bare minimum to interact with bogo-standard text form inputs.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+    """
+    def read(self):
+        return self.browser.get_attribute('value', self)
+
+    def fill(self, value):
+        current_value = self.read()
+        if value == current_value:
+            return False
+        if value.startswith(current_value):
+            # only add the additional characters, like user would do
+            to_fill = value[len(current_value):]
+        else:
+            # Clear and type everything
+            self.browser.clear(self)
+            to_fill = value
+        self.browser.send_keys(to_fill, self)
+        return True
+
+
+class Checkbox(BaseInput, ClickableMixin):
+    """This widget represents the bogo-standard form checkbox.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+    """
+    def read(self):
+        return self.browser.is_selected(self)
+
+    def fill(self, value):
+        value = bool(value)
+        current_value = self.read()
+        if value == current_value:
+            return False
+        else:
+            self.click()
+            if self.read() != value:
+                # TODO: More verbose here
+                raise WidgetOperationFailed('Failed to set the checkbox to requested value.')
+            return True

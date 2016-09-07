@@ -290,6 +290,9 @@ class Browser(object):
     def clear(self, *args, **kwargs):
         return self.element(*args, **kwargs).clear()
 
+    def is_selected(self, *args, **kwargs):
+        return self.element(*args, **kwargs).is_selected()
+
     def send_keys(self, text, *args, **kwargs):
         """Sends keys to the element. Detects the file inputs automatically.
 

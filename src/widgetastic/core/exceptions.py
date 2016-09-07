@@ -8,3 +8,7 @@ from selenium.common.exceptions import (  # NOQA
 
 class LocatorNotImplemented(NotImplementedError):
     pass
+
+
+class WidgetOperationFailed(Exception):
+    pass

@@ -80,5 +80,4 @@ def test_view_is_not_displayed_with_root_locator(browser):
         ROOT = '#thisdoesnotexist'
 
     view = MyView(browser)
-    view.__locator__
     assert not view.is_displayed
