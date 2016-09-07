@@ -72,7 +72,7 @@ class Widget(object):
         This allows you a sort of Django-ish access to the defined widgets then.
         """
         if args and isinstance(args[0], (Widget, Browser)):
-            return super(Widget, cls).__new__(cls, *args, **kwargs)
+            return super(Widget, cls).__new__(cls)
         else:
             return WidgetDescriptor(cls, *args, **kwargs)
 
@@ -233,7 +233,7 @@ class View(Widget):
     __metaclass__ = ViewMetaclass
 
     def __init__(self, parent, additional_context=None):
-        super(View, self).__init__(parent)
+        Widget.__init__(self, parent)
         self.context = additional_context or {}
         self._widget_cache = {}
 
