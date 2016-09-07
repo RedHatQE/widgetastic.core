@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 """This module contains the base classes that are used to implement the more specific behaviour."""
 
 import inspect
+import six
 from smartloc import Locator
 from threading import Lock
 from wait_for import wait_for
@@ -191,8 +192,8 @@ class ViewMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
-        for key, value in attrs.iteritems():
-            if inspect.isclass(value) and getattr(value, '__metaclass__', None) is cls:
+        for key, value in six.iteritems(attrs):
+            if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
             else:
                 new_attrs[key] = value
@@ -203,7 +204,7 @@ class ViewMetaclass(type):
         return super(ViewMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
-class View(Widget):
+class View(six.with_metaclass(ViewMetaclass, Widget)):
     """View is a kind of abstract widget that can hold another widgets. Remembers the order,
     so therefore it can function like a form with defined filling order.
 
@@ -230,7 +231,6 @@ class View(Widget):
             you shall use the ``additional_context`` to pass in required variables that will allow
             you to detect this.
     """
-    __metaclass__ = ViewMetaclass
 
     def __init__(self, parent, additional_context=None):
         Widget.__init__(self, parent)
@@ -306,7 +306,7 @@ class View(Widget):
         widget_names = self.widget_names()
         was_change = False
         self.before_fill(values)
-        for name, value in values.iteritems():
+        for name, value in six.iteritems(values):
             if name not in widget_names:
                 raise NameError('View {} does not have widget {}'.format(type(self).__name__, name))
             if value is None:
