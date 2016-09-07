@@ -20,7 +20,9 @@ class WidgetDescriptor(object):
 
     It also acts as a counter, so you can then order the widgets by their "creation" stamp.
     """
+    #: Sequential counter that gets incremented on each WidgetDescriptor creation
     _seq_cnt = 0
+    #: Lock that makes the :py:attr:`_seq_cnt` increment thread safe
     _seq_cnt_lock = Lock()
 
     def __new__(cls, *args, **kwargs):
@@ -45,16 +47,7 @@ class WidgetDescriptor(object):
         return obj._widget_cache[self]
 
     def __repr__(self):
-        if self.args:
-            args = ', ' + ', '.join(repr(arg) for arg in self.args)
-        else:
-            args = ''
-        if self.kwargs:
-            kwargs = ', ' + ', '.join(
-                '{}={}'.format(k, repr(v)) for k, v in self.kwargs.iteritems())
-        else:
-            kwargs = ''
-        return '{}({}{}{})'.format(type(self).__name__, self.klass.__name__, args, kwargs)
+        return '<Descriptor: {}, {!r}, {!r}>'.format(self.klass.__name__, self.args, self.kwargs)
 
 
 class Widget(object):
