@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest
 
-from widgetastic.core.exceptions import NoSuchElementException
+from widgetastic.core.exceptions import NoSuchElementException, LocatorNotImplemented
 
 
 def test_is_displayed(browser):
@@ -11,6 +11,11 @@ def test_is_displayed(browser):
 
 def test_is_displayed_negative(browser):
     assert not browser.is_displayed('#invisible')
+
+
+def test_elements_bad_locator(browser):
+    with pytest.raises(LocatorNotImplemented):
+        browser.element(1)
 
 
 def test_elements_string_locator_xpath(browser):
