@@ -59,3 +59,26 @@ def test_view_with_subviews(browser):
     assert isinstance(view.Foo, View)
     assert isinstance(view.AnotherView.another_widget, Widget)
     assert isinstance(view.Foo.bar, Widget)
+
+
+def test_view_is_displayed_without_root_locator(browser):
+    class MyView(View):
+        pass
+
+    assert MyView(browser).is_displayed
+
+
+def test_view_is_displayed_with_root_locator(browser):
+    class MyView(View):
+        ROOT = '#hello'
+
+    assert MyView(browser).is_displayed
+
+
+def test_view_is_not_displayed_with_root_locator(browser):
+    class MyView(View):
+        ROOT = '#thisdoesnotexist'
+
+    view = MyView(browser)
+    view.__locator__
+    assert not view.is_displayed

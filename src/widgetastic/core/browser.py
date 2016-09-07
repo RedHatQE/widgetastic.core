@@ -16,7 +16,7 @@ from wait_for import wait_for
 
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
-    StaleElementReferenceException, NoAlertPresentException)
+    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
 
 
 # TODO: Resolve this issue in smartloc
@@ -93,10 +93,8 @@ class Browser(object):
         try:
             return Locator(locator)
         except TypeError:
-            if hasattr(locator, '__element__'):
-                return locator.__element__()
-            else:
-                raise
+            raise LocatorNotImplemented(
+                'You have to implement __locator__ on {!r}'.format(type(locator)))
 
     def elements(self, locator, parent=None, check_visibility=False):
         """Method that resolves locators into selenium webelements.
@@ -109,7 +107,7 @@ class Browser(object):
                     selector)
                 * dictionaries - like ``{'xpath': '//something'}``
                 * :py:class:`selenium.webdriver.remote.webelement.WebElement` instances
-                * Any other object that implements ``__locator__`` or ``__element__``
+                * Any other object that implements ``__locator__``
             parent: A parent element identificator. Can be any valid locator.
             check_visibility: If set to ``True`` it will filter out elements that are not visible.
 

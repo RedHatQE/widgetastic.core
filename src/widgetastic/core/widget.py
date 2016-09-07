@@ -166,17 +166,6 @@ class Widget(object):
         raise NotImplementedError(
             'Widget {} does not implement read()!'.format(type(self).__name__))
 
-    def __element__(self):
-        """Default functionality, resolves :py:meth:`__locator__`.
-
-        Returns:
-            :py:class:`selenium.webdriver.remote.webelement.WebElement` instance
-        """
-        try:
-            return self.browser.element(self)
-        except AttributeError:
-            raise LocatorNotImplemented('You have to implement __locator__ or __element__')
-
 
 def _gen_locator_meth(loc):
     def __locator__(self):  # noqa
