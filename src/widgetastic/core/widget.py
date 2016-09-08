@@ -11,7 +11,7 @@ from wait_for import wait_for
 from .browser import Browser
 from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
 from .log import create_base_logger, logged
-from .utils import VersionPick, Widgetable
+from .utils import Widgetable
 from .xpath import quote
 
 
