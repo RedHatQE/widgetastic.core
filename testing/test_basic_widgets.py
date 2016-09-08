@@ -57,5 +57,3 @@ def test_nested_views_read_fill(browser):
 
     assert form.Nested1.input1.read() == 'foobar'
     assert form.Nested1.Nested2.input2.read()
-
-    assert False

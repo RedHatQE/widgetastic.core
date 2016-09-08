@@ -34,11 +34,11 @@ def logged(log_args=False, log_result=False):
                 signature = f.__name__
             self.logger.debug('%s started', signature)
             result = f(self, *args, **kwargs)
-            elapsed_time = time.time() - start_time
+            elapsed_time = (time.time() - start_time) * 1000.0
             if log_result:
-                self.logger.info('%s -> %r (elapsed %.3f)', signature, result, elapsed_time)
+                self.logger.info('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
             else:
-                self.logger.info('%s (elapsed %.3f)', signature, elapsed_time)
+                self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
             return result
 
         return wrapped
