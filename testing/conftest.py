@@ -11,6 +11,12 @@ from selenium import webdriver
 from widgetastic.core.browser import Browser
 
 
+class CustomBrowser(Browser):
+    @property
+    def product_version(self):
+        return '1.0.0'
+
+
 @pytest.fixture(scope='session')
 def selenium(request):
     driver = webdriver.PhantomJS()
@@ -26,4 +32,4 @@ def browser(selenium, httpserver, request):
     testfilename = path + '/testing_page.html'
     httpserver.serve_content(codecs.open(testfilename, mode='r', encoding='utf-8').read())
     selenium.get(httpserver.url)
-    return Browser(selenium)
+    return CustomBrowser(selenium)

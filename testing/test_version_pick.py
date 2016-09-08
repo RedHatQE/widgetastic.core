@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
+from widgetastic.core.widget import Checkbox, View, TextInput
 from widgetastic.core.utils import Version, VersionPick
 
 
@@ -64,3 +65,20 @@ def test_unmatched_version_fails():
 def test_descriptor_verpick_basic(descriptor_verpick):
     descriptor_verpick.browser.product_version = '1.0.0'
     assert descriptor_verpick.verpicked == 1
+
+
+def test_versionpick_on_view(browser):
+    class MyView(View):
+        widget = VersionPick({
+            Version.lowest(): Checkbox(id='nonexisting'),
+            '1.0.0': TextInput(name='input1')
+        })
+
+    view = MyView(browser)
+    assert 'widget' in view.widget_names()
+    assert 'widget' in MyView.widget_names()
+    assert isinstance(view.widget, TextInput)
+    assert view.widget.fill('test text')
+    assert view.widget.read() == 'test text'
+
+    assert view.read() == {'widget': 'test text'}

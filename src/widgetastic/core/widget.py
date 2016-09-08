@@ -6,16 +6,16 @@ import inspect
 import six
 from copy import copy
 from smartloc import Locator
-from threading import Lock
 from wait_for import wait_for
 
 from .browser import Browser
 from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
 from .log import create_base_logger, logged
+from .utils import VersionPick, Widgetable
 from .xpath import quote
 
 
-class WidgetDescriptor(object):
+class WidgetDescriptor(Widgetable):
     """This class handles instantiating and caching of the widgets on view.
 
     It stores the class and the parameters it should be instantiated with. Once it is accessed from
@@ -24,18 +24,6 @@ class WidgetDescriptor(object):
 
     It also acts as a counter, so you can then order the widgets by their "creation" stamp.
     """
-    #: Sequential counter that gets incremented on each WidgetDescriptor creation
-    _seq_cnt = 0
-    #: Lock that makes the :py:attr:`_seq_cnt` increment thread safe
-    _seq_cnt_lock = Lock()
-
-    def __new__(cls, *args, **kwargs):
-        o = super(WidgetDescriptor, cls).__new__(cls)
-        with WidgetDescriptor._seq_cnt_lock:
-            o._seq_id = WidgetDescriptor._seq_cnt
-            WidgetDescriptor._seq_cnt += 1
-        return o
-
     def __init__(self, klass, *args, **kwargs):
         self.klass = klass
         self.args = args
@@ -200,9 +188,13 @@ class ViewMetaclass(type):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
                 desc_name_mapping[new_attrs[key]] = key
-            elif isinstance(value, WidgetDescriptor):
+            elif isinstance(value, Widgetable):
                 new_attrs[key] = value
-                desc_name_mapping[new_attrs[key]] = key
+                desc_name_mapping[value] = key
+                for widget in value.child_items:
+                    if not isinstance(widget, (Widgetable, Widget)):
+                        continue
+                    desc_name_mapping[widget] = key
             else:
                 new_attrs[key] = value
         if 'ROOT' in new_attrs:
@@ -263,7 +255,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         result = []
         for key in dir(cls):
             value = getattr(cls, key)
-            if isinstance(value, WidgetDescriptor):
+            if isinstance(value, Widgetable):
                 result.append((key, value))
         return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
 

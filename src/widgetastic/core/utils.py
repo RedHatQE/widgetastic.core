@@ -4,8 +4,26 @@ from __future__ import unicode_literals
 
 import re
 from cached_property import cached_property
+from threading import Lock
 
-from .widget import WidgetDescriptor
+
+class Widgetable(object):
+    """A base class that should be a base class of anything that can be or act like a Widget."""
+    #: Sequential counter that gets incremented on each Widgetable creation
+    _seq_cnt = 0
+    #: Lock that makes the :py:attr:`_seq_cnt` increment thread safe
+    _seq_cnt_lock = Lock()
+
+    def __new__(cls, *args, **kwargs):
+        o = super(Widgetable, cls).__new__(cls)
+        with Widgetable._seq_cnt_lock:
+            o._seq_id = Widgetable._seq_cnt
+            Widgetable._seq_cnt += 1
+        return o
+
+    @property
+    def child_items(self):
+        return []
 
 
 class Version(object):
@@ -198,7 +216,7 @@ class Version(object):
         return ".".join(self.vstring.split(".")[:n])
 
 
-class VersionPick(object):
+class VersionPick(Widgetable):
     """A class that implements the version picking functionality.
 
     Basic usage is a descriptor in which you place instances of :py:class:`VersionPick` in a view.
@@ -235,6 +253,10 @@ class VersionPick(object):
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, repr(self.version_dict))
 
+    @property
+    def child_items(self):
+        return self.version_dict.values()
+
     def pick(self, version):
         """Selects the appropriate value for given version.
 
@@ -263,7 +285,7 @@ class VersionPick(object):
             return self
 
         result = self.pick(o.browser.product_version)
-        if isinstance(result, WidgetDescriptor):
+        if isinstance(result, Widgetable):
             # Resolve it instead of the class
             return result.__get__(o)
         else:
