@@ -7,4 +7,13 @@ python:
 install: pip install tox-travis
 script: tox
 after_success:
- - coveralls
+- coveralls
+deploy:
+  provider: pypi
+  user: mfalesni
+  password:
+    secure: Maw1EXXZRQJq14rsTdYCjIYpm+GBfqsdRNOBbqPnImwpJC76RLmH1jR88oYM2wgN8WNTX84qLnMUHyacBABFCmo5Sky57FxuLQWHrPkM6KsdSq9pHys0TB9y0b1wuJktF/HHLqWkty99gAZfP/bvaYq3B0Qo9WTEpaaBGDJo/ZDL23hcRgf+L9Xo0a+K8SuG8zcVijTNDP9HM6pAG3zXk4GuwUV04oUY1bSfFI0MoOR9/7us7c59jQx8iY2LPpVkdqAD5zkd/lwHZiIcsfKpWTKvQsRQ6Ze2r51Pc/bFa/8SCiFRykQm88pf4/F1BR1iR09DRiy6FnBWNQy06sIJfwjjHl5oVX+WKpcrO+3hdofSY8tH+uu2Kex0S+12ZhxbHd5Ylk9TzvGFzp7NWqmGtCzpixnekSC4VuuSe7nw/RYlqC0Fm0vo8PbX8aRXn6rwqzugZUkSFnRbf2wT2JIjQo12Rskvi+F1d3fr8WevcVW163C5nStZuwRCeejpwA7qS8XCuIqGJkfet9nYCFJjQHKH20Lp3kEb2DSvOzFCeB0ZWg1I4Ew64MkOGoS0ijXxdfQHYsOB5OMfqz0vBfxgOpYht5i28fAjTghslzwOHbWV6wvPh9DJrTbOojrdzEq9zoSeQ81akWpzq1U1dHaRDELO2rJ6oE9WlGMmqs0Ce0A=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: RedHatQE/widgetastic.core
