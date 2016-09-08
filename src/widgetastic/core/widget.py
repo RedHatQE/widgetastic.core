@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 
 import inspect
 import six
+from copy import copy
 from smartloc import Locator
 from threading import Lock
 from wait_for import wait_for
 
 from .browser import Browser
 from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
+from .log import create_base_logger, logged
 from .xpath import quote
 
 
@@ -45,7 +47,15 @@ class WidgetDescriptor(object):
 
         # Cache on WidgetDescriptor
         if self not in obj._widget_cache:
-            obj._widget_cache[self] = self.klass(obj, *self.args, **self.kwargs)
+            kwargs = copy(self.kwargs)
+            try:
+                parent_logger = obj.logger
+                logger = create_base_logger(
+                    '{}/{}'.format(parent_logger.name, obj._desc_name_mapping[self]))
+                kwargs['logger'] = logger
+            except AttributeError:
+                pass
+            obj._widget_cache[self] = self.klass(obj, *self.args, **kwargs)
         return obj._widget_cache[self]
 
     def __repr__(self):
@@ -78,19 +88,20 @@ class Widget(object):
         else:
             return WidgetDescriptor(cls, *args, **kwargs)
 
-    def __init__(self, parent):
+    def __init__(self, parent, logger=None):
         """If you are inheriting from this class, you **MUST ALWAYS** ensure that the inherited class
         has an init that always takes the ``parent`` as the first argument. You can do that on your
         own, setting the parent as ``self.parent`` or you can do something like this:
 
         .. code-block:: python
 
-            def __init__(self, parent, arg1, arg2):
-                super(MyClass, self).__init__(parent)
+            def __init__(self, parent, arg1, arg2, logger=None):
+                super(MyClass, self).__init__(parent, logger=logger)
                 # or if you have somehow complex inheritance ...
-                Widget.__init__(self, parent)
+                Widget.__init__(self, parent, logger=logger)
         """
         self.parent = parent
+        self.logger = logger or create_base_logger(type(self).__name__)
 
     @property
     def browser(self):
@@ -130,6 +141,7 @@ class Widget(object):
         """
         return self.browser.is_displayed(self)
 
+    @logged()
     def wait_displayed(self, timeout='10s'):
         """Wait for the element to be displayed. Uses the :py:meth:`is_displayed`
 
@@ -138,6 +150,7 @@ class Widget(object):
         """
         wait_for(lambda: self.is_displayed, timeout=timeout, delay=0.2)
 
+    @logged()
     def move_to(self):
         """Moves the mouse to the Selenium WebElement that is resolved by this widget.
 
@@ -182,15 +195,22 @@ class ViewMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
+        desc_name_mapping = {}
         for key, value in six.iteritems(attrs):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
+                desc_name_mapping[new_attrs[key]] = key
+            elif isinstance(value, WidgetDescriptor):
+                new_attrs[key] = value
+                desc_name_mapping[new_attrs[key]] = key
             else:
                 new_attrs[key] = value
         if 'ROOT' in new_attrs:
             # For handling the root locator of the View
             rl = Locator(new_attrs['ROOT'])
             new_attrs['__locator__'] = _gen_locator_meth(rl)
+
+        new_attrs['_desc_name_mapping'] = desc_name_mapping
         return super(ViewMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
@@ -222,8 +242,8 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             you to detect this.
     """
 
-    def __init__(self, parent, additional_context=None):
-        Widget.__init__(self, parent)
+    def __init__(self, parent, additional_context=None, logger=None):
+        Widget.__init__(self, parent, logger=logger)
         self.context = additional_context or {}
         self._widget_cache = {}
 
@@ -281,6 +301,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         except LocatorNotImplemented:
             return None
 
+    @logged(log_args=True, log_result=True)
     def fill(self, values):
         """Implementation of form filling.
 
@@ -312,6 +333,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         self.after_fill(was_change)
         return was_change
 
+    @logged(log_result=True)
     def read(self):
         """Reads the contents of the view and presents them as a dictionary.
 
@@ -354,6 +376,8 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
 
 
 class ClickableMixin(object):
+
+    @logged()
     def click(self):
         return self.browser.click(self)
 
@@ -365,13 +389,14 @@ class Text(Widget):
     Args:
         locator: Locator of the object ob the page.
     """
-    def __init__(self, parent, locator):
-        Widget.__init__(self, parent)
+    def __init__(self, parent, locator, logger=None):
+        Widget.__init__(self, parent, logger=logger)
         self.locator = locator
 
     def __locator__(self):
         return self.locator
 
+    @logged(log_result=True)
     def read(self):
         return self.browser.text(self)
 
@@ -383,10 +408,10 @@ class BaseInput(Widget):
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
-    def __init__(self, parent, name=None, id=None):
+    def __init__(self, parent, name=None, id=None, logger=None):
         if (name is None and id is None) or (name is not None and id is not None):
             raise TypeError('TextInput must have either name= or id= specified but also not both.')
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, logger=logger)
         self.name = name
         self.id = id
 
@@ -405,9 +430,11 @@ class TextInput(BaseInput):
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
+    @logged(log_result=True)
     def read(self):
         return self.browser.get_attribute('value', self)
 
+    @logged(log_args=True, log_result=True)
     def fill(self, value):
         current_value = self.read()
         if value == current_value:
@@ -430,9 +457,12 @@ class Checkbox(BaseInput, ClickableMixin):
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
+
+    @logged(log_result=True)
     def read(self):
         return self.browser.is_selected(self)
 
+    @logged(log_args=True, log_result=True)
     def fill(self, value):
         value = bool(value)
         current_value = self.read()

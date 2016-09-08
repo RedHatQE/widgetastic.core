@@ -11,6 +11,7 @@ def test_basic_widgets(browser):
         input2 = Checkbox(id='input2')
 
     form = TestForm(browser)
+    assert isinstance(form, TestForm)
     data = form.read()
     assert data['h3'] == 'test test'
     assert data['input1'] == ''
@@ -38,6 +39,7 @@ def test_nested_views_read_fill(browser):
                 input2 = Checkbox(id='input2')
 
     form = TestForm(browser)
+    assert isinstance(form, TestForm)
     data = form.read()
 
     assert data['h3'] == 'test test'
@@ -55,3 +57,5 @@ def test_nested_views_read_fill(browser):
 
     assert form.Nested1.input1.read() == 'foobar'
     assert form.Nested1.Nested2.input2.read()
+
+    assert False

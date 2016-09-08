@@ -17,6 +17,7 @@ from wait_for import wait_for
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
+from .log import create_base_logger
 
 
 # TODO: Resolve this issue in smartloc
@@ -62,10 +63,11 @@ class Browser(object):
 
     Subclass it if you want to present more informations (like product version) to the widgets.
     """
-    def __init__(self, selenium, plugin_class=None):
+    def __init__(self, selenium, plugin_class=None, logger=None):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
+        self.logger = logger or create_base_logger('widgetastic.core.browser')
 
     @property
     def handles_alerts(self):

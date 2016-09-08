@@ -30,6 +30,8 @@ def test_descriptor_on_class():
             self.parent = parent
 
     class HostClass(object):
+        _desc_name_mapping = {}
+
         def __init__(self):
             self._widget_cache = {}
 
