@@ -35,3 +35,14 @@ def test_widget_without_parent_view(browser):
     w = Widget(browser)
 
     assert w.parent_view is None
+
+
+def test_widget_extra_data(browser):
+    class AView(View):
+        widget = Widget()
+
+    view = AView(browser)
+    assert not dir(view.extra)
+    browser.extra_objects['testobject'] = 2
+    assert dir(view.extra) == ['testobject']
+    assert view.extra.testobject == 2

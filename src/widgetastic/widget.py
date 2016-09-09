@@ -50,6 +50,35 @@ class WidgetDescriptor(Widgetable):
         return '<Descriptor: {}, {!r}, {!r}>'.format(self.klass.__name__, self.args, self.kwargs)
 
 
+class ExtraData(object):
+    """This class implements a simple access to the extra data passed through
+    :py:class:`widgetastic.browser.Browser` object.
+
+    .. code-block:: python
+
+        widget.extra.foo
+        # is equivalent to
+        widget.browser.extra_objects['foo']
+    """
+    # TODO: Possibly replace it with a descriptor of some sort?
+    def __init__(self, widget):
+        self._widget = widget
+
+    @property
+    def _extra_objects_list(self):
+        return list(six.iterkeys(self._widget.browser.extra_objects))
+
+    def __dir__(self):
+        return self._extra_objects_list
+
+    def __getattr__(self, attr):
+        try:
+            return self._widget.browser.extra_objects[attr]
+        except KeyError:
+            raise AttributeError('Extra object {!r} was not found ({} are available)'.format(
+                attr, ', '.join(self._extra_objects_list)))
+
+
 class Widget(object):
     """Base class for all UI objects.
 
@@ -90,6 +119,7 @@ class Widget(object):
         """
         self.parent = parent
         self.logger = logger or create_base_logger(type(self).__name__)
+        self.extra = ExtraData(self)
 
     @property
     def browser(self):

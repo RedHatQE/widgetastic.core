@@ -58,19 +58,63 @@ class DefaultPlugin(object):
 class Browser(object):
     """Wrapper of the selenium "browser"
 
-    This class contains methods that wrap the default selenium functionality in a convenient way,
+    This class contains methods that wrap the Standard Selenium functionality in a convenient way,
     mitigating known issues and generally improving the developer experience.
 
-    Subclass it if you want to present more informations (like product version) to the widgets.
+    If you want to present more informations (like :py:meth:`product_version` for
+    :py:class:`widgetastic.utils.VersionPick`) to the widgets, subclass this class.
+
+    Many of these "hacks" were developed in period between 2013-2016 in ManageIQ QE functional test
+    suite and are used to date. Those that were generic enough were pulled in here.
+
+    This wrapper is opinionated in some aspects, tries to get out of your way. For example, if you
+    use :py:meth:`element`, and there are two elements of which first is invisible and the second
+    is visible, normal selenium would just return the first one, but this wrapper assumes you want
+    the visible one in case there is more than one element that resolves from given locator.
+
+    Standard Selenium cannot read text that is located under some other element or invisible in some
+    cases. This wrapper assumes that if you cannot scroll the element or you get no text, it shall
+    try getting it via JavaScript, which works always.
+
+    Standard Selenium has a special method that clicks on an element. It might not work in some
+    cases - eg. when some composed "widgets" make the element that is resolved by the locator
+    somehow hidden behind another. We had these issues so we just replaced the click with a two
+    stage "move & click the mouse", the :py:meth:`click`.
+
+    Moving to an element involves a workaround that tries to mitigate possible browser misbehaviour
+    when scrolling in. Sometimes some browsers complain that it is not possible to scroll to the
+    element but when you engage JavaScript, it works just fine, so this is what this wrapper does
+    too. Also when you accidentally try moving to ``<option>`` tag, it would throw an exception
+    but this wrapper assumes you want the parent ``<select>`` instead.
+
+    :py:meth:`send_keys` automatically detects whether the form item is a file upload and chooses
+    the proper file detector accordingly. That is because the default setting of Selenium uses a
+    file detector, which then can produce some unexpected results. Eg. if your user is called
+    ``admin`` you also have a file called ``admin`` somewhere around and you are testing in a remote
+    browser. That makes selenium upload the file on the remote machine and change the string
+    to reflect the new file name. Then you end up with the login not being ``admin``, but rather
+    something like ``/tmp/someawfulhashadmin`` for obvious reasons that however might not be obvious
+    to the ordinary users of Selenium.
+
+    Args:
+        selenium: Any :py:class:`selenium.webdriver.remote.webdriver.WebDriver` descendant
+        plugin_class: If you want to alter the behaviour of some aspects, you can specify your own
+            class as plugin.
+        logger: a logger, if not specified, default is used.
+        extra_objects: If the testing system needs to know more about the environment, you can pass
+            a dictionary in this parameter, where you can store all these additional objects.
     """
-    def __init__(self, selenium, plugin_class=None, logger=None):
+    def __init__(self, selenium, plugin_class=None, logger=None, extra_objects=None):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
         self.logger = logger or create_base_logger('widgetastic.browser')
+        self.extra_objects = extra_objects or {}
 
     @property
     def handles_alerts(self):
+        """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
+        handling functions do nothing."""
         return self.selenium.capabilities.get('handlesAlerts', True)
 
     @property
