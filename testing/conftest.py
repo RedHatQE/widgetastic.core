@@ -8,7 +8,7 @@ import sys
 
 from selenium import webdriver
 
-from widgetastic.core.browser import Browser
+from widgetastic.browser import Browser
 
 
 class CustomBrowser(Browser):

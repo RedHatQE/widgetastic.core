@@ -67,7 +67,7 @@ class Browser(object):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
-        self.logger = logger or create_base_logger('widgetastic.core.browser')
+        self.logger = logger or create_base_logger('widgetastic.browser')
 
     @property
     def handles_alerts(self):
@@ -75,14 +75,14 @@ class Browser(object):
 
     @property
     def browser(self):
-        """Implemented so :py:class:`widgetastic.core.widget.View` does not have to check the
+        """Implemented so :py:class:`widgetastic.widget.View` does not have to check the
         instance of its parent. This property exists there so here it just stops the chain"""
         return self
 
     @property
     def product_version(self):
-        """In order for :py:class:`widgetastic.core.utils.VersionPick` to work on
-        :py:class:`widgetastic.core.widget.Widget` instances, you need to override this property
+        """In order for :py:class:`widgetastic.utils.VersionPick` to work on
+        :py:class:`widgetastic.widget.Widget` instances, you need to override this property
         that will enable this functionality.
         """
         raise NotImplementedError('You have to implement product_version')

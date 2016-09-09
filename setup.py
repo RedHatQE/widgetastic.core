@@ -33,5 +33,4 @@ setup(
         'Topic :: Software Development :: Quality Assurance',
         'Topic :: Software Development :: Testing',
     ],
-    namespace_packages=['widgetastic']
 )

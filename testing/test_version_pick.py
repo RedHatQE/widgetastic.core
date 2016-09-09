@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 import pytest
 
-from widgetastic.core.widget import Checkbox, View, TextInput
-from widgetastic.core.utils import Version, VersionPick
+from widgetastic.widget import Checkbox, View, TextInput
+from widgetastic.utils import Version, VersionPick
 
 
 def test_empty_verpick_fails():

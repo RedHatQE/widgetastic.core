@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.core.widget import View, Widget
+from widgetastic.widget import View, Widget
 
 
 def test_can_create_view(browser):

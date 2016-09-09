@@ -221,7 +221,7 @@ class VersionPick(Widgetable):
 
     Basic usage is a descriptor in which you place instances of :py:class:`VersionPick` in a view.
     Whenever is this instance accessed from an instance, it automatically picks the correct variant
-    based on product_version defined in the :py:class:`widgetastic.core.browser.Browser`.
+    based on product_version defined in the :py:class:`widgetastic.browser.Browser`.
 
     You can also use this separately using the :py:meth:`pick` method.
 

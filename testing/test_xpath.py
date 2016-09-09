@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from widgetastic.core.xpath import quote
+from widgetastic.xpath import quote
 
 
 @pytest.mark.parametrize(

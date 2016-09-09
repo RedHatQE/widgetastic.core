@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from widgetastic.core.utils import Version
+from widgetastic.utils import Version
 
 
 @pytest.mark.parametrize(

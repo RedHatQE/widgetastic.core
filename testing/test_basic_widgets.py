@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.core.widget import View, Text, TextInput, Checkbox
+from widgetastic.widget import View, Text, TextInput, Checkbox
 
 
 def test_basic_widgets(browser):

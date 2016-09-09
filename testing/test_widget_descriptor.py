@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.core.widget import WidgetDescriptor
+from widgetastic.widget import WidgetDescriptor
 
 
 def test_can_create_descriptor():

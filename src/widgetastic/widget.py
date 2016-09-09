@@ -64,7 +64,7 @@ class Widget(object):
     def __new__(cls, *args, **kwargs):
         """Implement some typing saving magic.
 
-        Unless you are passing a :py:class:`Widget` or :py:class:`widgetastic.core.browser.Browser`
+        Unless you are passing a :py:class:`Widget` or :py:class:`widgetastic.browser.Browser`
         as a first argument which implies the instantiation of an actual widget, it will return
         :py:class:`WidgetDescriptor` instead which will resolve automatically inside of
         :py:class:`View` instance.
@@ -96,7 +96,7 @@ class Widget(object):
         """Returns the instance of parent browser.
 
         Returns:
-            :py:class:`widgetastic.core.browser.Browser` instance
+            :py:class:`widgetastic.browser.Browser` instance
 
         Raises:
             :py:class:`ValueError` when the browser is not defined, which is an error.
@@ -223,11 +223,11 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
                 do_something()
 
     The view is usually instantiated with an instance of
-    :py:class:`widgetastic.core.browser.Browser`, which will then enable resolving of all of the
+    :py:class:`widgetastic.browser.Browser`, which will then enable resolving of all of the
     widgets defined.
 
     Args:
-        parent: A parent :py:class:`View` or :py:class:`widgetastic.core.browser.Browser`
+        parent: A parent :py:class:`View` or :py:class:`widgetastic.browser.Browser`
         additional_context: If the view needs some context, for example - you want to check that
             you are on the page of user XYZ but you can also be on the page for user FOO, then
             you shall use the ``additional_context`` to pass in required variables that will allow

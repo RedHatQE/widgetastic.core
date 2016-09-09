@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 import pytest
 
-from widgetastic.core.widget import View, Widget, WidgetDescriptor
+from widgetastic.widget import View, Widget, WidgetDescriptor
 
 
 def test_widget_correctly_collapses_to_descriptor(browser):
