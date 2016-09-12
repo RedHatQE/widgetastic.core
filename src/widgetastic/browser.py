@@ -289,6 +289,9 @@ class Browser(object):
                         locator))
         return el
 
+    def move_by_offset(self, x, y):
+        ActionChains(self.selenium).move_by_offset(x, y)
+
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
