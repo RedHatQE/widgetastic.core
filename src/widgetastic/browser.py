@@ -139,6 +139,11 @@ class Browser(object):
         try:
             return Locator(locator)
         except TypeError:
+            if hasattr(locator, '__locator__'):
+                # Deal with the case when __locator__ returns a webelement.
+                loc = locator.__locator__()
+                if isinstance(loc, WebElement):
+                    return loc
             raise LocatorNotImplemented(
                 'You have to implement __locator__ on {!r}'.format(type(locator)))
 
