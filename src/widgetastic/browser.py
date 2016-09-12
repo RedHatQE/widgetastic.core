@@ -18,6 +18,7 @@ from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
 from .log import create_base_logger
+from .xpath import normalize_space
 
 
 # TODO: Resolve this issue in smartloc
@@ -75,6 +76,10 @@ class Browser(object):
     Standard Selenium cannot read text that is located under some other element or invisible in some
     cases. This wrapper assumes that if you cannot scroll the element or you get no text, it shall
     try getting it via JavaScript, which works always.
+
+    This wrapper also ensures the text that is returned is normalized. When working with this
+    wrapper and using XPath to match text, never use ``.="foo"`` or ``text()="foo"`` but rather use
+    something like this: ``normalize-space(.)="foo"``.
 
     Standard Selenium has a special method that clicks on an element. It might not work in some
     cases - eg. when some composed "widgets" make the element that is resolved by the locator
@@ -312,6 +317,9 @@ class Browser(object):
     def text(self, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
 
+        The returned text is normalized with :py:func:`widgetastic.xpath.normalize_space` as defined
+        by XPath standard.
+
         Args: See :py:meth:`elements`
 
         Returns:
@@ -324,11 +332,11 @@ class Browser(object):
 
         if not text:
             # It is probably invisible
-            return self.execute_script(
+            text = self.execute_script(
                 'return arguments[0].textContent || arguments[0].innerText;',
                 self.element(*args, **kwargs))
-        else:
-            return text
+
+        return normalize_space(text)
 
     def get_attribute(self, attr, *args, **kwargs):
         return self.element(*args, **kwargs).get_attribute(attr)
