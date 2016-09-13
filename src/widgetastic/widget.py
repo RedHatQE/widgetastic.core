@@ -336,18 +336,15 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         Returns:
             :py:class:`bool` if the fill changed any value.
         """
-        widget_names = self.widget_names()
         was_change = False
         self.before_fill(values)
-        for name, value in six.iteritems(values):
-            if name not in widget_names:
-                raise NameError('View {} does not have widget {}'.format(type(self).__name__, name))
-            if value is None:
+        for name in self.widget_names():
+            if name not in values:
                 continue
 
             widget = getattr(self, name)
             try:
-                if widget.fill(value):
+                if widget.fill(values[name]):
                     was_change = True
             except NotImplementedError:
                 continue
