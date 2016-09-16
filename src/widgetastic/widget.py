@@ -275,6 +275,35 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             view._widget_cache.clear()
         self._widget_cache.clear()
 
+    def nested(self, view_class):
+        """Shortcut for :py:class:`WidgetDescriptor`
+        
+        Usage:
+
+        .. code-block:: python
+
+            class SomeView(View):
+                some_widget = Widget()
+
+                @View.nested
+                class another_view(View):
+                    pass
+
+        Why? The problem is counting things. When you are placing widgets themselves on a view, they
+        handle counting themselves and just work. But when you are creating a nested view, that is a
+        bit of a problem. The widgets are instantiated, whereas the views are placed in a class and
+        wait for the :py:class:`ViewMetaclass` to pick them up, but that happens after all other
+        widgets have been instantiated into the :py:class:`WidgetDescriptor`s, which has the
+        consequence of things being out of order. By wrapping the class into the descriptor we do
+        the job of :py:meth:`Widget.__new__` which creates the :py:class:`WidgetDescriptor` if not
+        called with a :py:class:`widgetastic.browser.Browser` or :py:class:`Widget` instance as the
+        first argument.
+
+        Args:
+            view_class: A subclass of :py:class:`View`
+        """
+        return WidgetDescriptor(view_class)
+
     @classmethod
     def widget_names(cls):
         """Returns a list of widget names in the order they were defined on the class.
