@@ -6,21 +6,21 @@ import time
 from six import wraps
 
 
-def create_base_logger(name):
-    # create logger
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    # create console handler and set level to debug
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    # create formatter
-    formatter = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s")
-    # add formatter to ch
-    ch.setFormatter(formatter)
-    # add ch to logger
-    logger.addHandler(ch)
+null_logger = logging.getLogger('widgetastic_null')
+null_logger.addHandler(logging.NullHandler())
 
-    return logger
+
+class PrependParentsAdapter(logging.LoggerAdapter):
+    """This class ensures the path to the widget is represented in the log records."""
+    def process(self, msg, kwargs):
+        return '[{}]: {}'.format(self.extra['widget_path'], msg), kwargs
+
+
+def create_widget_logger(widget_path, logger=None):
+    """Create a logger that prepends the ``widget_path`` to the log records."""
+    return PrependParentsAdapter(
+        logger or null_logger,
+        {'widget_path': widget_path})
 
 
 def logged(log_args=False, log_result=False):

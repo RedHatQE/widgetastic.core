@@ -10,7 +10,7 @@ from wait_for import wait_for
 
 from .browser import Browser
 from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
-from .log import create_base_logger, logged
+from .log import PrependParentsAdapter, create_widget_logger, logged
 from .utils import Widgetable
 from .xpath import quote
 
@@ -38,9 +38,17 @@ class WidgetDescriptor(Widgetable):
             kwargs = copy(self.kwargs)
             try:
                 parent_logger = obj.logger
-                logger = create_base_logger(
-                    '{}/{}'.format(parent_logger.name, obj._desc_name_mapping[self]))
-                kwargs['logger'] = logger
+                current_name = obj._desc_name_mapping[self]
+                if isinstance(parent_logger, PrependParentsAdapter):
+                    # If it already is adapter, then pull the logger itself out and append
+                    # the widget name
+                    widget_path = '{}/{}'.format(parent_logger.extra['widget_path'], current_name)
+                    parent_logger = parent_logger.logger
+                else:
+                    # Seems like first in the line.
+                    widget_path = current_name
+
+                kwargs['logger'] = create_widget_logger(widget_path, parent_logger)
             except AttributeError:
                 pass
             obj._widget_cache[self] = self.klass(obj, *self.args, **kwargs)
@@ -118,7 +126,12 @@ class Widget(object):
                 Widget.__init__(self, parent, logger=logger)
         """
         self.parent = parent
-        self.logger = logger or create_base_logger(type(self).__name__)
+        if isinstance(logger, PrependParentsAdapter):
+            # The logger is already prepared
+            self.logger = logger
+        else:
+            # We need a PrependParentsAdapter here.
+            self.logger = create_widget_logger(type(self).__name__, logger)
         self.extra = ExtraData(self)
 
     @property
@@ -275,9 +288,10 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             view._widget_cache.clear()
         self._widget_cache.clear()
 
-    def nested(self, view_class):
+    @staticmethod
+    def nested(view_class):
         """Shortcut for :py:class:`WidgetDescriptor`
-        
+
         Usage:
 
         .. code-block:: python
