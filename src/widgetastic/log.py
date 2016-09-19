@@ -6,7 +6,14 @@ import time
 from six import wraps
 
 
+class PrependParentsAdapter(logging.LoggerAdapter):
+    """This class ensures the path to the widget is represented in the log records."""
+    def process(self, msg, kwargs):
+        return '[{}]: {}'.format(self.extra['widget_path'], msg), kwargs
+
+
 def create_base_logger(name):
+    """A default logger to generate if no logger gets passed."""
     # create logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
@@ -21,6 +28,13 @@ def create_base_logger(name):
     logger.addHandler(ch)
 
     return logger
+
+
+def create_widget_logger(widget_path, logger=None):
+    """Create a logger that prepends the ``widget_path`` to the log records."""
+    return PrependParentsAdapter(
+        logger or create_base_logger('widgetastic'),
+        {'widget_path': widget_path})
 
 
 def logged(log_args=False, log_result=False):
