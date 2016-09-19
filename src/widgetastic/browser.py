@@ -17,7 +17,7 @@ from wait_for import wait_for
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
-from .log import create_base_logger
+from .log import null_logger
 from .xpath import normalize_space
 
 
@@ -113,7 +113,7 @@ class Browser(object):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
-        self.logger = logger or create_base_logger('widgetastic.browser')
+        self.logger = logger or null_logger
         self.extra_objects = extra_objects or {}
 
     @property
