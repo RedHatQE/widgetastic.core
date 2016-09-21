@@ -81,3 +81,14 @@ def test_view_is_not_displayed_with_root_locator(browser):
 
     view = MyView(browser)
     assert not view.is_displayed
+
+
+def test_inherited_view(browser):
+    class AView1(View):
+        widget1 = Widget()
+
+    class AView2(AView1):
+        widget2 = Widget()
+
+    view = AView2(browser)
+    assert view.widget1.parent_view is view

@@ -227,6 +227,9 @@ class ViewMetaclass(type):
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
         desc_name_mapping = {}
+        for base in bases:
+            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
+                desc_name_mapping[key] = value
         for key, value in six.iteritems(attrs):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
