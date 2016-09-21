@@ -458,9 +458,13 @@ class Text(Widget, ClickableMixin):
     def __locator__(self):
         return self.locator
 
+    @property
+    def text(self):
+        return self.browser.text(self)
+
     @logged(log_result=True)
     def read(self):
-        return self.browser.text(self)
+        return self.text
 
 
 class BaseInput(Widget):
@@ -492,13 +496,17 @@ class TextInput(BaseInput):
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
+    @property
+    def value(self):
+        return self.browser.get_attribute('value', self)
+
     @logged(log_result=True)
     def read(self):
-        return self.browser.get_attribute('value', self)
+        return self.value
 
     @logged(log_args=True, log_result=True)
     def fill(self, value):
-        current_value = self.read()
+        current_value = self.value
         if value == current_value:
             return False
         if value.startswith(current_value):
@@ -520,19 +528,23 @@ class Checkbox(BaseInput, ClickableMixin):
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
 
+    @property
+    def selected(self):
+        return self.browser.is_selected(self)
+
     @logged(log_result=True)
     def read(self):
-        return self.browser.is_selected(self)
+        return self.selected
 
     @logged(log_args=True, log_result=True)
     def fill(self, value):
         value = bool(value)
-        current_value = self.read()
+        current_value = self.selected
         if value == current_value:
             return False
         else:
             self.click()
-            if self.read() != value:
+            if self.selected != value:
                 # TODO: More verbose here
                 raise WidgetOperationFailed('Failed to set the checkbox to requested value.')
             return True
