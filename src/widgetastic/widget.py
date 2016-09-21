@@ -444,7 +444,7 @@ class ClickableMixin(object):
         return self.browser.click(self)
 
 
-class Text(Widget):
+class Text(Widget, ClickableMixin):
     """A widget that an represent anything that can be read from the webpage as a text content of
     a tag.
 
