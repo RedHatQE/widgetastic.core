@@ -52,7 +52,9 @@ class WidgetDescriptor(Widgetable):
             except AttributeError:
                 pass
             obj._widget_cache[self] = self.klass(obj, *self.args, **kwargs)
-        return obj._widget_cache[self]
+        widget = obj._widget_cache[self]
+        obj.child_widget_accessed(widget)
+        return widget
 
     def __repr__(self):
         return '<Descriptor: {}, {!r}, {!r}>'.format(self.klass.__name__, self.args, self.kwargs)
@@ -189,6 +191,16 @@ class Widget(object):
             :py:class:`selenium.webdriver.remote.webelement.WebElement` instance
         """
         return self.browser.move_to_element(self)
+
+    def child_widget_accessed(self, widget):
+        """Called when a child widget of this widget gets accessed.
+
+        Useful when eg. the containing widget needs to open for the child widget to become visible.
+
+        Args:
+            widget: The widget being accessed.
+        """
+        pass
 
     def fill(self, *args, **kwargs):
         """Interactive objects like inputs, selects, checkboxes, et cetera should implement fill.

@@ -34,6 +34,10 @@ def test_descriptor_on_class():
 
         def __init__(self):
             self._widget_cache = {}
+            self.widget_accessed = None
+
+        def child_widget_accessed(self, widget):
+            self.widget_accessed = widget
 
         desc = WidgetDescriptor(MyClass)
 
@@ -43,3 +47,4 @@ def test_descriptor_on_class():
     assert isinstance(obj, MyClass)
     assert hc.desc is obj
     assert obj.parent is hc
+    assert hc.widget_accessed is hc.desc
