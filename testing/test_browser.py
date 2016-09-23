@@ -87,6 +87,12 @@ def test_click(browser):
     assert 'clicked' in browser.classes('#a_button')
 
 
+def test_raw_click(browser):
+    assert len(browser.classes('#a_button')) == 0
+    browser.raw_click('#a_button')
+    assert 'clicked' in browser.classes('#a_button')
+
+
 def test_tag(browser):
     assert browser.tag('#hello') == 'h1'
 

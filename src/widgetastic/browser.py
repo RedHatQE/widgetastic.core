@@ -239,6 +239,18 @@ class Browser(object):
         except UnexpectedAlertPresentException:
             pass
 
+    def raw_click(self, *args, **kwargs):
+        """Clicks at a specific element using the direct event.
+
+        Args: See :py:meth:`elements`
+        """
+        el = self.element(*args, **kwargs)
+        el.click()
+        try:
+            self.plugin.ensure_page_safe()
+        except UnexpectedAlertPresentException:
+            pass
+
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
 
