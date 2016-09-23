@@ -9,10 +9,16 @@ from smartloc import Locator
 from wait_for import wait_for
 
 from .browser import Browser
-from .exceptions import NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed
+from .exceptions import (
+    NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
 from .utils import Widgetable
 from .xpath import quote
+
+
+def do_not_read_this_widget():
+    """Call inside widget's read method in case you don't want it to appear in the data."""
+    raise DoNotReadThisWidget('Do not read this widget.')
 
 
 class WidgetDescriptor(Widgetable):
@@ -423,7 +429,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             widget = getattr(self, widget_name)
             try:
                 value = widget.read()
-            except (NotImplementedError, NoSuchElementException):
+            except (NotImplementedError, NoSuchElementException, DoNotReadThisWidget):
                 continue
 
             result[widget_name] = value

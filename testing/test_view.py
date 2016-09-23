@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.widget import View, Widget
+from widgetastic.widget import View, Widget, do_not_read_this_widget
 
 
 def test_can_create_view(browser):
@@ -92,3 +92,21 @@ def test_inherited_view(browser):
 
     view = AView2(browser)
     assert view.widget1.parent_view is view
+
+
+def test_do_not_read_widget(browser):
+    class AWidget1(Widget):
+        def read(self):
+            return 1
+
+    class AWidget2(Widget):
+        def read(self):
+            do_not_read_this_widget()
+
+    class AView(View):
+        w1 = AWidget1()
+        w2 = AWidget2()
+
+    view = AView(browser)
+    data = view.read()
+    assert 'w2' not in data

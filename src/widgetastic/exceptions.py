@@ -12,3 +12,7 @@ class LocatorNotImplemented(NotImplementedError):
 
 class WidgetOperationFailed(Exception):
     pass
+
+
+class DoNotReadThisWidget(Exception):
+    pass
