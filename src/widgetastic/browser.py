@@ -231,25 +231,29 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
         """
+        ignore_ajax = kwargs.pop('ignore_ajax', False)
         self.move_to_element(*args, **kwargs)
         # and then click on current mouse position
         self.perform_click()
-        try:
-            self.plugin.ensure_page_safe()
-        except UnexpectedAlertPresentException:
-            pass
+        if not ignore_ajax:
+            try:
+                self.plugin.ensure_page_safe()
+            except UnexpectedAlertPresentException:
+                pass
 
     def raw_click(self, *args, **kwargs):
         """Clicks at a specific element using the direct event.
 
         Args: See :py:meth:`elements`
         """
+        ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.element(*args, **kwargs)
         el.click()
-        try:
-            self.plugin.ensure_page_safe()
-        except UnexpectedAlertPresentException:
-            pass
+        if not ignore_ajax:
+            try:
+                self.plugin.ensure_page_safe()
+            except UnexpectedAlertPresentException:
+                pass
 
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
