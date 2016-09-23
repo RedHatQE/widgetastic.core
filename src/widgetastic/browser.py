@@ -152,6 +152,13 @@ class Browser(object):
             raise LocatorNotImplemented(
                 'You have to implement __locator__ on {!r}'.format(type(locator)))
 
+    @staticmethod
+    def _locator_force_visibility_check(locator):
+        if hasattr(locator, '__locator__') and hasattr(locator, 'CHECK_VISIBILITY'):
+            return locator.CHECK_VISIBILITY
+        else:
+            return None
+
     def elements(self, locator, parent=None, check_visibility=False):
         """Method that resolves locators into selenium webelements.
 
@@ -200,6 +207,9 @@ class Browser(object):
             :py:class:`selenium.common.exceptions.NoSuchElementException`
         """
         try:
+            vcheck = self._locator_force_visibility_check(locator)
+            if vcheck is not None:
+                kwargs['check_visibility'] = vcheck
             elements = self.elements(locator, *args, **kwargs)
             if len(elements) > 1:
                 visible_elements = [e for e in elements if self.is_displayed(e)]
