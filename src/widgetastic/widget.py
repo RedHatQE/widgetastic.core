@@ -394,6 +394,8 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         This method goes through all widgets defined on this view one by one and calls their
         ``fill`` methods appropriately.
 
+        ``None`` values will be ignored.
+
         Args:
             values: A dictionary of ``widget_name: value_to_fill``.
 
@@ -403,7 +405,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         was_change = False
         self.before_fill(values)
         for name in self.widget_names():
-            if name not in values:
+            if name not in values or values[name] is None:
                 continue
 
             widget = getattr(self, name)
