@@ -5,6 +5,8 @@ import logging
 import time
 from six import wraps
 
+from .exceptions import DoNotReadThisWidget
+
 
 null_logger = logging.getLogger('widgetastic_null')
 null_logger.addHandler(logging.NullHandler())
@@ -33,13 +35,20 @@ def logged(log_args=False, log_result=False):
             else:
                 signature = f.__name__
             self.logger.debug('%s started', signature)
-            result = f(self, *args, **kwargs)
-            elapsed_time = (time.time() - start_time) * 1000.0
-            if log_result:
-                self.logger.info('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
+            try:
+                result = f(self, *args, **kwargs)
+            except DoNotReadThisWidget:
+                elapsed_time = (time.time() - start_time) * 1000.0
+                self.logger.info(
+                    '%s not read on widget\'s request (elapsed %.0f ms)', signature, elapsed_time)
+                raise
             else:
-                self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
-            return result
+                elapsed_time = (time.time() - start_time) * 1000.0
+                if log_result:
+                    self.logger.info('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
+                else:
+                    self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
+                return result
 
         return wrapped
 
