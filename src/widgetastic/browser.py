@@ -55,6 +55,14 @@ class DefaultPlugin(object):
 
         wait_for(_check, timeout=timeout, delay=0.2)
 
+    def after_click(self, element):
+        """Invoked after clicking on an element."""
+        pass
+
+    def before_click(self, element):
+        """Invoked before clicking on an element."""
+        pass
+
 
 class Browser(object):
     """Wrapper of the selenium "browser"
@@ -232,7 +240,8 @@ class Browser(object):
         Args: See :py:meth:`elements`
         """
         ignore_ajax = kwargs.pop('ignore_ajax', False)
-        self.move_to_element(*args, **kwargs)
+        el = self.move_to_element(*args, **kwargs)
+        self.plugin.before_click(el)
         # and then click on current mouse position
         self.perform_click()
         if not ignore_ajax:
@@ -240,6 +249,7 @@ class Browser(object):
                 self.plugin.ensure_page_safe()
             except UnexpectedAlertPresentException:
                 pass
+        self.plugin.after_click(el)
 
     def raw_click(self, *args, **kwargs):
         """Clicks at a specific element using the direct event.
@@ -248,12 +258,14 @@ class Browser(object):
         """
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.element(*args, **kwargs)
+        self.plugin.before_click(el)
         el.click()
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
             except UnexpectedAlertPresentException:
                 pass
+        self.plugin.after_click(el)
 
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
