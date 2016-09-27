@@ -63,6 +63,22 @@ class DefaultPlugin(object):
         """Invoked before clicking on an element."""
         pass
 
+    def after_keyboard_input(self, element, keyboard_input):
+        """Invoked after sending keys into an element.
+
+        Args:
+            keyboard_input: String if any text typed in, None if the element is cleared.
+        """
+        pass
+
+    def before_keyboard_input(self, element, keyboard_input):
+        """Invoked after sending keys into an element.
+
+        Args:
+            keyboard_input: String if any text typed in, None if the element is cleared.
+        """
+        pass
+
 
 class Browser(object):
     """Wrapper of the selenium "browser"
@@ -388,7 +404,11 @@ class Browser(object):
             self.element(*args, **kwargs), attr, value)
 
     def clear(self, *args, **kwargs):
-        return self.element(*args, **kwargs).clear()
+        el = self.element(*args, **kwargs)
+        self.plugin.before_keyboard_input(el, None)
+        result = el.clear()
+        self.plugin.after_keyboard_input(el, None)
+        return result
 
     def is_selected(self, *args, **kwargs):
         return self.element(*args, **kwargs).is_selected()
@@ -412,7 +432,11 @@ class Browser(object):
             if file_intercept:
                 # If we detected a file upload field, let's use the file detector.
                 self.selenium.file_detector = LocalFileDetector()
-            self.move_to_element(*args, **kwargs).send_keys(text)
+            el = self.move_to_element(*args, **kwargs)
+            self.plugin.before_keyboard_input(el, text)
+            result = el.send_keys(text)
+            self.plugin.after_keyboard_input(el, text)
+            return result
         finally:
             # Always the UselessFileDetector for all other kinds of fields, so do not leave
             # the LocalFileDetector there.
