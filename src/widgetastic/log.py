@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 import time
-from six import wraps
+from six import wraps, get_method_function, get_method_self
 
 from .exceptions import DoNotReadThisWidget
 
@@ -50,6 +50,28 @@ def logged(log_args=False, log_result=False):
                     self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
                 return result
 
+        wrapped.original_function = f
         return wrapped
 
     return g
+
+
+def call_unlogged(method, *args, **kwargs):
+    """Calls the original method without logging when ``logged`` is applied.
+
+    In case you pass in an ordinary method that was not decorated, it will work as usual.
+
+    Args:
+        method: The method object from the object.
+        *args: Args to pass to the method.
+        **kwargs: Keyword arguments to pass to the method.
+
+    Returns:
+        Whatever that method returns.
+    """
+    try:
+        f = method.original_function
+    except AttributeError:
+        f = get_method_function(method)
+
+    return f(get_method_self(method), *args, **kwargs)
