@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import six
 import time
 
+from cached_property import cached_property
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.file_detector import LocalFileDetector, UselessFileDetector
@@ -17,7 +18,7 @@ from wait_for import wait_for
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
-from .log import null_logger
+from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
 
 
@@ -40,6 +41,11 @@ class DefaultPlugin(object):
 
     def __init__(self, browser):
         self.browser = browser
+
+    @cached_property
+    def logger(self):
+        """Logger with prepended plugin name."""
+        return create_widget_logger(type(self).__name__, self.browser.logger)
 
     def ensure_page_safe(self, timeout='10s'):
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
