@@ -42,6 +42,13 @@ def logged(log_args=False, log_result=False):
                 self.logger.info(
                     '%s not read on widget\'s request (elapsed %.0f ms)', signature, elapsed_time)
                 raise
+            except Exception as e:
+                elapsed_time = (time.time() - start_time) * 1000.0
+                self.logger.error(
+                    'An exception happened during %s call (elapsed %.0f ms)',
+                    signature, elapsed_time)
+                self.logger.exception(e)
+                raise
             else:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 if log_result:
