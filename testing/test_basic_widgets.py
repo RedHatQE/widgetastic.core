@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from widgetastic.widget import View, Text, TextInput, Checkbox
+from widgetastic.utils import Fillable
 
 
 def test_basic_widgets(browser):
@@ -9,6 +10,13 @@ def test_basic_widgets(browser):
         h3 = Text('.//h3')
         input1 = TextInput(name='input1')
         input2 = Checkbox(id='input2')
+
+    class AFillable(Fillable):
+        def __init__(self, text):
+            self.text = text
+
+        def as_fill_value(self):
+            return self.text
 
     form = TestForm(browser)
     assert isinstance(form, TestForm)
@@ -26,6 +34,13 @@ def test_basic_widgets(browser):
     assert form.fill({'input1': 'foobar'})
     assert not form.fill({'input1': 'foobar'})
     assert form.fill(data)
+
+    assert form.fill({'input1': AFillable('wut')})
+    assert not form.fill({'input1': AFillable('wut')})
+    assert form.read()['input1'] == 'wut'
+    assert form.input1.fill(AFillable('a_test'))
+    assert not form.input1.fill(AFillable('a_test'))
+    assert form.input1.read() == 'a_test'
 
 
 def test_nested_views_read_fill(browser):

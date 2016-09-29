@@ -12,13 +12,21 @@ from .browser import Browser
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
-from .utils import Widgetable
+from .utils import Widgetable, Fillable
 from .xpath import quote
 
 
 def do_not_read_this_widget():
     """Call inside widget's read method in case you don't want it to appear in the data."""
     raise DoNotReadThisWidget('Do not read this widget.')
+
+
+def wrap_fill_method(method):
+    @six.wraps(method)
+    def wrapped(self, value, *args, **kwargs):
+        return method(self, Fillable.coerce(value), *args, **kwargs)
+
+    return wrapped
 
 
 class WidgetDescriptor(Widgetable):
@@ -95,7 +103,28 @@ class ExtraData(object):
                 attr, ', '.join(self._extra_objects_list)))
 
 
-class Widget(object):
+class WidgetMetaclass(type):
+    """metaclass that ensures nested widgets' functionality from the declaration point of view.
+
+    When you pass a ``ROOT`` class attribute, it is used to generate a ``__locator__`` method on
+    the view that ensures the view is resolvable.
+    """
+    def __new__(cls, name, bases, attrs):
+        new_attrs = {}
+        for key, value in six.iteritems(attrs):
+            if key == 'fill':
+                # handle fill() specifics
+                new_attrs[key] = logged(log_args=True, log_result=True)(wrap_fill_method(value))
+            elif key == 'read':
+                # handle read() specifics
+                new_attrs[key] = logged(log_result=True)(value)
+            else:
+                # Do nothing
+                new_attrs[key] = value
+        return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
+
+
+class Widget(six.with_metaclass(WidgetMetaclass, object)):
     """Base class for all UI objects.
 
     Does couple of things:
@@ -236,7 +265,7 @@ def _gen_locator_meth(loc):
     return __locator__
 
 
-class ViewMetaclass(type):
+class ViewMetaclass(WidgetMetaclass):
     """metaclass that ensures nested widgets' functionality from the declaration point of view.
 
     When you pass a ``ROOT`` class attribute, it is used to generate a ``__locator__`` method on
@@ -387,7 +416,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         except LocatorNotImplemented:
             return None
 
-    @logged(log_args=True, log_result=True)
     def fill(self, values):
         """Implementation of form filling.
 
@@ -418,7 +446,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         self.after_fill(was_change)
         return was_change
 
-    @logged(log_result=True)
     def read(self):
         """Reads the contents of the view and presents them as a dictionary.
 
@@ -485,7 +512,6 @@ class Text(Widget, ClickableMixin):
     def text(self):
         return self.browser.text(self)
 
-    @logged(log_result=True)
     def read(self):
         return self.text
 
@@ -523,11 +549,9 @@ class TextInput(BaseInput):
     def value(self):
         return self.browser.get_attribute('value', self)
 
-    @logged(log_result=True)
     def read(self):
         return self.value
 
-    @logged(log_args=True, log_result=True)
     def fill(self, value):
         current_value = self.value
         if value == current_value:
@@ -555,11 +579,9 @@ class Checkbox(BaseInput, ClickableMixin):
     def selected(self):
         return self.browser.is_selected(self)
 
-    @logged(log_result=True)
     def read(self):
         return self.selected
 
-    @logged(log_args=True, log_result=True)
     def fill(self, value):
         value = bool(value)
         current_value = self.selected
