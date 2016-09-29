@@ -392,6 +392,8 @@ class Browser(object):
             text = self.execute_script(
                 'return arguments[0].textContent || arguments[0].innerText;',
                 self.element(*args, **kwargs))
+            if text is None:
+                text = ''
 
         return normalize_space(text)
 
