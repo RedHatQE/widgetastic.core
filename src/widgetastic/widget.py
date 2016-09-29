@@ -22,6 +22,7 @@ def do_not_read_this_widget():
 
 
 def wrap_fill_method(method):
+    """Generates a method that automatically coerces the first argument as Fillable."""
     @six.wraps(method)
     def wrapped(self, value, *args, **kwargs):
         return method(self, Fillable.coerce(value), *args, **kwargs)
@@ -104,10 +105,17 @@ class ExtraData(object):
 
 
 class WidgetMetaclass(type):
-    """metaclass that ensures nested widgets' functionality from the declaration point of view.
+    """Metaclass that ensures that ``fill`` and ``read`` methods are logged and coerce Fillable
+    properly.
 
-    When you pass a ``ROOT`` class attribute, it is used to generate a ``__locator__`` method on
-    the view that ensures the view is resolvable.
+    For ``fill`` methods placed in :py:class:`Widget` descendants it first wraps them using
+    :py:func:`wrap_fill_method` that ensures that :py:class:`widgetastic.utils.Fillable` can be
+    passed and then it wraps them in the :py:func:`widgetastic.log.logged`.
+
+    The same happens for ``read`` except the ``wrap_fill_method`` which is only useful for ``fill``.
+
+    Therefore, you shall not wrap any ``read`` or ``fill`` methods in
+    :py:func:`widgetastic.log.logged`.
     """
     def __new__(cls, name, bases, attrs):
         new_attrs = {}

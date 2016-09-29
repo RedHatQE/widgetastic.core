@@ -19,13 +19,34 @@ class PrependParentsAdapter(logging.LoggerAdapter):
 
 
 def create_widget_logger(widget_path, logger=None):
-    """Create a logger that prepends the ``widget_path`` to the log records."""
+    """Create a logger that prepends the ``widget_path`` to the log records.
+
+    Args:
+        widget_path: A string indicating the path to the widget
+        logger: Specify a logger if you want some output, otherwise a null logger will be used.
+
+    Returns:
+        A logger instance.
+    """
     return PrependParentsAdapter(
         logger or null_logger,
         {'widget_path': widget_path})
 
 
 def logged(log_args=False, log_result=False):
+    """Decorator that logs entry and exit to a method and also times the execution.
+
+    It assumes that the object where you decorate the methods on has a ``.logger`` attribute.
+
+    :py:meth:`widgetastic.widget.Widget.fill` and :py:meth:`widgetastic.widget.Widget.read` are
+    automatically wrapped with this call due to usage of
+    :py:class:`widgetastic.widget.WidgetMetaclass` which finds all ``fill`` and ``read`` methods and
+    wraps them automatically.
+
+    Args:
+        log_args: Whether to log args passed to the method
+        log_result: Whether to log the result value returned from the method.
+    """
     def g(f):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
