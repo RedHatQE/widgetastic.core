@@ -290,3 +290,29 @@ class VersionPick(Widgetable):
             return result.__get__(o)
         else:
             return result
+
+
+class Fillable(object):
+    @classmethod
+    def coerce(cls, o):
+        """This method serves as a processor for filling values.
+
+        When you are filling values inside widgets and views, I bet you will quickly realize that
+        filling basic values like strings or numbers is not enough. This method allows a potential
+        fillable implement :py:meth:`as_fill_value` to return a basic value that represents the
+        object in the UI
+
+        Args:
+            o: Object to be filled in the :py:class:`widgetastic.widget.View` or
+                :py:class:`widgetastic.widget.Widget`
+
+        Returns:
+            Whatever is supposed to be filled in the widget.
+        """
+        if isinstance(o, cls):
+            return o.as_fill_value()
+        else:
+            return o
+
+    def as_fill_value(self):
+        raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
