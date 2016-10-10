@@ -316,3 +316,23 @@ class Fillable(object):
 
     def as_fill_value(self):
         raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
+
+
+def _prenormalize_text(text):
+    """Makes the text lowercase and removes all characters that are not digits, alphas, or spaces"""
+    # _'s represent spaces so convert those to spaces too
+    return re.sub(r"[^a-z0-9 ]", "", text.strip().lower().replace('_', ' '))
+
+
+def _replace_spaces_with(text, delim):
+    """Contracts spaces into one character and replaces it with a custom character."""
+    return re.sub(r"\s+", delim, text)
+
+
+def attributize_string(text):
+    """Converts a string to a lowercase string containing only letters, digits and underscores.
+
+    Usable for eg. generating object key names.
+    The underscore is always one character long if it is present.
+    """
+    return _replace_spaces_with(_prenormalize_text(text), '_')

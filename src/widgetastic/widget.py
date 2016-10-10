@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import inspect
 import six
+from cached_property import cached_property
 from copy import copy
 from smartloc import Locator
 from wait_for import wait_for
@@ -12,7 +13,7 @@ from .browser import Browser
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
-from .utils import Widgetable, Fillable
+from .utils import Widgetable, Fillable, attributize_string
 from .xpath import quote
 
 
@@ -601,3 +602,128 @@ class Checkbox(BaseInput, ClickableMixin):
                 # TODO: More verbose here
                 raise WidgetOperationFailed('Failed to set the checkbox to requested value.')
             return True
+
+
+class Table(Widget):
+    """Basic table-handling class."""
+    HEADERS = './thead/tr/th|./tr/th'
+    ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+    ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
+
+    class Row(Widget, ClickableMixin):
+        def __init__(self, parent, element_or_index, logger=None):
+            Widget.__init__(self, parent, logger=logger)
+            if isinstance(element_or_index, int):
+                self.index = element_or_index
+                self.element = None
+            else:
+                self.index = None
+                self.element = element_or_index
+
+        def __locator__(self):
+            if self.index is not None:
+                loc = self.parent.ROW_AT_INDEX.format(self.index)
+                return self.browser.element(loc, parent=self.parent)
+            else:
+                return self.element
+
+    def __init__(self, parent, locator, logger=None):
+        Widget.__init__(self, parent, logger=logger)
+        self.locator = locator
+
+    def __locator__(self):
+        return self.locator
+
+    def clear_cache(self):
+        for item in [
+                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping']:
+            try:
+                delattr(self, item)
+            except AttributeError:
+                pass
+
+    @cached_property
+    def headers(self):
+        result = []
+        for header in self.browser.elements(self.HEADERS, parent=self):
+            result.append(self.browser.text(header).strip() or None)
+
+        without_none = [x for x in result if x is not None]
+
+        if len(without_none) != len(set(without_none)):
+            self.logger.warning(
+                'Detected duplicate headers in %r. Correct functionality is not guaranteed',
+                without_none)
+
+        return tuple(result)
+
+    @cached_property
+    def attributized_headers(self):
+        return {attributize_string(h): h for h in self.headers if h is not None}
+
+    @cached_property
+    def header_index_mapping(self):
+        return {h: i for i, h in enumerate(self.headers) if h is not None}
+
+    @cached_property
+    def index_header_mapping(self):
+        return {i: h for h, i in self.header_index_mapping.items()}
+
+    def row_at_index(self, at_index):
+        return self.Row(self, at_index, logger=self.logger)
+
+    def row(self, **filters):
+        return list(self.rows(**filters))[0]
+
+    def __iter__(self):
+        return self.rows()
+
+    def rows(self, **filters):
+        if not filters:
+            return self._all_rows()
+        else:
+            return self._filtered_rows(**filters)
+
+    def _all_rows(self):
+        for row_element in self.browser.elements(self.ROWS, parent=self):
+            yield self.Row(self, row_element, logger=self.logger)
+
+    def _filtered_rows(self, **filters):
+        # Pre-process the filters
+        processed_filters = {}
+        for filter_column, filter_value in six.iteritems(filters):
+            if '__' in filter_column:
+                column, method = filter_column.rsplit('__', 1)
+            else:
+                column = filter_column
+                method = None
+            column_index = self.header_index_mapping[self.attributized_headers[column]]
+            processed_filters[(column_index, method)] = str(filter_value)
+
+        # Build the query
+        query_parts = []
+        for (column_index, method), value in six.iteritems(processed_filters):
+            if method is None:
+                # equals
+                q = 'normalize-space(.)={}'.format(quote(value))
+            elif method == 'contains':
+                # in
+                q = 'contains(normalize-space(.), {})'.format(quote(value))
+            elif method == 'startswith':
+                # starts with
+                q = 'starts-with(normalize-space(.), {})'.format(quote(value))
+            elif method == 'endswith':
+                # ends with
+                # This needs to be faked since selenium does not support this feature.
+                q = (
+                    'substring(normalize-space(.), '
+                    'string-length(normalize-space(.)) - string-length({0}) + 1)={0}').format(
+                        quote(value))
+            else:
+                raise ValueError('Unknown method {}'.format(method))
+            query_parts.append('./td[{}][{}]'.format(column_index + 1, q))
+
+        query = './/tr[{}]'.format(' and '.join(query_parts))
+
+        for row_element in self.browser.elements(query, parent=self):
+            yield self.Row(self, row_element, logger=self.logger)
