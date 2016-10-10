@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import inspect
 import six
 from cached_property import cached_property
+from collections import defaultdict
 from copy import copy
 from smartloc import Locator
 from wait_for import wait_for
@@ -690,7 +691,7 @@ class Table(Widget):
 
     def _filtered_rows(self, **filters):
         # Pre-process the filters
-        processed_filters = {}
+        processed_filters = defaultdict(list)
         for filter_column, filter_value in six.iteritems(filters):
             if '__' in filter_column:
                 column, method = filter_column.rsplit('__', 1)
@@ -698,30 +699,34 @@ class Table(Widget):
                 column = filter_column
                 method = None
             column_index = self.header_index_mapping[self.attributized_headers[column]]
-            processed_filters[(column_index, method)] = str(filter_value)
+            processed_filters[column_index].append((method, filter_value))
 
         # Build the query
         query_parts = []
-        for (column_index, method), value in six.iteritems(processed_filters):
-            if method is None:
-                # equals
-                q = 'normalize-space(.)={}'.format(quote(value))
-            elif method == 'contains':
-                # in
-                q = 'contains(normalize-space(.), {})'.format(quote(value))
-            elif method == 'startswith':
-                # starts with
-                q = 'starts-with(normalize-space(.), {})'.format(quote(value))
-            elif method == 'endswith':
-                # ends with
-                # This needs to be faked since selenium does not support this feature.
-                q = (
-                    'substring(normalize-space(.), '
-                    'string-length(normalize-space(.)) - string-length({0}) + 1)={0}').format(
-                        quote(value))
-            else:
-                raise ValueError('Unknown method {}'.format(method))
-            query_parts.append('./td[{}][{}]'.format(column_index + 1, q))
+        for column_index, matchers in six.iteritems(processed_filters):
+            col_query_parts = []
+            for method, value in matchers:
+                if method is None:
+                    # equals
+                    q = 'normalize-space(.)=normalize-space({})'.format(quote(value))
+                elif method == 'contains':
+                    # in
+                    q = 'contains(normalize-space(.), normalize-space({}))'.format(quote(value))
+                elif method == 'startswith':
+                    # starts with
+                    q = 'starts-with(normalize-space(.), normalize-space({}))'.format(quote(value))
+                elif method == 'endswith':
+                    # ends with
+                    # This needs to be faked since selenium does not support this feature.
+                    q = (
+                        'substring(normalize-space(.), '
+                        'string-length(normalize-space(.)) - string-length({0}) + 1)={0}').format(
+                            'normalize-space({})'.format(quote(value)))
+                else:
+                    raise ValueError('Unknown method {}'.format(method))
+                col_query_parts.append(q)
+            query_parts.append(
+                './td[{}][{}]'.format(column_index + 1, ' and '.join(col_query_parts)))
 
         query = './/tr[{}]'.format(' and '.join(query_parts))
 
