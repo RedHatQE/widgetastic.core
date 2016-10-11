@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.widget import View, Text, TextInput, Checkbox
+from widgetastic.widget import View, Table, Text, TextInput, Checkbox
 from widgetastic.utils import Fillable
 
 
@@ -72,3 +72,16 @@ def test_nested_views_read_fill(browser):
 
     assert form.Nested1.input1.read() == 'foobar'
     assert form.Nested1.Nested2.input2.read()
+
+
+def test_table(browser):
+    class TestForm(View):
+        table = Table('#with-thead')
+
+    view = TestForm(browser)
+    assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3')
+    assert len(list(view.table.rows())) == 3
+    assert len(list(view.table.rows(column_1='qwer'))) == 1
+    assert len(list(view.table.rows(column_1__startswith='bar_'))) == 2
+    assert len(list(view.table.rows(column_1__contains='_'))) == 2
+    assert len(list(view.table.rows(column_1__endswith='_x'))) == 1
