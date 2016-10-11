@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import pytest
 
 from widgetastic.widget import View, Table, Text, TextInput, Checkbox
 from widgetastic.utils import Fillable
@@ -85,3 +86,24 @@ def test_table(browser):
     assert len(list(view.table.rows(column_1__startswith='bar_'))) == 2
     assert len(list(view.table.rows(column_1__contains='_'))) == 2
     assert len(list(view.table.rows(column_1__endswith='_x'))) == 1
+
+    assert len(list(view.table.rows(column_1__startswith='bar_', column_1__endswith='_x'))) == 1
+
+    row = view.table.row(column_1='bar_x')
+    assert row[0].text == 'foo_x'
+    assert row['Column 1'].text == 'bar_x'
+    assert row.column_1.text == 'bar_x'
+
+    assert [(header, column.text) for header, column in row] == [
+        (None, 'foo_x'),
+        ('Column 1', 'bar_x'),
+        ('Column 2', 'baz_x'),
+        ('Column 3', 'bat_x')]
+
+    assert view.table[0].column_2.text == 'yxcv'
+
+    with pytest.raises(AttributeError):
+        row.papalala
+
+    with pytest.raises(TypeError):
+        view.table['boom!']

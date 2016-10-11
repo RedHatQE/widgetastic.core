@@ -605,28 +605,110 @@ class Checkbox(BaseInput, ClickableMixin):
             return True
 
 
+class TableColumn(Widget, ClickableMixin):
+    """Represents a cell in the row."""
+    def __init__(self, parent, position, logger=None):
+        Widget.__init__(self, parent, logger=logger)
+        self.position = position
+
+    def __locator__(self):
+        return self.browser.element('./td[{}]'.format(self.position + 1), parent=self.parent)
+
+    @property
+    def text(self):
+        return self.browser.text(self)
+
+
+class TableRow(Widget, ClickableMixin):
+    """Represents a row in the table.
+
+    If subclassing and also changing the Column class, do not forget to set the Column to the new
+    class.
+
+    Args:
+        index: Position of the row in the table.
+    """
+    Column = TableColumn
+
+    def __init__(self, parent, index, logger=None):
+        Widget.__init__(self, parent, logger=logger)
+        self.index = index
+
+    def __locator__(self):
+        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
+        return self.browser.element(loc, parent=self.parent)
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.Column(self, item, logger=self.logger)
+        elif isinstance(item, six.string_types):
+            return self[self.parent.header_index_mapping[item]]
+        else:
+            raise TypeError('row[] accepts only integers and strings')
+
+    def __getattr__(self, attr):
+        try:
+            return self[self.parent.attributized_headers[attr]]
+        except KeyError:
+            raise AttributeError('Cannot find column {} in the table'.format(attr))
+
+    def __dir__(self):
+        result = super(TableRow, self).__dir__()
+        result.extend(self.parent.attributized_headers.keys())
+        return sorted(result)
+
+    def __iter__(self):
+        for i, header in enumerate(self.parent.headers):
+            yield header, self[i]
+
+
+# TODO: read/fill? How would that work?
 class Table(Widget):
-    """Basic table-handling class."""
+    """Basic table-handling class.
+
+    Usage is as follows assuming the table is instantiated as ``view.table``:
+
+    .. code-block:: python
+
+        # List the headers
+        view.table.headers  # => (None, 'something', ...)
+        # Access rows by their position
+        view.table[0] # => gives you the first row
+        # Or you can iterate through rows simply
+        for row in view.table:
+            do_something()
+        # You can filter rows
+        # The column names are "attributized"
+        view.table.rows(column_name='asdf') # All rows where asdf is in "Column Name"
+        # And with Django fashion:
+        view.table.rows(column_name__contains='asdf')
+        view.table.rows(column_name__startswith='asdf')
+        view.table.rows(column_name__endswith='asdf')
+        # You can put multiple filters together.
+        # And you can of course query a songle row
+        row = view.table.row(column_name='asdf')
+
+        # When you have a row, you can do these things.
+        row[0]  # => gives you the first column cell in the row
+        row['Column Name'] # => Gives you the column that is named "Column Name". Non-attributized
+        row.column_name # => Gives you the column whose attributized name is "column_name"
+
+        # Basic row column can give you text
+        assert row.column_name.text == 'some text'
+        # Or you can click at it
+        assert row.column_name.click()
+
+    If you subclass Table, Row, or Column, do not forget to update the Row in Table and Column in
+    Row in order for the classes to use the correct class.
+
+    Args:
+        locator: A locator to the table ``<table>`` tag.
+    """
     HEADERS = './thead/tr/th|./tr/th'
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
-    class Row(Widget, ClickableMixin):
-        def __init__(self, parent, element_or_index, logger=None):
-            Widget.__init__(self, parent, logger=logger)
-            if isinstance(element_or_index, int):
-                self.index = element_or_index
-                self.element = None
-            else:
-                self.index = None
-                self.element = element_or_index
-
-        def __locator__(self):
-            if self.index is not None:
-                loc = self.parent.ROW_AT_INDEX.format(self.index)
-                return self.browser.element(loc, parent=self.parent)
-            else:
-                return self.element
+    Row = TableRow
 
     def __init__(self, parent, locator, logger=None):
         Widget.__init__(self, parent, logger=logger)
@@ -670,7 +752,9 @@ class Table(Widget):
     def index_header_mapping(self):
         return {i: h for h, i in self.header_index_mapping.items()}
 
-    def row_at_index(self, at_index):
+    def __getitem__(self, at_index):
+        if not isinstance(at_index, int):
+            raise TypeError('table indexing only accepts integers')
         return self.Row(self, at_index, logger=self.logger)
 
     def row(self, **filters):
@@ -679,6 +763,23 @@ class Table(Widget):
     def __iter__(self):
         return self.rows()
 
+    def _get_number_preceeding_rows(self, row_el):
+        """This is a sort of trick that helps us remove stale element errors.
+
+        We know that correct tables only have ``<tr>`` elements next to each other. We do not want
+        to pass around webelements because they can get stale. Therefore this trick will give us the
+        number of elements that precede this element, effectively giving us the index of the row.
+
+        How simple.
+        """
+        return self.browser.execute_script(
+            """\
+            var prev = []; var element = arguments[0];
+            while (element.previousElementSibling)
+                prev.push(element = element.previousElementSibling);
+            return prev.length;
+            """, row_el)
+
     def rows(self, **filters):
         if not filters:
             return self._all_rows()
@@ -686,8 +787,8 @@ class Table(Widget):
             return self._filtered_rows(**filters)
 
     def _all_rows(self):
-        for row_element in self.browser.elements(self.ROWS, parent=self):
-            yield self.Row(self, row_element, logger=self.logger)
+        for row_pos in range(len(self.browser.elements(self.ROWS, parent=self))):
+            yield self.Row(self, row_pos, logger=self.logger)
 
     def _filtered_rows(self, **filters):
         # Pre-process the filters
@@ -731,4 +832,4 @@ class Table(Widget):
         query = './/tr[{}]'.format(' and '.join(query_parts))
 
         for row_element in self.browser.elements(query, parent=self):
-            yield self.Row(self, row_element, logger=self.logger)
+            yield self.Row(self, self._get_number_preceeding_rows(row_element), logger=self.logger)
