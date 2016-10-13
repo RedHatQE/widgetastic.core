@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from widgetastic.log import call_unlogged
+import pytest
+from widgetastic.log import call_unlogged, call_sig
 from widgetastic.widget import View, Text
 
 
@@ -27,3 +28,14 @@ def test_normal_method():
             return call_unlogged(super(AnotherClass, self).method)
 
     assert AnotherClass().method()
+
+
+@pytest.mark.parametrize("args, kwargs, sig", [
+    ((), {}, "()"),
+    ((1,), {}, "(1)"),
+    ((), {'a': 1}, "(a=1)"),
+    ((1,), {'a': 1}, "(1, a=1)"),
+
+])
+def test_call_sig(args, kwargs, sig):
+    assert call_sig(args, kwargs) == sig
