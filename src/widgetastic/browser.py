@@ -429,6 +429,10 @@ class Browser(object):
             *args: See :py:meth:`elements`
             **kwargs: See :py:meth:`elements`
         """
+        no_post = False
+        if 'no_post' in kwargs:
+            no_post = kwargs.pop('no_post')
+
         text = six.text_type(text) or ''
         file_intercept = False
         # If the element is input type file, we will need to use the file detector
@@ -443,7 +447,8 @@ class Browser(object):
             el = self.move_to_element(*args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
             result = el.send_keys(text)
-            self.plugin.after_keyboard_input(el, text)
+            if not no_post:
+                self.plugin.after_keyboard_input(el, text)
             return result
         finally:
             # Always the UselessFileDetector for all other kinds of fields, so do not leave
