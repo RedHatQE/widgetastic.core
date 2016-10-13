@@ -13,6 +13,15 @@ null_logger.addHandler(logging.NullHandler())
 
 
 def call_sig(args, kwargs):
+    """Generates a function-like signature of function called with certain parameters.
+
+    Args:
+        args: *args
+        kwargs: **kwargs
+
+    Returns:
+        A string that contains parameters in parentheses like the call to it.
+    """
     arglist = [repr(x) for x in args]
     arglist.extend("{0}={1!r}".format(k, v) for k, v in kwargs.items())
     return "({args})".format(
