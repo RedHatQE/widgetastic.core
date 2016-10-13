@@ -12,6 +12,14 @@ null_logger = logging.getLogger('widgetastic_null')
 null_logger.addHandler(logging.NullHandler())
 
 
+def call_sig(args, kwargs):
+    arglist = [repr(x) for x in args]
+    arglist.extend("{0}={1!r}".format(k, v) for k, v in kwargs.items())
+    return "({args})".format(
+        args=', '.join(arglist),
+    )
+
+
 class PrependParentsAdapter(logging.LoggerAdapter):
     """This class ensures the path to the widget is represented in the log records."""
     def process(self, msg, kwargs):
@@ -51,17 +59,15 @@ def logged(log_args=False, log_result=False):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
             start_time = time.time()
-            if log_args:
-                signature = '{}{!r}{!r}'.format(f.__name__, args, kwargs)
-            else:
-                signature = f.__name__
+            signature = f.__name__ + (call_sig(args, kwargs) if log_args else '')
             self.logger.debug('%s started', signature)
             try:
                 result = f(self, *args, **kwargs)
             except DoNotReadThisWidget:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 self.logger.info(
-                    '%s not read on widget\'s request (elapsed %.0f ms)', signature, elapsed_time)
+                    '%s not read on widget\'s request (elapsed %.0f ms)',
+                    signature, elapsed_time)
                 raise
             except Exception as e:
                 elapsed_time = (time.time() - start_time) * 1000.0
