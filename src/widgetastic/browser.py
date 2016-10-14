@@ -7,6 +7,7 @@ import time
 from cached_property import cached_property
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.file_detector import LocalFileDetector, UselessFileDetector
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
@@ -443,7 +444,15 @@ class Browser(object):
             el = self.move_to_element(*args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
             result = el.send_keys(text)
-            self.plugin.after_keyboard_input(el, text)
+            if Keys.ENTER not in text:
+                try:
+                    self.plugin.after_keyboard_input(el, text)
+                except StaleElementReferenceException:
+                    pass
+            else:
+                self.logger.info(
+                    'skipped the after_keyboard_input call due to %r containing ENTER.',
+                    text)
             return result
         finally:
             # Always the UselessFileDetector for all other kinds of fields, so do not leave
