@@ -257,13 +257,14 @@ class Browser(object):
         """Clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).click().perform()
 
-    def click(self, *args, **kwargs):
+    def click(self, locator, *args, **kwargs):
         """Clicks at a specific element using two separate events (mouse move, mouse click).
 
         Args: See :py:meth:`elements`
         """
+        self.logger.debug('click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
-        el = self.move_to_element(*args, **kwargs)
+        el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         # and then click on current mouse position
         self.perform_click()
@@ -272,15 +273,19 @@ class Browser(object):
                 self.plugin.ensure_page_safe()
             except UnexpectedAlertPresentException:
                 pass
-        self.plugin.after_click(el)
+        try:
+            self.plugin.after_click(el)
+        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+            pass
 
-    def raw_click(self, *args, **kwargs):
+    def raw_click(self, locator, *args, **kwargs):
         """Clicks at a specific element using the direct event.
 
         Args: See :py:meth:`elements`
         """
+        self.logger.debug('raw_click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
-        el = self.element(*args, **kwargs)
+        el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         el.click()
         if not ignore_ajax:
@@ -288,7 +293,10 @@ class Browser(object):
                 self.plugin.ensure_page_safe()
             except UnexpectedAlertPresentException:
                 pass
-        self.plugin.after_click(el)
+        try:
+            self.plugin.after_click(el)
+        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+            pass
 
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
@@ -329,6 +337,7 @@ class Browser(object):
         Returns:
             :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
+        self.logger.debug('move_to_element: %r', locator)
         el = self.element(locator, *args, **kwargs)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
@@ -351,10 +360,12 @@ class Browser(object):
         return el
 
     def move_by_offset(self, x, y):
+        self.logger.debug('move_by_offset X:%r Y:%r', x, y)
         ActionChains(self.selenium).move_by_offset(x, y)
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
+        self.logger.debug('execute_script: %r', script)
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
 
     def classes(self, *args, **kwargs):
@@ -412,8 +423,10 @@ class Browser(object):
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
             self.element(*args, **kwargs), attr, value)
 
-    def clear(self, *args, **kwargs):
-        el = self.element(*args, **kwargs)
+    def clear(self, locator, *args, **kwargs):
+        """Clears a text input with given locator."""
+        self.logger.debug('clear: %r', locator)
+        el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
         result = el.clear()
         self.plugin.after_keyboard_input(el, None)
@@ -422,7 +435,7 @@ class Browser(object):
     def is_selected(self, *args, **kwargs):
         return self.element(*args, **kwargs).is_selected()
 
-    def send_keys(self, text, *args, **kwargs):
+    def send_keys(self, text, locator, *args, **kwargs):
         """Sends keys to the element. Detects the file inputs automatically.
 
         Args:
@@ -433,16 +446,17 @@ class Browser(object):
         text = six.text_type(text) or ''
         file_intercept = False
         # If the element is input type file, we will need to use the file detector
-        if self.tag(*args, **kwargs) == 'input':
-            type_attr = self.get_attribute('type', *args, **kwargs)
+        if self.tag(locator, *args, **kwargs) == 'input':
+            type_attr = self.get_attribute('type', locator, *args, **kwargs)
             if type_attr and type_attr.strip() == 'file':
                 file_intercept = True
         try:
             if file_intercept:
                 # If we detected a file upload field, let's use the file detector.
                 self.selenium.file_detector = LocalFileDetector()
-            el = self.move_to_element(*args, **kwargs)
+            el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
+            self.logger.debug('send_keys %r to %r', text, locator)
             result = el.send_keys(text)
             if Keys.ENTER not in text:
                 try:
@@ -493,6 +507,7 @@ class Browser(object):
         try:
             while self.alert_present:
                 alert = self.get_alert()
+                self.logger.info('dismissing alert: %r', alert.text)
                 alert.dismiss()
         except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
@@ -529,9 +544,16 @@ class Browser(object):
             if wait:
                 WebDriverWait(self.selenium, wait).until(expected_conditions.alert_is_present())
             popup = self.get_alert()
+            self.logger.info('handling alert: %r', popup.text)
             if prompt is not None:
+                self.logger.info('  answering prompt: %r', prompt)
                 popup.send_keys(prompt)
-            popup.dismiss() if cancel else popup.accept()
+            if cancel:
+                self.logger.info('  dismissing')
+                popup.dismiss()
+            else:
+                self.logger.info('  accepting')
+                popup.accept()
             # Should any problematic "double" alerts appear here, we don't care, just blow'em away.
             self.dismiss_any_alerts()
             return True
