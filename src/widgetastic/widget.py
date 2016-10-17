@@ -687,6 +687,11 @@ class Table(Widget):
         # You can put multiple filters together.
         # And you can of course query a songle row
         row = view.table.row(column_name='asdf')
+        # You can also look the rows up by their indices
+        rows = view.table.rows((0, 'asdf'))  # First column has asdf exactly
+        rows = view.table.rows((1, 'contains', 'asdf'))  # Second column contains asdf
+        # The partial search methods are the same like for keywords.
+        # You can add multiple tuple queries and also combine them with keyword search
 
         # When you have a row, you can do these things.
         row[0]  # => gives you the first column cell in the row
@@ -757,8 +762,8 @@ class Table(Widget):
             raise TypeError('table indexing only accepts integers')
         return self.Row(self, at_index, logger=self.logger)
 
-    def row(self, **filters):
-        return list(self.rows(**filters))[0]
+    def row(self, *extra_filters, **filters):
+        return list(self.rows(*extra_filters, **filters))[0]
 
     def __iter__(self):
         return self.rows()
@@ -780,17 +785,17 @@ class Table(Widget):
             return prev.length;
             """, row_el)
 
-    def rows(self, **filters):
-        if not filters:
+    def rows(self, *extra_filters, **filters):
+        if not (filters or extra_filters):
             return self._all_rows()
         else:
-            return self._filtered_rows(**filters)
+            return self._filtered_rows(*extra_filters, **filters)
 
     def _all_rows(self):
         for row_pos in range(len(self.browser.elements(self.ROWS, parent=self))):
             yield self.Row(self, row_pos, logger=self.logger)
 
-    def _filtered_rows(self, **filters):
+    def _filtered_rows(self, *extra_filters, **filters):
         # Pre-process the filters
         processed_filters = defaultdict(list)
         for filter_column, filter_value in six.iteritems(filters):
@@ -801,6 +806,28 @@ class Table(Widget):
                 method = None
             column_index = self.header_index_mapping[self.attributized_headers[column]]
             processed_filters[column_index].append((method, filter_value))
+
+        for argfilter in extra_filters:
+            if not isinstance(argfilter, (tuple, list)):
+                raise TypeError('Wrong type passed into tuplefilters (expected tuple or list)')
+            if len(argfilter) == 2:
+                # Column / string match
+                column, value = argfilter
+                method = None
+            elif len(argfilter) == 3:
+                # Column / method / string match
+                column, method, value = argfilter
+            else:
+                raise ValueError(
+                    'tuple filters can only be (column, string) or (column, method, string)')
+
+            # Here we can also get ints, so ...
+            if isinstance(column, int):
+                column_index = column
+            else:
+                column_index = self.header_index_mapping[self.attributized_headers[column]]
+
+            processed_filters[column_index].append((method, value))
 
         # Build the query
         query_parts = []

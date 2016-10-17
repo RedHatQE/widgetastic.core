@@ -89,6 +89,10 @@ def test_table(browser):
 
     assert len(list(view.table.rows(column_1__startswith='bar_', column_1__endswith='_x'))) == 1
 
+    assert len(list(view.table.rows((0, 'asdf')))) == 1
+    assert len(list(view.table.rows((1, 'startswith', 'bar_')))) == 2
+    assert len(list(view.table.rows((1, 'startswith', 'bar_'), column_1__endswith='_x'))) == 1
+
     row = view.table.row(column_1='bar_x')
     assert row[0].text == 'foo_x'
     assert row['Column 1'].text == 'bar_x'
