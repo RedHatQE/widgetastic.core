@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
+import re
 
 from widgetastic.widget import View, Table, Text, TextInput, Checkbox
 from widgetastic.utils import Fillable
@@ -92,6 +93,22 @@ def test_table(browser):
     assert len(list(view.table.rows((0, 'asdf')))) == 1
     assert len(list(view.table.rows((1, 'startswith', 'bar_')))) == 2
     assert len(list(view.table.rows((1, 'startswith', 'bar_'), column_1__endswith='_x'))) == 1
+
+    assert len(list(view.table.rows((1, re.compile(r'_x$'))))) == 1
+    assert len(list(view.table.rows((1, re.compile(r'^bar_'))))) == 2
+    assert len(list(view.table.rows(('column_1', re.compile(r'^bar_'))))) == 2
+    assert len(list(view.table.rows(('Column 1', re.compile(r'^bar_'))))) == 2
+    assert len(list(view.table.rows((0, re.compile(r'^foo_')), (3, re.compile(r'_x$'))))) == 1
+    assert len(list(view.table.rows(
+        (0, re.compile(r'^foo_')),
+        (1, 'contains', '_'),
+        column_3__endswith='_x'))) == 1
+
+    row = view.table.row(
+        (0, re.compile(r'^foo_')),
+        (1, 'contains', '_'),
+        column_3__endswith='_x')
+    assert row[0].text == 'foo_x'
 
     row = view.table.row(column_1='bar_x')
     assert row[0].text == 'foo_x'

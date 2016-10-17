@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 """This module contains the base classes that are used to implement the more specific behaviour."""
 
 import inspect
+import re
 import six
 from cached_property import cached_property
 from collections import defaultdict
@@ -785,6 +786,18 @@ class Table(Widget):
             return prev.length;
             """, row_el)
 
+    def map_column(self, column):
+        if isinstance(column, int):
+            return column
+        else:
+            try:
+                return self.header_index_mapping[self.attributized_headers[column]]
+            except KeyError:
+                try:
+                    return self.header_index_mapping[column]
+                except KeyError:
+                    raise NameError('Could not find column {!r} in the table'.format(column))
+
     def rows(self, *extra_filters, **filters):
         if not (filters or extra_filters):
             return self._all_rows()
@@ -798,14 +811,18 @@ class Table(Widget):
     def _filtered_rows(self, *extra_filters, **filters):
         # Pre-process the filters
         processed_filters = defaultdict(list)
+        regexp_filters = []
         for filter_column, filter_value in six.iteritems(filters):
             if '__' in filter_column:
                 column, method = filter_column.rsplit('__', 1)
             else:
                 column = filter_column
                 method = None
-            column_index = self.header_index_mapping[self.attributized_headers[column]]
-            processed_filters[column_index].append((method, filter_value))
+                if isinstance(filter_value, re._pattern_type):
+                    regexp_filters.append((self.map_column(column), filter_value))
+                    continue
+
+            processed_filters[self.map_column(column)].append((method, filter_value))
 
         for argfilter in extra_filters:
             if not isinstance(argfilter, (tuple, list)):
@@ -814,6 +831,9 @@ class Table(Widget):
                 # Column / string match
                 column, value = argfilter
                 method = None
+                if isinstance(value, re._pattern_type):
+                    regexp_filters.append((self.map_column(column), value))
+                    continue
             elif len(argfilter) == 3:
                 # Column / method / string match
                 column, method, value = argfilter
@@ -821,13 +841,7 @@ class Table(Widget):
                 raise ValueError(
                     'tuple filters can only be (column, string) or (column, method, string)')
 
-            # Here we can also get ints, so ...
-            if isinstance(column, int):
-                column_index = column
-            else:
-                column_index = self.header_index_mapping[self.attributized_headers[column]]
-
-            processed_filters[column_index].append((method, value))
+            processed_filters[self.map_column(column)].append((method, value))
 
         # Build the query
         query_parts = []
@@ -856,7 +870,24 @@ class Table(Widget):
             query_parts.append(
                 './td[{}][{}]'.format(column_index + 1, ' and '.join(col_query_parts)))
 
-        query = './/tr[{}]'.format(' and '.join(query_parts))
+        if query_parts:
+            query = './/tr[{}]'.format(' and '.join(query_parts))
+        else:
+            # When using ONLY regexps, we might see no query_parts, therefore default query
+            query = self.ROWS
 
+        # Preload the rows to prevent stale element exceptions
+        rows = []
         for row_element in self.browser.elements(query, parent=self):
-            yield self.Row(self, self._get_number_preceeding_rows(row_element), logger=self.logger)
+            rows.append(
+                self.Row(self, self._get_number_preceeding_rows(row_element), logger=self.logger))
+
+        for row in rows:
+            if regexp_filters:
+                for regexp_column, regexp_filter in regexp_filters:
+                    if regexp_filter.search(row[regexp_column].text) is None:
+                        break
+                else:
+                    yield row
+            else:
+                yield row
