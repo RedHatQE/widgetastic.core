@@ -526,6 +526,9 @@ class Text(Widget, ClickableMixin):
     def read(self):
         return self.text
 
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.locator)
+
 
 class BaseInput(Widget):
     """This represents the bare minimum to interact with bogo-standard form inputs.
@@ -540,6 +543,12 @@ class BaseInput(Widget):
         Widget.__init__(self, parent, logger=logger)
         self.name = name
         self.id = id
+
+    def __repr__(self):
+        if self.name is not None:
+            return '{}(name={!r})'.format(type(self).__name__, self.name)
+        else:
+            return '{}(id={!r})'.format(type(self).__name__, self.id)
 
     def __locator__(self):
         if self.name is not None:
@@ -615,6 +624,9 @@ class TableColumn(Widget, ClickableMixin):
     def __locator__(self):
         return self.browser.element('./td[{}]'.format(self.position + 1), parent=self.parent)
 
+    def __repr__(self):
+        return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
+
     @property
     def text(self):
         return self.browser.text(self)
@@ -634,6 +646,9 @@ class TableRow(Widget, ClickableMixin):
     def __init__(self, parent, index, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.index = index
+
+    def __repr__(self):
+        return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
         loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
@@ -719,6 +734,9 @@ class Table(Widget):
     def __init__(self, parent, locator, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
+
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.locator)
 
     def __locator__(self):
         return self.locator
