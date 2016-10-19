@@ -369,7 +369,7 @@ class Browser(object):
             self.logger.debug('execute_script: %r', script)
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
 
-    def classes(self, *args, **kwargs):
+    def classes(self, locator, *args, **kwargs):
         """Return a list of classes attached to the element.
 
         Args: See :py:meth:`elements`
@@ -377,9 +377,10 @@ class Browser(object):
         Returns:
             A :py:class:`set` of strings with classes.
         """
-        return set(self.execute_script(
-            "return arguments[0].classList;", self.element(*args, **kwargs), silent=True))
-
+        result = set(self.execute_script(
+            "return arguments[0].classList;", self.element(locator, *args, **kwargs), silent=True))
+        self.logger.debug('css classes for %r => %r', locator, result)
+        return result
 
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.
