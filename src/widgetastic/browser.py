@@ -365,7 +365,8 @@ class Browser(object):
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
-        self.logger.debug('execute_script: %r', script)
+        if not kwargs.pop('silent', False):
+            self.logger.debug('execute_script: %r', script)
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
 
     def classes(self, *args, **kwargs):
@@ -377,7 +378,8 @@ class Browser(object):
             A :py:class:`set` of strings with classes.
         """
         return set(self.execute_script(
-            "return arguments[0].classList;", self.element(*args, **kwargs)))
+            "return arguments[0].classList;", self.element(*args, **kwargs), silent=True))
+
 
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.
