@@ -16,6 +16,7 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         'cached_property',
+        'jsmin',
         'selenium',
         'selenium-smart-locator',
         'wait_for',
