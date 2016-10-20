@@ -50,7 +50,6 @@ class DefaultPlugin(object):
 
     def ensure_page_safe(self, timeout='10s'):
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
-        self.browser.dismiss_any_alerts()
 
         def _check():
             result = self.browser.execute_script(self.ENSURE_PAGE_SAFE)
@@ -60,7 +59,7 @@ class DefaultPlugin(object):
             except AttributeError:
                 return True
 
-        wait_for(_check, timeout=timeout, delay=0.2)
+        wait_for(_check, timeout=timeout, delay=0.2, very_quiet=True)
 
     def after_click(self, element):
         """Invoked after clicking on an element."""
@@ -190,7 +189,9 @@ class Browser(object):
         else:
             return None
 
-    def elements(self, locator, parent=None, check_visibility=False):
+    def elements(
+            self, locator, parent=None, check_visibility=False, check_safe=True,
+            force_check_safe=False):
         """Method that resolves locators into selenium webelements.
 
         Args:
@@ -204,11 +205,17 @@ class Browser(object):
                 * Any other object that implements ``__locator__``
             parent: A parent element identificator. Can be any valid locator.
             check_visibility: If set to ``True`` it will filter out elements that are not visible.
+            check_safe: You can turn off the page safety check. It is turned off automatically when
+                :py:class:`WebElement` is passed.
+            force_check_safe: If you want to override the :py:class:`WebElement` detection and force
+                the page safety check, pass True.
 
         Returns:
             A :py:class:`list` of :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
-        self.plugin.ensure_page_safe()
+        if (check_safe and not isinstance(locator, WebElement)) or force_check_safe:
+            # If we have a webelement so it is pointless to check it
+            self.plugin.ensure_page_safe()
         locator = self._process_locator(locator)
         # Get result
         if isinstance(locator, WebElement):

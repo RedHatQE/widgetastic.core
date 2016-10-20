@@ -964,6 +964,23 @@ class Select(Widget):
         ''')
 
     SELECTED_OPTIONS = jsmin('return arguments[0].selectedOptions;')
+    SELECTED_OPTIONS_TEXT = jsmin('''\
+            var result_arr = [];
+            var opt_elements = arguments[0].selectedOptions;
+            for(var i = 0; i < opt_elements.length; i++){
+                result_arr.push(opt_elements[i].innerHTML);
+            }
+            return result_arr;
+        ''')
+
+    SELECTED_OPTIONS_VALUE = jsmin('''\
+            var result_arr = [];
+            var opt_elements = arguments[0].selectedOptions;
+            for(var i = 0; i < opt_elements.length; i++){
+                result_arr.push(opt_elements[i].getAttribute("value"));
+            }
+            return result_arr;
+        ''')
 
     def __init__(self, parent, locator=None, id=None, name=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
@@ -1012,10 +1029,11 @@ class Select(Widget):
     @property
     def all_selected_options(self):
         """Returns a list of all selected options as their displayed texts."""
+        parser = html_parser.HTMLParser()
         return [
-            self.browser.text(option)
+            normalize_space(parser.unescape(option))
             for option
-            in self.browser.execute_script(self.SELECTED_OPTIONS, self.browser.element(self))]
+            in self.browser.execute_script(self.SELECTED_OPTIONS_TEXT, self.browser.element(self))]
 
     @property
     def all_selected_values(self):
@@ -1023,10 +1041,9 @@ class Select(Widget):
 
         If the value is not present, it is ignored.
         """
-        values = [
-            self.browser.get_attribute('value', option)
-            for option
-            in self.browser.execute_script(self.SELECTED_OPTIONS, self.browser.element(self))]
+        values = self.browser.execute_script(
+            self.SELECTED_OPTIONS_VALUE,
+            self.browser.element(self))
         return [value for value in values if value is not None]
 
     @property
