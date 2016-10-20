@@ -615,6 +615,27 @@ class Checkbox(BaseInput, ClickableMixin):
             return True
 
 
+class MultiSelect(BaseInput):
+    """This widget represents the bogo-standard form select.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+    """
+
+    @property
+    def values(self):
+        return [element.text for element in self.browser.elements('./option', self)]
+
+    def read(self):
+        return self.values
+
+    def fill(self, value):
+        element = self.browser.element('./option[text()="{}"]'.format(value), self)
+        element.click()
+        return True
+
+
 class TableColumn(Widget, ClickableMixin):
     """Represents a cell in the row."""
     def __init__(self, parent, position, logger=None):
