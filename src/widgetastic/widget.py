@@ -710,6 +710,15 @@ class Table(Widget):
         rows = view.table.rows((1, 'contains', 'asdf'))  # Second column contains asdf
         # The partial search methods are the same like for keywords.
         # You can add multiple tuple queries and also combine them with keyword search
+        # You are also able to filter based on some row-based filters
+        # Yield only those rows who have data-foo=bar in their tr:
+        view.table.rows(_row__attr=('data-foo', 'bar'))
+        # You can do it similarly for the other operations
+        view.table.rows(_row__attr_startswith=('data-foo', 'bar'))
+        view.table.rows(_row__attr_endswith=('data-foo', 'bar'))
+        view.table.rows(_row__attr_contains=('data-foo', 'bar'))
+        # First item in the tuple is the attribute name, second the operand of the operation.
+        # It is perfectly possibly to combine these queries with other kinds
 
         # When you have a row, you can do these things.
         row[0]  # => gives you the first column cell in the row
@@ -832,7 +841,11 @@ class Table(Widget):
         # Pre-process the filters
         processed_filters = defaultdict(list)
         regexp_filters = []
+        row_filters = []
         for filter_column, filter_value in six.iteritems(filters):
+            if filter_column.startswith('_row__'):
+                row_filters.append((filter_column.split('__', 1)[-1], filter_value))
+                continue
             if '__' in filter_column:
                 column, method = filter_column.rsplit('__', 1)
             else:
@@ -890,8 +903,40 @@ class Table(Widget):
             query_parts.append(
                 './td[{}][{}]'.format(column_index + 1, ' and '.join(col_query_parts)))
 
-        if query_parts:
+        # Row query
+        row_parts = []
+        for row_action, row_value in row_filters:
+            row_action = row_action.lower()
+            if row_action.startswith('attr'):
+                try:
+                    attr_name, attr_value = row_value
+                except ValueError:
+                    raise ValueError(
+                        'When passing _row__{}= into the row filter, you must pass it a 2-tuple'
+                        .format(row_action))
+                if row_action == 'attr_startswith':
+                    row_parts.append('starts-with(@{}, {})'.format(attr_name, quote(attr_value)))
+                elif row_action == 'attr':
+                    row_parts.append('@{}={}'.format(attr_name, quote(attr_value)))
+                elif row_action == 'attr_endswith':
+                    row_parts.append(
+                        ('substring(@{attr}, '
+                         'string-length(@{attr}) - string-length({value}) + 1)={value}').format(
+                            attr=attr_name,
+                            value='normalize-space({value})'.format(value=quote(attr_value))))
+                elif row_action == 'attr_contains':
+                    row_parts.append('contains(@{}, {})'.format(attr_name, quote(attr_value)))
+                else:
+                    raise ValueError('Unsupported action {}'.format(row_action))
+            else:
+                raise ValueError('Unsupported action {}'.format(row_action))
+
+        if query_parts and row_parts:
+            query = './/tr[{}][{}]'.format(' and '.join(row_parts), ' and '.join(query_parts))
+        elif query_parts:
             query = './/tr[{}]'.format(' and '.join(query_parts))
+        elif row_parts:
+            query = './/tr[{}]'.format(' and '.join(row_parts))
         else:
             # When using ONLY regexps, we might see no query_parts, therefore default query
             query = self.ROWS

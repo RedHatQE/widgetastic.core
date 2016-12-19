@@ -90,6 +90,24 @@ def test_table(browser):
 
     assert len(list(view.table.rows(column_1__startswith='bar_', column_1__endswith='_x'))) == 1
 
+    assert len(list(view.table.rows(_row__attr=('data-test', 'def-345')))) == 1
+    assert len(list(view.table.rows(_row__attr_startswith=('data-test', 'abc')))) == 2
+    assert len(list(view.table.rows(_row__attr_endswith=('data-test', '345')))) == 2
+    assert len(list(view.table.rows(_row__attr_contains=('data-test', '3')))) == 3
+    assert len(list(view.table.rows(
+        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
+
+    assert len(list(view.table.rows(_row__attr=('data-test', 'abc-345'), column_1='qwer'))) == 0
+
+    with pytest.raises(ValueError):
+        list(view.table.rows(_row__papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
+        list(view.table.rows(_row__attr_papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
+        list(view.table.rows(_row__attr='foobar'))
+
     assert len(list(view.table.rows((0, 'asdf')))) == 1
     assert len(list(view.table.rows((1, 'startswith', 'bar_')))) == 2
     assert len(list(view.table.rows((1, 'startswith', 'bar_'), column_1__endswith='_x'))) == 1
