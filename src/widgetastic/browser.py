@@ -28,6 +28,7 @@ from .xpath import normalize_space
 def is_valid(cls, strategy):
     return strategy in {'xpath', 'css'}
 
+
 By.is_valid = classmethod(is_valid)
 
 
