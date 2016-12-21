@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import pytest
+from widgetastic.utils import ParametrizedString, Parameter
 from widgetastic.widget import View, Widget, do_not_read_this_widget
 
 
@@ -110,3 +112,20 @@ def test_do_not_read_widget(browser):
     view = AView(browser)
     data = view.read()
     assert 'w2' not in data
+
+
+def test_view_parameter(browser):
+    class MyView(View):
+        my_param = Parameter('foo')
+
+    assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar'
+
+    with pytest.raises(AttributeError):
+        MyView(browser).my_param
+
+
+def test_view_parametrized_string(browser):
+    class MyView(View):
+        my_param = ParametrizedString('{foo} {foo|quote}')
+
+    assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar "bar"'

@@ -3,8 +3,11 @@ from __future__ import unicode_literals
 """This module contains some supporting classes."""
 
 import re
+import string
 from cached_property import cached_property
 from threading import Lock
+
+from . import xpath
 
 
 class Widgetable(object):
@@ -316,6 +319,66 @@ class Fillable(object):
 
     def as_fill_value(self):
         raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
+
+
+class ParametrizedString(object):
+    """Class used to generate strings based on the context passed to the view.
+
+    Useful for parametrized views.
+
+    Supported filters: ``quote`` (XPath)
+
+    Args:
+        template: String template in ``.format()`` format, use pipe to add a filter.
+    """
+    def __init__(self, template):
+        self.template = template
+        formatter = string.Formatter()
+        self.format_params = {}
+        for _, param_name, _, _ in formatter.parse(self.template):
+            param = param_name.split('|', 1)
+            if len(param) == 1:
+                self.format_params[param_name] = (param[0], ())
+            else:
+                context_var_name = param[0]
+                ops = param[1].split('|')
+                self.format_params[param_name] = (context_var_name, tuple(ops))
+
+    def resolve(self, view):
+        format_dict = {}
+        for format_key, (context_name, ops) in self.format_params.items():
+            try:
+                param_value = view.context[context_name]
+            except AttributeError:
+                raise TypeError('Parameter class must be defined on a view!')
+            except KeyError:
+                raise AttributeError(
+                    'Parameter {} is not present in the context'.format(self.param_name))
+            for op in ops:
+                if op == 'quote':
+                    param_value = xpath.quote(param_value)
+                else:
+                    raise NameError('Unknown operation {} for {}'.format(op, format_key))
+
+            format_dict[format_key] = param_value
+
+        return self.template.format(**format_dict)
+
+    def __get__(self, o, t=None):
+        if o is None:
+            return self
+
+        return self.resolve(o)
+
+
+class Parameter(ParametrizedString):
+    """Class used to expose a context parameter as an object attribute.
+
+    Args:
+        param: Name of the param.
+    """
+    def __init__(self, param):
+        super(Parameter, self).__init__('{' + param + '}')
 
 
 def _prenormalize_text(text):
