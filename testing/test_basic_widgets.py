@@ -4,7 +4,7 @@ import pytest
 import re
 
 from widgetastic.widget import View, Table, Text, TextInput, Checkbox, Select
-from widgetastic.utils import Fillable
+from widgetastic.utils import Fillable, ParametrizedString
 
 
 def test_basic_widgets(browser):
@@ -243,3 +243,23 @@ def test_multi_select(browser):
 
     assert view.select.fill(['Foo', ('by_value', 'bar')])
     assert view.select.read() == ['Foo', 'Bar']
+
+
+def test_parametrized_locator(browser):
+    class TestForm(View):
+        header = Text(ParametrizedString('.//h{header}'))
+        input = TextInput(name=ParametrizedString('input{input}'))
+
+    good = TestForm(browser, additional_context={'header': 3, 'input': 1})
+    assert good.header.text == 'test test'
+    good.input.fill('')
+    assert good.input.read() == ''
+    assert good.input.fill('foo')
+    assert good.input.read() == 'foo'
+
+    bad = TestForm(browser)
+    with pytest.raises(AttributeError):
+        bad.header.text
+
+    with pytest.raises(AttributeError):
+        bad.input.read()

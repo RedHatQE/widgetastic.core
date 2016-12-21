@@ -17,7 +17,7 @@ from .browser import Browser
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
-from .utils import Widgetable, Fillable, attributize_string, normalize_space
+from .utils import Widgetable, Fillable, ParametrizedString, attributize_string, normalize_space
 from .xpath import quote
 
 
@@ -33,6 +33,25 @@ def wrap_fill_method(method):
         return method(self, Fillable.coerce(value), *args, **kwargs)
 
     return wrapped
+
+
+def process_parameters(parent_obj, args, kwargs):
+    """Processes the widget input parameters - checks if args or kwarg values are parametrized."""
+    new_args = []
+    for arg in args:
+        if isinstance(arg, ParametrizedString):
+            new_args.append(arg.resolve(parent_obj))
+        else:
+            new_args.append(arg)
+
+    new_kwargs = {}
+    for k, v in kwargs.items():
+        if isinstance(v, ParametrizedString):
+            new_kwargs[k] = v.resolve(parent_obj)
+        else:
+            new_kwargs[k] = v
+
+    return new_args, new_kwargs
 
 
 class WidgetDescriptor(Widgetable):
@@ -71,7 +90,9 @@ class WidgetDescriptor(Widgetable):
                 kwargs['logger'] = create_widget_logger(widget_path, parent_logger)
             except AttributeError:
                 pass
-            obj._widget_cache[self] = self.klass(obj, *self.args, **kwargs)
+
+            args, kwargs = process_parameters(obj, self.args, kwargs)
+            obj._widget_cache[self] = self.klass(obj, *args, **kwargs)
         widget = obj._widget_cache[self]
         obj.child_widget_accessed(widget)
         return widget
