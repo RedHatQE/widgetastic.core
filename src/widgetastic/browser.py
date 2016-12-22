@@ -9,6 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.file_detector import LocalFileDetector, UselessFileDetector
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
@@ -222,9 +223,14 @@ class Browser(object):
         if isinstance(locator, WebElement):
             result = [locator]
         else:
-            # Get the direct parent object
             if parent:
-                root_element = self.element(parent, check_visibility=check_visibility)
+                if isinstance(parent, Browser):
+                    root_element = parent.selenium
+                elif isinstance(parent, (WebElement)) or hasattr(parent, '__locator__'):
+                    root_element = self.element(parent, check_visibility=check_visibility)
+                else:
+                    # TODO: handle intermediate views that do not have __locator__
+                    root_element = self.selenium
             else:
                 root_element = self.selenium
             result = root_element.find_elements(*locator)

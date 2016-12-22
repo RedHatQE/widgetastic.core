@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 import pytest
-from widgetastic.utils import ParametrizedString, Parameter
-from widgetastic.widget import View, Widget, do_not_read_this_widget
+from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter
+from widgetastic.widget import (
+    ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget)
 
 
 def test_can_create_view(browser):
@@ -129,3 +130,26 @@ def test_view_parametrized_string(browser):
         my_param = ParametrizedString('{foo} {foo|quote}')
 
     assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar "bar"'
+
+
+def test_parametrized_view(browser):
+    class MyView(View):
+        class table_row(ParametrizedView):
+            PARAMETERS = ('rowid', )
+            ROOT = ParametrizedLocator('.//tr[@data-test={rowid|quote}]')
+
+            col1 = Text('./td[2]')
+
+    view = MyView(browser)
+    assert isinstance(view.table_row, ParametrizedViewRequest)
+    assert view.table_row('abc-123').col1.text == 'qwer'
+    assert view.table_row(rowid='abc-345').col1.text == 'bar_x'
+
+    with pytest.raises(TypeError):
+        view.table_row()
+
+    with pytest.raises(TypeError):
+        view.table_row('foo', 'bar')
+
+    with pytest.raises(TypeError):
+        view.table_row(foo='bar')

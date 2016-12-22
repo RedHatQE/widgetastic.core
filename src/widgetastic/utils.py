@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import re
 import string
 from cached_property import cached_property
+from smartloc import Locator
 from threading import Lock
 
 from . import xpath
@@ -336,6 +337,8 @@ class ParametrizedString(object):
         formatter = string.Formatter()
         self.format_params = {}
         for _, param_name, _, _ in formatter.parse(self.template):
+            if param_name is None:
+                continue
             param = param_name.split('|', 1)
             if len(param) == 1:
                 self.format_params[param_name] = (param[0], ())
@@ -369,6 +372,12 @@ class ParametrizedString(object):
             return self
 
         return self.resolve(o)
+
+
+class ParametrizedLocator(ParametrizedString):
+    def __get__(self, o, t=None):
+        result = super(ParametrizedLocator, self).__get__(o, t)
+        return Locator(result)
 
 
 class Parameter(ParametrizedString):

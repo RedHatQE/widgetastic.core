@@ -17,7 +17,9 @@ from .browser import Browser
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
-from .utils import Widgetable, Fillable, ParametrizedString, attributize_string, normalize_space
+from .utils import (
+    Widgetable, Fillable, ParametrizedLocator, ParametrizedString, attributize_string,
+    normalize_space)
 from .xpath import quote
 
 
@@ -92,7 +94,11 @@ class WidgetDescriptor(Widgetable):
                 pass
 
             args, kwargs = process_parameters(obj, self.args, kwargs)
-            obj._widget_cache[self] = self.klass(obj, *args, **kwargs)
+            if issubclass(self.klass, ParametrizedView):
+                # Shortcut, don't cache as the ParametrizedViewRequest is not the widget yet
+                return ParametrizedViewRequest(obj, self.klass, *args, **kwargs)
+            else:
+                obj._widget_cache[self] = self.klass(obj, *args, **kwargs)
         widget = obj._widget_cache[self]
         obj.child_widget_accessed(widget)
         return widget
@@ -299,6 +305,12 @@ def _gen_locator_meth(loc):
     return __locator__
 
 
+def _gen_locator_root():
+    def __locator__(self):  # noqa
+        return self.ROOT
+    return __locator__
+
+
 class ViewMetaclass(WidgetMetaclass):
     """metaclass that ensures nested widgets' functionality from the declaration point of view.
 
@@ -326,8 +338,11 @@ class ViewMetaclass(WidgetMetaclass):
                 new_attrs[key] = value
         if 'ROOT' in new_attrs:
             # For handling the root locator of the View
-            rl = Locator(new_attrs['ROOT'])
-            new_attrs['__locator__'] = _gen_locator_meth(rl)
+            root = new_attrs['ROOT']
+            if isinstance(root, ParametrizedLocator):
+                new_attrs['__locator__'] = _gen_locator_root()
+            else:
+                new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
 
         new_attrs['_desc_name_mapping'] = desc_name_mapping
         return super(ViewMetaclass, cls).__new__(cls, name, bases, new_attrs)
@@ -361,9 +376,9 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             you to detect this.
     """
 
-    def __init__(self, parent, additional_context=None, logger=None):
+    def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
-        self.context = additional_context or {}
+        self.context = kwargs.pop('additional_context', {})
         self._widget_cache = {}
 
     def flush_widget_cache(self):
@@ -521,6 +536,50 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             yield getattr(self, widget_attr)
 
 
+class ParametrizedView(View):
+    """View that needs parameters to be run."""
+    PARAMETERS = ()
+
+
+class ParametrizedViewRequest(object):
+    def __init__(self, parent_object, view_class, *args, **kwargs):
+        self.parent_object = parent_object
+        self.view_class = view_class
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self, *args, **kwargs):
+        if len(args) > len(self.view_class.PARAMETERS):
+            raise TypeError(
+                'You passed more parameters than {} accepts'.format(self.view_class.__name__))
+        param_dict = {}
+        for passed_arg, required_arg in zip(args, self.view_class.PARAMETERS):
+            param_dict[required_arg] = passed_arg
+        for key, value in kwargs.items():
+            if key not in self.view_class.PARAMETERS:
+                raise TypeError('Unknown view parameter {}'.format(key))
+            param_dict[key] = value
+
+        for param in self.view_class.PARAMETERS:
+            if param not in param_dict:
+                raise TypeError(
+                    'You did not pass the required parameter {} into {}'.format(
+                        param, self.view_class.__name__))
+
+        new_kwargs = copy(self.kwargs)
+        if 'additional_context' not in self.kwargs:
+            new_kwargs['additional_context'] = {}
+        new_kwargs['additional_context'].update(param_dict)
+        result = self.view_class(self.parent_object, *self.args, **new_kwargs)
+        self.parent_object.child_widget_accessed(result)
+        return result
+
+    def __getattr__(self, attr):
+        raise AttributeError(
+            'This is not an instance of {}. You need to call this object and pass the required '
+            'parameters of the view.'.format(self.view_class.__name__))
+
+
 class ClickableMixin(object):
 
     @logged()
@@ -544,7 +603,7 @@ class Text(Widget, ClickableMixin):
 
     @property
     def text(self):
-        return self.browser.text(self)
+        return self.browser.text(self, parent=self.parent)
 
     def read(self):
         return self.text
