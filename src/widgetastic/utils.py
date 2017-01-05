@@ -351,12 +351,19 @@ class ParametrizedString(object):
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
             try:
-                param_value = view.context[context_name]
+                if context_name.startswith('@'):
+                    param_value = getattr(view, context_name[1:])
+                else:
+                    param_value = view.context[context_name]
             except AttributeError:
-                raise TypeError('Parameter class must be defined on a view!')
+                if context_name.startswith('@'):
+                    raise AttributeError(
+                        'Parameter {} is not present in the object'.format(context_name))
+                else:
+                    raise TypeError('Parameter class must be defined on a view!')
             except KeyError:
                 raise AttributeError(
-                    'Parameter {} is not present in the context'.format(self.param_name))
+                    'Parameter {} is not present in the context'.format(context_name))
             for op in ops:
                 if op == 'quote':
                     param_value = xpath.quote(param_value)

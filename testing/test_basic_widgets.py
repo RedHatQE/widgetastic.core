@@ -247,17 +247,22 @@ def test_multi_select(browser):
 
 def test_parametrized_locator(browser):
     class TestForm(View):
+        my_value = 3
         header = Text(ParametrizedString('.//h{header}'))
+        header_cls = Text(ParametrizedString('.//h{@my_value}'))
         input = TextInput(name=ParametrizedString('input{input}'))
 
     good = TestForm(browser, additional_context={'header': 3, 'input': 1})
     assert good.header.text == 'test test'
+    assert good.header_cls.text == 'test test'
     good.input.fill('')
     assert good.input.read() == ''
     assert good.input.fill('foo')
     assert good.input.read() == 'foo'
 
     bad = TestForm(browser)
+    # This uses value defined on class so it should work
+    assert good.header_cls.text == 'test test'
     with pytest.raises(AttributeError):
         bad.header.text
 
