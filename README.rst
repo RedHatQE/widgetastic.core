@@ -119,6 +119,7 @@ Basic usage
 
 
 .. `Version picking`:
+
 Version picking
 ------------------
 By version picking you can tackle the challenge of widgets changing between versions.
@@ -148,6 +149,7 @@ automatically pick the right widget under the hood.
 ``VersionPick`` is not limited to resolving widgets and can be used for anything.
 
 .. `Parametrized views`:
+
 Parametrized views
 ------------------
 
