@@ -28,25 +28,25 @@ Licensed under Apache license, Version 2.0
 Introduction
 ------------
 
-Widgetastic is a Python library designed to abstract out the web UI features into a nice object-oriented
+Widgetastic is a Python library designed to abstract out web UI widgets into a nice object-oriented
 layer. This library includes the core classes and some basic widgets that are universal enough to
 exist in this core repository.
 
 Features
 --------
 
-- Individual interactive and non-interactive elements on the web pages are represented as widgets,
-  that is classes with defined behaviour. A good candidates on what constitutes a widget might be
-  things like custom HTML button and such things.
-- Widgets are grouped on Views. View descends from the Widget class but it is specifically designed
-  to hold another widgets.
-- All Widgets (including Views because they descend from them) have read/fill interface useful for
-  filling forms and this kind of stuff. It works recursively.
+- Individual interactive and non-interactive elements on the web pages are represented as widgets;
+  that is, classes with defined behaviour. A good candidate for a widget might be something
+  a like custom HTML button.
+- Widgets are grouped on Views. A View descends from the Widget class but it is specifically designed
+  to hold other widgets.
+- All Widgets (including Views because they descend from them) have a read/fill interface useful for
+  filling in forms etc. This interface works recursively.
 - Views can be nested.
-- Widgets defined on Views are read/filled in exact order as they were defined. The only exception
-  from default behaviour is for Views inside Views as there is limitation of language but can be
-  worked around by using ``View.nested`` decorator on the nested View.
-- Features a wrapper around selenium functionality that tries to make the experience as hassle-free
+- Widgets defined on Views are read/filled in exact order that they were defined. The only exception
+  to this default behaviour is for nested Views as there is limitation in the language. However, this
+  can be worked around by using ``View.nested`` decorator on the nested View.
+- Includes a wrapper around selenium functionality that tries to make the experience as hassle-free
   as possible including customizable hooks and built-in "JavaScript wait" code.
 - Supports `Parametrized views`_.
 - Supports `Version picking`_.
@@ -121,7 +121,7 @@ Basic usage
 .. `Version picking`:
 Version picking
 ------------------
-By version picking you can tackle the challenge of things changing between versions but not so much.
+By version picking you can tackle the challenge of widgets changing between versions.
 
 In order to use this feature, you have to provide ``product_version`` property in the Browser which
 should return the current version (ideally ``utils.Version``, otherwise you would need to redefine
@@ -145,7 +145,7 @@ Then you can version pick widgets on a view for example:
 When you instantiate the ``MyVerpickedView`` and then subsequently access ``hostname`` it will
 automatically pick the right widget under the hood.
 
-``VersionPick`` is not limited to resolving widgets, you can use it for anything.
+``VersionPick`` is not limited to resolving widgets and can be used for anything.
 
 .. `Parametrized views`:
 Parametrized views
@@ -174,8 +174,8 @@ and then you can use the parameters eg. in locators.
     # Then for invoking this:
     view = MyParametrizedView(browser, additional_context={'thing_id': 'foo'})
 
-It is also possible to nest the parametrized view inside another view, be it a parametrized one or
-not. In that case the invocation of a nested view looks like method call instead of looking like a
+It is also possible to nest the parametrized view inside another view, parametrized or otherwise.
+In this case the invocation of a nested view looks like a method call, instead of looking like a
 property. The invocation supports passing the arguments both ways, positional and keyword based.
 
 .. code-block:: python
