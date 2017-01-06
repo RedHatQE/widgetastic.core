@@ -605,7 +605,8 @@ class BrowserParentWrapper(object):
             return False
         return self._o == other._o and self._browser == other._browser
 
-    def elements(self, locator, parent=None, check_visibility=False, check_safe=True,
+    def elements(
+            self, locator, parent=None, check_visibility=False, check_safe=True,
             force_check_safe=False):
         if parent is None:
             parent = self._o
