@@ -154,9 +154,13 @@ def test_nested_views_parent_injection(browser):
     assert view.browser == view.without.nested.browser
     assert len(view.c1.browser.elements('.lookmeup')) == 1
     assert view.c1.w.text == 'C1'
+    assert view.c1.browser.text('.lookmeup') == 'C1'
     assert len(view.c2.browser.elements('.lookmeup')) == 1
     assert view.c2.w.text == 'C2'
+    assert view.c2.browser.text('.lookmeup') == 'C2'
     assert len(view.c3.browser.elements('.lookmeup')) == 1
     assert view.c3.w.text == 'C3'
+    assert view.c3.browser.text('.lookmeup') == 'C3'
 
     assert len(view.browser.elements('.lookmeup')) == 3
+    assert view.c3.browser.text('.lookmeup') == 'C3'
