@@ -164,3 +164,22 @@ def test_nested_views_parent_injection(browser):
 
     assert len(view.browser.elements('.lookmeup')) == 3
     assert view.c3.browser.text('.lookmeup') == 'C3'
+
+
+def test_element_force_visibility_check_by_locator(browser):
+    class MyLocator(object):
+        CHECK_VISIBILITY = True  # Always check visibility no matter what
+
+        def __locator__(self):
+            return '#invisible'
+
+    loc = MyLocator()
+    with pytest.raises(NoSuchElementException):
+        browser.element(loc)
+
+    with pytest.raises(NoSuchElementException):
+        browser.element(loc, check_visibility=False)
+
+    loc.CHECK_VISIBILITY = False  # Never check visibility no matter what
+    browser.element(loc)
+    browser.element(loc, check_visibility=True)
