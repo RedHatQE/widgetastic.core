@@ -583,3 +583,42 @@ class Browser(object):
                 return False
             else:
                 raise
+
+
+class BrowserParentWrapper(object):
+    """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
+
+    Required for the proper operation of nesting.
+
+    Assumes the object passed has a ``browser`` attribute.
+
+    Args:
+        o: Object which should be considered as a parent element for lookups. Must have ``.browser``
+           defined.
+    """
+    def __init__(self, o, browser):
+        self._o = o
+        self._browser = browser
+
+    def __eq__(self, other):
+        if not isinstance(other, BrowserParentWrapper):
+            return False
+        return self._o == other._o and self._browser == other._browser
+
+    def elements(self, locator, parent=None, check_visibility=False, check_safe=True,
+            force_check_safe=False):
+        if parent is None:
+            parent = self._o
+        return self._browser.elements(
+            locator,
+            parent=parent,
+            check_visibility=check_visibility,
+            check_safe=check_safe,
+            force_check_safe=force_check_safe)
+
+    def __getattr__(self, attr):
+        """Route all other attribute requests into the parent object's browser."""
+        return getattr(self._browser, attr)
+
+    def __repr__(self):
+        return '<{} for {!r}>'.format(type(self).__name__, self._o)

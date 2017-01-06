@@ -13,7 +13,7 @@ from jsmin import jsmin
 from smartloc import Locator
 from wait_for import wait_for
 
-from .browser import Browser
+from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
@@ -222,7 +222,12 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            return self.parent.browser
+            if hasattr(self, '__locator__'):
+                # Wrap it so we have automatic parent injection
+                return BrowserParentWrapper(self, self.parent.browser)
+            else:
+                # This view has no locator, therefore just use the parent browser
+                return self.parent.browser
         except AttributeError:
             raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
 
