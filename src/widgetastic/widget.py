@@ -487,7 +487,16 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
 
             widget = getattr(self, name)
             try:
-                if widget.fill(values[name]):
+                value = values[name]
+                if isinstance(widget, ParametrizedViewRequest):
+                    if not isinstance(value, dict):
+                        raise ValueError('When filling parametrized view a dict is required')
+                    for param_tuple, fill_value in value.items():
+                        if not isinstance(param_tuple, tuple):
+                            param_tuple = (param_tuple, )
+                        if widget(*param_tuple).fill(fill_value):
+                            was_change = True
+                elif widget.fill(value):
                     was_change = True
             except NotImplementedError:
                 continue
@@ -506,7 +515,19 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         for widget_name in self.widget_names():
             widget = getattr(self, widget_name)
             try:
-                value = widget.read()
+                if isinstance(widget, ParametrizedViewRequest):
+                    # Special handling of the parametrized views
+                    all_presences = widget.view_class.all(widget.parent_object.browser)
+                    value = {}
+                    for param_tuple in all_presences:
+                        # For each presence store it in a dictionary
+                        args = param_tuple
+                        if len(param_tuple) < 2:
+                            # Single value - no tuple
+                            param_tuple = param_tuple[0]
+                        value[param_tuple] = widget(*args).read()
+                else:
+                    value = widget.read()
             except (NotImplementedError, NoSuchElementException, DoNotReadThisWidget):
                 continue
 
@@ -539,6 +560,19 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
 class ParametrizedView(View):
     """View that needs parameters to be run."""
     PARAMETERS = ()
+
+    @classmethod
+    def all(cls, browser):
+        """Method that returns tuples of parameters that correspond to PARAMETRS attribute.
+
+        It is required for proper functionality of :py:meth:`read` so it knows the exact instances
+        of the view.
+
+        Returns:
+            An iterable that contains tuples. Values in the tuples must map exactly to the keys in
+            the PARAMETERS class attribute.
+        """
+        raise NotImplementedError('You need to implement the all() classmethod')
 
 
 class ParametrizedViewRequest(object):
@@ -619,25 +653,24 @@ class BaseInput(Widget):
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
     """
-    def __init__(self, parent, name=None, id=None, logger=None):
-        if (name is None and id is None) or (name is not None and id is not None):
-            raise TypeError('TextInput must have either name= or id= specified but also not both.')
+    def __init__(self, parent, name=None, id=None, locator=None, logger=None):
+        if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
+            raise TypeError('You can only pass one of name, id or locator!')
         Widget.__init__(self, parent, logger=logger)
-        self.name = name
-        self.id = id
+        if name or id:
+            if name is not None:
+                id_attr = '@name={}'.format(quote(name))
+            elif id is not None:
+                id_attr = '@id={}'.format(quote(id))
+            self.locator = './/*[(self::input or self::textarea) and {}]'.format(id_attr)
+        else:
+            self.locator = locator
 
     def __repr__(self):
-        if self.name is not None:
-            return '{}(name={!r})'.format(type(self).__name__, self.name)
-        else:
-            return '{}(id={!r})'.format(type(self).__name__, self.id)
+        return '{}(locator={!r})'.format(type(self).__name__, self.locator)
 
     def __locator__(self):
-        if self.name is not None:
-            id_attr = '@name={}'.format(quote(self.name))
-        else:
-            id_attr = '@id={}'.format(quote(self.id))
-        return './/*[(self::input or self::textarea) and {}]'.format(id_attr)
+        return self.locator
 
 
 class TextInput(BaseInput):

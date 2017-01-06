@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 import pytest
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter
 from widgetastic.widget import (
-    ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget)
+    ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
+    Checkbox)
 
 
 def test_can_create_view(browser):
@@ -139,6 +140,14 @@ def test_parametrized_view(browser):
             ROOT = ParametrizedLocator('.//tr[@data-test={rowid|quote}]')
 
             col1 = Text('./td[2]')
+            checkbox = Checkbox(locator=ParametrizedString('.//td/input[@id={rowid|quote}]'))
+
+            @classmethod
+            def all(cls, browser):
+                result = []
+                for e in browser.elements('.//table[@id="with-thead"]//tr[td]'):
+                    result.append((browser.get_attribute('data-test', e), ))
+                return result
 
     view = MyView(browser)
     assert isinstance(view.table_row, ParametrizedViewRequest)
@@ -153,3 +162,45 @@ def test_parametrized_view(browser):
 
     with pytest.raises(TypeError):
         view.table_row(foo='bar')
+
+    view.fill({'table_row': {
+        'abc-123': {'checkbox': True},
+        ('abc-345', ): {'checkbox': False},
+        ('def-345', ): {'checkbox': True},
+    }})
+
+    assert view.read() == {
+        'table_row': {
+            'abc-123': {'col1': 'qwer', 'checkbox': True},
+            'abc-345': {'col1': 'bar_x', 'checkbox': False},
+            'def-345': {'col1': 'bar_y', 'checkbox': True}}}
+
+    assert view.fill({'table_row': {
+        'abc-123': {'checkbox': False},
+        ('abc-345', ): {'checkbox': False},
+        ('def-345', ): {'checkbox': False},
+    }})
+
+    assert view.read() == {
+        'table_row': {
+            'abc-123': {'col1': 'qwer', 'checkbox': False},
+            'abc-345': {'col1': 'bar_x', 'checkbox': False},
+            'def-345': {'col1': 'bar_y', 'checkbox': False}}}
+
+    assert not view.fill({'table_row': {
+        'abc-123': {'checkbox': False},
+        ('abc-345', ): {'checkbox': False},
+        ('def-345', ): {'checkbox': False},
+    }})
+
+
+def test_parametrized_view_read_without_all(browser):
+    class MyView(View):
+        class table_row(ParametrizedView):
+            PARAMETERS = ('rowid', )
+            ROOT = ParametrizedLocator('.//tr[@data-test={rowid|quote}]')
+
+            col1 = Text('./td[2]')
+
+    view = MyView(browser)
+    assert list(view.read().keys()) == []

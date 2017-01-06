@@ -81,7 +81,7 @@ def test_table(browser):
         table = Table('#with-thead')
 
     view = TestForm(browser)
-    assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3')
+    assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
     assert len(list(view.table.rows())) == 3
     assert len(list(view.table.rows(column_1='qwer'))) == 1
     assert len(list(view.table.rows(column_1__startswith='bar_'))) == 2
@@ -137,7 +137,8 @@ def test_table(browser):
         (None, 'foo_x'),
         ('Column 1', 'bar_x'),
         ('Column 2', 'baz_x'),
-        ('Column 3', 'bat_x')]
+        ('Column 3', 'bat_x'),
+        ('Column 4', '')]
 
     assert view.table[0].column_2.text == 'yxcv'
 

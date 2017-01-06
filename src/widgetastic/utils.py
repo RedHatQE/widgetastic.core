@@ -384,7 +384,10 @@ class ParametrizedString(object):
 class ParametrizedLocator(ParametrizedString):
     def __get__(self, o, t=None):
         result = super(ParametrizedLocator, self).__get__(o, t)
-        return Locator(result)
+        if isinstance(result, ParametrizedString):
+            return result
+        else:
+            return Locator(result)
 
 
 class Parameter(ParametrizedString):
