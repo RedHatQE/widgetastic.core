@@ -222,10 +222,19 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     @property
     def hierarchy(self):
         """Returns a list of widgets from the top level to this one."""
-        if self.parent is self.browser:
+        if not isinstance(self.parent, Widget):
             return [self]
         else:
             return self.parent.hierarchy + [self]
+
+    @property
+    def locatable_parent(self):
+        """If the widget has a parent that is locatable, returns it. Otherwise returns None"""
+        for locatable in list(reversed(self.hierarchy))[1:]:
+            if hasattr(locatable, '__locator__'):
+                return locatable
+        else:
+            return None
 
     @property
     def browser(self):

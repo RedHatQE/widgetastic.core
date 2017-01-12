@@ -165,6 +165,10 @@ def test_nested_views_parent_injection(browser):
     assert len(view.browser.elements('.lookmeup')) == 3
     assert view.c3.browser.text('.lookmeup') == 'C3'
 
+    assert view.c1.locatable_parent is view
+    assert view.c1.w.locatable_parent is view.c1
+    assert view.without.nested.locatable_parent is view
+
 
 def test_element_force_visibility_check_by_locator(browser):
     class MyLocator(object):

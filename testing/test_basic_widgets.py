@@ -85,6 +85,8 @@ def test_nested_views_read_fill(browser):
         form, form.Nested1, form.Nested1.Nested2, form.Nested1.Nested2.input2]
     assert form.hierarchy == [form]
 
+    assert form.Nested1.Nested2.input2.locatable_parent is None
+
 
 def test_table(browser):
     class TestForm(View):
