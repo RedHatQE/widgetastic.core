@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 import pytest
 import re
 
-from widgetastic.widget import View, Table, Text, TextInput, Checkbox, Select
+from widgetastic.exceptions import DoNotReadThisWidget
+from widgetastic.widget import View, Table, Text, TextInput, FileInput, Checkbox, Select
 from widgetastic.utils import Fillable, ParametrizedString
 
 
@@ -12,6 +13,7 @@ def test_basic_widgets(browser):
         h3 = Text('.//h3')
         input1 = TextInput(name='input1')
         input2 = Checkbox(id='input2')
+        fileinput = FileInput(id='fileinput')
 
     class AFillable(Fillable):
         def __init__(self, text):
@@ -43,6 +45,10 @@ def test_basic_widgets(browser):
     assert form.input1.fill(AFillable('a_test'))
     assert not form.input1.fill(AFillable('a_test'))
     assert form.input1.read() == 'a_test'
+
+    assert form.fileinput.fill('foo')
+    with pytest.raises(DoNotReadThisWidget):
+        form.fileinput.read()
 
 
 def test_nested_views_read_fill(browser):

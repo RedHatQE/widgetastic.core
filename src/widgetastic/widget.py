@@ -10,6 +10,7 @@ from cached_property import cached_property
 from collections import defaultdict, namedtuple
 from copy import copy
 from jsmin import jsmin
+from selenium.webdriver.remote.file_detector import LocalFileDetector
 from smartloc import Locator
 from wait_for import wait_for
 
@@ -676,6 +677,7 @@ class BaseInput(Widget):
     Args:
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
+        locator: If you have specific locator, use it here.
     """
     def __init__(self, parent, name=None, id=None, locator=None, logger=None):
         if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
@@ -703,6 +705,7 @@ class TextInput(BaseInput):
     Args:
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
+        locator: If you have specific locator, use it here.
     """
     @property
     def value(self):
@@ -726,12 +729,31 @@ class TextInput(BaseInput):
         return True
 
 
+class FileInput(BaseInput):
+    """This represents the file input.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+        locator: If you have specific locator, use it here.
+    """
+
+    def read(self):
+        raise DoNotReadThisWidget()
+
+    def fill(self, value):
+        with self.browser.selenium.file_detector_context(LocalFileDetector):
+            self.browser.send_keys(value, self)
+        return True
+
+
 class Checkbox(BaseInput, ClickableMixin):
     """This widget represents the bogo-standard form checkbox.
 
     Args:
         name: If you want to look the input up by name, use this parameter, pass the name.
         id: If you want to look the input up by id, use this parameter, pass the id.
+        locator: If you have specific locator, use it here.
     """
 
     @property
