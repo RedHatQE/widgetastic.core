@@ -162,6 +162,13 @@ class WidgetMetaclass(type):
             else:
                 # Do nothing
                 new_attrs[key] = value
+        if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
+            # For handling the root locator of the Widget
+            root = new_attrs['ROOT']
+            if isinstance(root, ParametrizedLocator):
+                new_attrs['__locator__'] = _gen_locator_root()
+            else:
+                new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
@@ -337,7 +344,7 @@ class ViewMetaclass(WidgetMetaclass):
                     desc_name_mapping[widget] = key
             else:
                 new_attrs[key] = value
-        if 'ROOT' in new_attrs:
+        if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
             # For handling the root locator of the View
             root = new_attrs['ROOT']
             if isinstance(root, ParametrizedLocator):
