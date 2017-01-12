@@ -81,6 +81,10 @@ def test_nested_views_read_fill(browser):
     assert form.Nested1.input1.read() == 'foobar'
     assert form.Nested1.Nested2.input2.read()
 
+    assert form.Nested1.Nested2.input2.hierarchy == [
+        form, form.Nested1, form.Nested1.Nested2, form.Nested1.Nested2.input2]
+    assert form.hierarchy == [form]
+
 
 def test_table(browser):
     class TestForm(View):

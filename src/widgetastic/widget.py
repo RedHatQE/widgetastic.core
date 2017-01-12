@@ -220,6 +220,14 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self.extra = ExtraData(self)
 
     @property
+    def hierarchy(self):
+        """Returns a list of widgets from the top level to this one."""
+        if self.parent is self.browser:
+            return [self]
+        else:
+            return self.parent.hierarchy + [self]
+
+    @property
     def browser(self):
         """Returns the instance of parent browser.
 
