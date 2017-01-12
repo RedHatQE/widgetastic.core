@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import inspect
 import six
 import time
 
@@ -583,3 +584,61 @@ class Browser(object):
                 return False
             else:
                 raise
+
+
+class BrowserParentWrapper(object):
+    """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
+
+    Required for the proper operation of nesting.
+
+    Assumes the object passed has a ``browser`` attribute.
+
+    Args:
+        o: Object which should be considered as a parent element for lookups. Must have ``.browser``
+           defined.
+    """
+    def __init__(self, o, browser):
+        self._o = o
+        self._browser = browser
+
+    def __eq__(self, other):
+        if not isinstance(other, BrowserParentWrapper):
+            return False
+        return self._o == other._o and self._browser == other._browser
+
+    def elements(
+            self, locator, parent=None, check_visibility=False, check_safe=True,
+            force_check_safe=False):
+        if parent is None:
+            parent = self._o
+        return self._browser.elements(
+            locator,
+            parent=parent,
+            check_visibility=check_visibility,
+            check_safe=check_safe,
+            force_check_safe=force_check_safe)
+
+    def __getattr__(self, attr):
+        """Route all other attribute requests into the parent object's browser. Black magic included
+
+        Here is the explanation:
+        If you call ``.elements`` on this object directly, it will correctly inject the parent
+        locator. But if you call eg. ``element``, what will happen is that it will invoke the
+        original method from underlying browser and that method's ``self`` is the underlying browser
+        and not this wrapper. Therefore ``element`` would call the original ``elements`` without
+        injecting the parent.
+
+        What this getter does is that if you pull out a method, it detects that, unbinds the
+        pure function and rebinds it to this wrapper. The method that came from the browser object
+        is now executed not against the browser, but against this wrapper, enabling us to intercept
+        every single ``elements`` call.
+        """
+        value = getattr(self._browser, attr)
+        if inspect.ismethod(value):
+            function = six.get_method_function(value)
+            # Bind the function like it was defined on this class
+            value = function.__get__(self, BrowserParentWrapper)
+        return value
+
+    def __repr__(self):
+        return '<{} for {!r}>'.format(type(self).__name__, self._o)

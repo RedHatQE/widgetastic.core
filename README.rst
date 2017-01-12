@@ -48,6 +48,8 @@ Features
   can be worked around by using ``View.nested`` decorator on the nested View.
 - Includes a wrapper around selenium functionality that tries to make the experience as hassle-free
   as possible including customizable hooks and built-in "JavaScript wait" code.
+- Views can define their root locators and those are automatically honoured in the element lookup
+  in the child Widgets.
 - Supports `Parametrized views`_.
 - Supports `Version picking`_.
 

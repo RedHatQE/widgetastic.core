@@ -2,7 +2,9 @@
 from __future__ import unicode_literals
 import pytest
 
+from widgetastic.browser import BrowserParentWrapper
 from widgetastic.exceptions import NoSuchElementException, LocatorNotImplemented
+from widgetastic.widget import View, Text
 
 
 def test_is_displayed(browser):
@@ -119,3 +121,65 @@ def test_simple_input_send_keys_clear(browser):
     assert browser.get_attribute('value', '#input') == 'test!'
     browser.clear('#input')
     assert browser.get_attribute('value', '#input') == ''
+
+
+def test_nested_views_parent_injection(browser):
+    class MyView(View):
+        ROOT = '#proper'
+
+        class c1(View):  # noqa
+            ROOT = '.c1'
+
+            w = Text('.lookmeup')
+
+        class c2(View):  # noqa
+            ROOT = '.c2'
+
+            w = Text('.lookmeup')
+
+        class c3(View):  # noqa
+            ROOT = '.c3'
+
+            w = Text('.lookmeup')
+
+        class without(View):  # noqa
+            # This one receives the parent browser wrapper
+            class nested(View):  # noqa
+                # and it should work in multiple levels
+                pass
+
+    view = MyView(browser)
+    assert isinstance(view.browser, BrowserParentWrapper)
+    assert view.browser == view.without.browser
+    assert view.browser == view.without.nested.browser
+    assert len(view.c1.browser.elements('.lookmeup')) == 1
+    assert view.c1.w.text == 'C1'
+    assert view.c1.browser.text('.lookmeup') == 'C1'
+    assert len(view.c2.browser.elements('.lookmeup')) == 1
+    assert view.c2.w.text == 'C2'
+    assert view.c2.browser.text('.lookmeup') == 'C2'
+    assert len(view.c3.browser.elements('.lookmeup')) == 1
+    assert view.c3.w.text == 'C3'
+    assert view.c3.browser.text('.lookmeup') == 'C3'
+
+    assert len(view.browser.elements('.lookmeup')) == 3
+    assert view.c3.browser.text('.lookmeup') == 'C3'
+
+
+def test_element_force_visibility_check_by_locator(browser):
+    class MyLocator(object):
+        CHECK_VISIBILITY = True  # Always check visibility no matter what
+
+        def __locator__(self):
+            return '#invisible'
+
+    loc = MyLocator()
+    with pytest.raises(NoSuchElementException):
+        browser.element(loc)
+
+    with pytest.raises(NoSuchElementException):
+        browser.element(loc, check_visibility=False)
+
+    loc.CHECK_VISIBILITY = False  # Never check visibility no matter what
+    browser.element(loc)
+    browser.element(loc, check_visibility=True)

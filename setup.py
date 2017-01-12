@@ -19,6 +19,7 @@ setup(
         'jsmin',
         'selenium',
         'selenium-smart-locator',
+        'six',
         'wait_for',
     ],
     setup_requires=[

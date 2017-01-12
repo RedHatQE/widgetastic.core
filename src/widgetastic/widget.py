@@ -13,7 +13,7 @@ from jsmin import jsmin
 from smartloc import Locator
 from wait_for import wait_for
 
-from .browser import Browser
+from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
@@ -387,6 +387,30 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             view._widget_cache.clear()
         self._widget_cache.clear()
 
+    @property
+    def browser(self):
+        """Returns the instance of parent browser.
+
+        If the view defines ``__locator__`` or ``ROOT`` then a new wrapper is created that injects
+        the ``parent=``
+
+        Returns:
+            :py:class:`widgetastic.browser.Browser` instance
+
+        Raises:
+            :py:class:`ValueError` when the browser is not defined, which is an error.
+        """
+        try:
+            super_browser = super(View, self).browser
+            if hasattr(self, '__locator__'):
+                # Wrap it so we have automatic parent injection
+                return BrowserParentWrapper(self, super_browser)
+            else:
+                # This view has no locator, therefore just use the parent browser
+                return super_browser
+        except AttributeError:
+            raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
+
     @staticmethod
     def nested(view_class):
         """Shortcut for :py:class:`WidgetDescriptor`
@@ -449,7 +473,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             :py:class:`bool`
         """
         try:
-            return super(View, self).is_displayed
+            return self.parent.browser.is_displayed(self)
         except LocatorNotImplemented:
             return True
 
