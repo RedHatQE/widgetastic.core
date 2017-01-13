@@ -204,3 +204,20 @@ def test_parametrized_view_read_without_all(browser):
 
     view = MyView(browser)
     assert list(view.read().keys()) == []
+
+
+def test_view_parent_smart_works(browser):
+    """This test ensures that when the functionality of a view is extended, the element lookup
+    correctly handles the difference between ROOT and other locators."""
+    class MyView(View):
+        ROOT = '#proper'
+
+        class AnotherView(View):
+            ROOT = './div[@class="c1"]/span'
+
+            def get_text(self):
+                return self.browser.text(self)
+
+    view = MyView(browser)
+
+    assert view.AnotherView.get_text() == 'C1'
