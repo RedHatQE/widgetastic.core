@@ -487,7 +487,18 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         Returns:
             A :py:class:`list` of :py:class:`View`
         """
-        return [view for view in self if isinstance(view, View)]
+        cls = type(self)
+        views = []
+        for widget_name in cls.widget_names():
+            widget_class = getattr(cls, widget_name)
+            if (
+                    (inspect.isclass(widget_class) and issubclass(widget_class, View)) or
+                    (
+                        isinstance(widget_class, WidgetDescriptor) and
+                        issubclass(widget_class.klass, View))):
+                views.append(getattr(self, widget_name))
+
+        return views
 
     @property
     def is_displayed(self):

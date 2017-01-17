@@ -246,3 +246,22 @@ def test_cache(browser):
     assert set(view._widget_cache.keys()) == {getattr(MyView, 'w'), getattr(MyView, 'nested1')}
     view.flush_widget_cache()
     assert len(view._widget_cache.keys()) == 0
+
+
+def test_view_iteration(browser):
+    """Test whether the widget cache does not get widgets when only views touched."""
+    class MyView(View):
+        w = Widget()
+        x = Widget()
+
+        @View.nested
+        class y(View):
+            pass
+
+        class z(View):
+            pass
+
+    view = MyView(browser)
+    assert len(view._widget_cache.keys()) == 0
+    assert len(view._views) == 2
+    assert set(view._widget_cache.keys()) == {getattr(MyView, 'y'), getattr(MyView, 'z')}
