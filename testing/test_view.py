@@ -221,3 +221,28 @@ def test_view_parent_smart_works(browser):
     view = MyView(browser)
 
     assert view.AnotherView.get_text() == 'C1'
+
+
+def test_cache(browser):
+    class MyView(View):
+        w = Widget()
+        x = Widget()
+
+        class nested1(View):
+            w = Widget()
+            x = Widget()
+
+            class nested2(View):
+                class nested3(View):
+                    w = Widget()
+
+    view = MyView(browser)
+    assert len(view._widget_cache.keys()) == 0
+    assert len(view.nested1._widget_cache.keys()) == 0
+    assert len(view.nested1.nested2._widget_cache.keys()) == 0
+    assert len(view.nested1.nested2.nested3._widget_cache.keys()) == 0
+
+    view.w
+    assert set(view._widget_cache.keys()) == {getattr(MyView, 'w'), getattr(MyView, 'nested1')}
+    view.flush_widget_cache()
+    assert len(view._widget_cache.keys()) == 0

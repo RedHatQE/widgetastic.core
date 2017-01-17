@@ -407,9 +407,9 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         self._widget_cache = {}
 
     def flush_widget_cache(self):
-        # Recursively ...
+        """FLush the widget cache recursively for the whole View tree structure"""
         for view in self._views:
-            view._widget_cache.clear()
+            view.flush_widget_cache()
         self._widget_cache.clear()
 
     @property
