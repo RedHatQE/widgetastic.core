@@ -231,7 +231,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     def locatable_parent(self):
         """If the widget has a parent that is locatable, returns it. Otherwise returns None"""
         for locatable in list(reversed(self.hierarchy))[1:]:
-            if hasattr(locatable, '__locator__'):
+            if hasattr(locatable, '__locator__') and not getattr(locatable, 'INDIRECT', False):
                 return locatable
         else:
             return None
@@ -400,6 +400,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             you shall use the ``additional_context`` to pass in required variables that will allow
             you to detect this.
     """
+    INDIRECT = False
 
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
@@ -427,7 +428,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         """
         try:
             super_browser = super(View, self).browser
-            if hasattr(self, '__locator__'):
+            if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
                 # Wrap it so we have automatic parent injection
                 return BrowserParentWrapper(self, super_browser)
             else:

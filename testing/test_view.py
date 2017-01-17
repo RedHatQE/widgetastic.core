@@ -265,3 +265,34 @@ def test_view_iteration(browser):
     assert len(view._widget_cache.keys()) == 0
     assert len(view._views) == 2
     assert set(view._widget_cache.keys()) == {getattr(MyView, 'y'), getattr(MyView, 'z')}
+
+
+def test_indirect_positive(browser):
+    class MyView(View):
+        ROOT = '//badger'
+        INDIRECT = True
+
+        class nested(View):
+            ROOT = '#bogus'
+
+            t = Text('.lookmeup')
+
+    view = MyView(browser)
+    assert not view.is_displayed
+    assert view.nested.is_displayed
+    assert view.nested.t.text == 'BAD'
+
+
+def test_indirect_negative(browser):
+    class MyView(View):
+        ROOT = '//badger'
+        INDIRECT = False
+
+        class nested(View):
+            ROOT = '#bogus'
+
+            t = Text('.lookmeup')
+
+    view = MyView(browser)
+    assert not view.is_displayed
+    assert not view.nested.is_displayed
