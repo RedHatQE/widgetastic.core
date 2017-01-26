@@ -410,7 +410,11 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
     def flush_widget_cache(self):
         """FLush the widget cache recursively for the whole View tree structure"""
         for view in self._views:
-            view.flush_widget_cache()
+            try:
+                view.flush_widget_cache()
+            except AttributeError:
+                # ParametrizedViewRequest does this, we can safely ignore that
+                pass
         self._widget_cache.clear()
 
     @property
