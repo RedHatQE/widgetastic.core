@@ -193,7 +193,8 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
         This allows you a sort of Django-ish access to the defined widgets then.
         """
-        if args and isinstance(args[0], (Widget, Browser)):
+        if (args and isinstance(args[0], (Widget, Browser))) \
+                or ('parent' in kwargs and isinstance(kwargs['parent'], (Widget, Browser))):
             return super(Widget, cls).__new__(cls)
         else:
             return WidgetDescriptor(cls, *args, **kwargs)

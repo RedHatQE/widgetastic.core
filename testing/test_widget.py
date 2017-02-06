@@ -8,6 +8,7 @@ from widgetastic.widget import View, Widget, WidgetDescriptor
 def test_widget_correctly_collapses_to_descriptor(browser):
     assert isinstance(Widget(), WidgetDescriptor)
     assert isinstance(Widget(browser), Widget)
+    assert isinstance(Widget(parent=browser), Widget)
 
 
 def test_widget_browser(browser):
