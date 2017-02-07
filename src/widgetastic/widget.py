@@ -694,6 +694,13 @@ class ParametrizedViewRequest(object):
         else:
             return views
 
+    def __iter__(self):
+        for args in self.view_class.all(self.parent_object.browser):
+            yield self(*args)
+
+    def __len__(self):
+        return len(self.view_class.all(self.parent_object.browser))
+
     def __getattr__(self, attr):
         raise AttributeError(
             'This is not an instance of {}. You need to call this object and pass the required '
