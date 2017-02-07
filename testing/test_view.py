@@ -193,6 +193,16 @@ def test_parametrized_view(browser):
         ('def-345', ): {'checkbox': False},
     }})
 
+    # list-like access
+    assert view.table_row[0].col1.text == 'qwer'
+    cx, cy = view.table_row[1:3]
+    assert cx.col1.text == 'bar_x'
+    assert cy.col1.text == 'bar_y'
+
+    cx, cy = view.table_row[0:3:2]
+    assert cx.col1.text == 'qwer'
+    assert cy.col1.text == 'bar_y'
+
 
 def test_parametrized_view_read_without_all(browser):
     class MyView(View):

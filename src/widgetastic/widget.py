@@ -674,6 +674,26 @@ class ParametrizedViewRequest(object):
         self.parent_object.child_widget_accessed(result)
         return result
 
+    def __getitem__(self, int_or_slice):
+        """Emulates list-like behaviour.
+
+        Maps into the dict-like structure by utilizing all() to get the list of all items and then
+        it picks the one selected by the list-like accessor. Supports both integers and slices.
+        """
+        all_items = self.view_class.all(self.parent_object.browser)
+        items = all_items[int_or_slice]
+        single = isinstance(int_or_slice, int)
+        if single:
+            items = [items]
+        views = []
+        for args in items:
+            views.append(self(*args))
+
+        if single:
+            return views[0]
+        else:
+            return views
+
     def __getattr__(self, attr):
         raise AttributeError(
             'This is not an instance of {}. You need to call this object and pass the required '
