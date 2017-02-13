@@ -309,6 +309,8 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         When you implement this method, it *MUST ALWAYS* return a boolean whether the value
         *was changed*. Otherwise it can break.
 
+        For actual filling, please use :py:meth:`fill_with`. It offers richer interface for filling.
+
         Returns:
             A boolean whether it changed the value or not.
         """
@@ -323,6 +325,61 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         """
         raise NotImplementedError(
             'Widget {} does not implement read()!'.format(type(self).__name__))
+
+    def _process_fill_handler(self, handler):
+        """Processes a given handler in the way that it is usable as a callable + its representation
+
+        Handlers can come in variety of ways. Simplest thing is to pass a callable, it will get
+        executed. The handler can also work with classes that mix in :py:class:`ClickableMixin`
+        where they use the :py:meth:`CallableMixin.click` as the handler action. If you pass a
+        string, it will first get resolved by getting it as an attribute of the instance. Then all
+        abovementioned steps are tried.
+
+        Args:
+            handler: The handler. More explanation in the description of this method.
+
+        Returns:
+            A 2-tuple consisting of ``(action_callable, obj_for_repr)``. The ``obj_for_repr`` is an
+            object that can be passed to a logger that uses ``%r``.
+        """
+        if isinstance(handler, six.string_types):
+            try:
+                handler = getattr(self, handler)
+            except AttributeError:
+                raise TypeError('{} does not exist on {!r}'.format(handler, self))
+
+        if isinstance(handler, ClickableMixin):
+            return (handler.click, handler)
+        elif callable(handler):
+            return (handler, handler)
+        else:
+            raise TypeError('Fill handler must be callable or clickable.')
+
+    def fill_with(self, value, on_change=None, no_change=None):
+        """Method to fill the widget, especially usable when filling in forms.
+
+        Args:
+            value: Value to fill - gets passed to :py:meth:`fill`
+            on_change: Optional handler to be executed when there was a change. See
+                :py:meth`_process_fill_handler` for details
+            no_change: Optional handler to be executed when there was no change. See
+                :py:meth`_process_fill_handler` for details
+
+        Returns:
+            Whether there was any change. Same as :py:meth:`fill`.
+        """
+        changed = self.fill(value)
+        if changed:
+            if on_change is not None:
+                action, rep = self._process_fill_handler(on_change)
+                self.logger.info('invoking after fill on_change=%r', rep)
+                action()
+        else:
+            if no_change is not None:
+                action, rep = self._process_fill_handler(no_change)
+                self.logger.info('invoking after fill no_change=%r', rep)
+                action()
+        return changed
 
 
 def _gen_locator_meth(loc):
@@ -786,14 +843,10 @@ class TextInput(BaseInput):
         current_value = self.value
         if value == current_value:
             return False
-        if value.startswith(current_value):
-            # only add the additional characters, like user would do
-            to_fill = value[len(current_value):]
-        else:
-            # Clear and type everything
-            self.browser.clear(self)
-            to_fill = value
-        self.browser.send_keys(to_fill, self)
+        # Clear and type everything
+        self.browser.click(self)
+        self.browser.clear(self)
+        self.browser.send_keys(value, self)
         return True
 
 

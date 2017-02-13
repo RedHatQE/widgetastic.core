@@ -281,3 +281,75 @@ def test_parametrized_locator(browser):
 
     with pytest.raises(AttributeError):
         bad.input.read()
+
+
+@pytest.mark.parametrize('style', ['callable', 'clickable', 'string'])
+def test_fill_with(browser, style):
+    class TestForm(View):
+        i1 = TextInput(name='fill_with_1')
+        i2 = TextInput(name='fill_with_2')
+        i3 = TextInput(name='fill_with_3')
+
+        b1 = Text('//button[@id="fill_with_button_1"]')
+        b2 = Text('//button[@id="fill_with_button_2"]')
+
+    view = TestForm(browser)
+    if style == 'callable':
+        assert view.fill_with(
+            {'i1': 'foo'},
+            on_change=view.b1.click,
+            no_change=view.b2.click)
+        assert view.read()['i1'] == 'foo'
+        assert 'clicked' in browser.classes(view.b1)
+        assert 'clicked' not in browser.classes(view.b2)
+        # Reset classes
+        browser.set_attribute('class', '', view.b1)
+        browser.set_attribute('class', '', view.b2)
+
+        assert not view.fill_with(
+            {'i1': 'foo'},
+            on_change=view.b1.click,
+            no_change=view.b2.click)
+        assert view.read()['i1'] == 'foo'
+        assert 'clicked' not in browser.classes(view.b1)
+        assert 'clicked' in browser.classes(view.b2)
+    elif style == 'clickable':
+        assert view.fill_with(
+            {'i1': 'foo'},
+            on_change=view.b1,
+            no_change=view.b2)
+        assert view.read()['i1'] == 'foo'
+        assert 'clicked' in browser.classes(view.b1)
+        assert 'clicked' not in browser.classes(view.b2)
+        # Reset classes
+        browser.set_attribute('class', '', view.b1)
+        browser.set_attribute('class', '', view.b2)
+
+        assert not view.fill_with(
+            {'i1': 'foo'},
+            on_change=view.b1,
+            no_change=view.b2)
+        assert view.i1.value == 'foo'
+        assert 'clicked' not in browser.classes(view.b1)
+        assert 'clicked' in browser.classes(view.b2)
+    elif style == 'string':
+        assert view.fill_with(
+            {'i1': 'foo'},
+            on_change='b1',
+            no_change='b2')
+        assert view.read()['i1'] == 'foo'
+        assert 'clicked' in browser.classes(view.b1)
+        assert 'clicked' not in browser.classes(view.b2)
+        # Reset classes
+        browser.set_attribute('class', '', view.b1)
+        browser.set_attribute('class', '', view.b2)
+
+        assert not view.fill_with(
+            {'i1': 'foo'},
+            on_change='b1',
+            no_change='b2')
+        assert view.read()['i1'] == 'foo'
+        assert 'clicked' not in browser.classes(view.b1)
+        assert 'clicked' in browser.classes(view.b2)
+    else:
+        pytest.fail('bad param {}'.format(style))
