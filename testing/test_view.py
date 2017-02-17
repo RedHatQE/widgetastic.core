@@ -193,6 +193,28 @@ def test_parametrized_view(browser):
         ('def-345', ): {'checkbox': False},
     }})
 
+    # list-like access
+    assert view.table_row[0].col1.text == 'qwer'
+    cx, cy = view.table_row[1:3]
+    assert cx.col1.text == 'bar_x'
+    assert cy.col1.text == 'bar_y'
+
+    cx, cy = view.table_row[0:3:2]
+    assert cx.col1.text == 'qwer'
+    assert cy.col1.text == 'bar_y'
+
+    for i, row in enumerate(view.table_row):
+        if i == 0:
+            assert row.col1.text == 'qwer'
+        elif i == 1:
+            assert row.col1.text == 'bar_x'
+        elif i == 2:
+            assert row.col1.text == 'bar_y'
+        else:
+            pytest.fail('iterated longer than expected')
+
+    assert len(view.table_row) == 3
+
 
 def test_parametrized_view_read_without_all(browser):
     class MyView(View):
