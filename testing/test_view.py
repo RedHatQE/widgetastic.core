@@ -43,7 +43,8 @@ def test_view_no_subviews(browser):
     class MyView(View):
         w = Widget()
 
-    assert not MyView(browser)._views
+    assert not MyView(browser).sub_views
+    assert not MyView(browser).cached_sub_views
 
 
 def test_view_with_subviews(browser):
@@ -57,12 +58,15 @@ def test_view_with_subviews(browser):
             bar = Widget()
 
     view = MyView(browser)
-    assert {type(v).__name__ for v in view._views} == {'AnotherView', 'Foo'}
     assert isinstance(view.w, Widget)
+    assert not view.cached_sub_views
     assert isinstance(view.AnotherView, View)
+    assert view.cached_sub_views == [view.AnotherView]
     assert isinstance(view.Foo, View)
+    assert set(view.cached_sub_views) == {view.AnotherView, view.Foo}
     assert isinstance(view.AnotherView.another_widget, Widget)
     assert isinstance(view.Foo.bar, Widget)
+    assert {type(v).__name__ for v in view.sub_views} == {'AnotherView', 'Foo'}
 
 
 def test_view_is_displayed_without_root_locator(browser):
@@ -285,7 +289,7 @@ def test_view_iteration(browser):
 
     view = MyView(browser)
     assert len(view._widget_cache.keys()) == 0
-    assert len(view._views) == 2
+    assert len(view.sub_views) == 2
     assert set(view._widget_cache.keys()) == {getattr(MyView, 'y'), getattr(MyView, 'z')}
 
 

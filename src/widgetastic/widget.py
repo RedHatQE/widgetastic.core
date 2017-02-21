@@ -467,7 +467,7 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
 
     def flush_widget_cache(self):
         """FLush the widget cache recursively for the whole View tree structure"""
-        for view in self._views:
+        for view in self.cached_sub_views:
             try:
                 view.flush_widget_cache()
             except AttributeError:
@@ -544,11 +544,11 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
 
     @property
-    def _views(self):
-        """Returns all sub-views of this view.
+    def sub_view_names(self):
+        """Returns all sub-views' names of this view.
 
         Returns:
-            A :py:class:`list` of :py:class:`View`
+            A :py:class:`list` of :py:class:`str`
         """
         cls = type(self)
         views = []
@@ -559,9 +559,31 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
                     (
                         isinstance(widget_class, WidgetDescriptor) and
                         issubclass(widget_class.klass, View))):
-                views.append(getattr(self, widget_name))
+                views.append(widget_name)
 
         return views
+
+    @property
+    def sub_views(self):
+        """Returns all sub-views of this view.
+
+        Returns:
+            A :py:class:`list` of :py:class:`View`
+        """
+        return [getattr(self, view_name) for view_name in self.sub_view_names]
+
+    @property
+    def cached_sub_views(self):
+        """Returns all cached sub-views of this view.
+
+        Returns:
+            A :py:class:`list` of :py:class:`View`
+        """
+        return [
+            getattr(self, view_name)
+            for view_name in self.sub_view_names
+            # Grab the descriptor
+            if getattr(type(self), view_name) in self._widget_cache]
 
     @property
     def is_displayed(self):
