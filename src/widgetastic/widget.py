@@ -1038,8 +1038,9 @@ class Table(Widget):
     Args:
         locator: A locator to the table ``<table>`` tag.
     """
-    HEADERS = './thead/tr/th|./tr/th'
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+    HEADER_IN_ROWS = './tbody/tr/th'
+    HEADERS = './thead/tr/th|./tr/th' + '|' + HEADER_IN_ROWS
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
     Row = TableRow
@@ -1129,6 +1130,10 @@ class Table(Widget):
                 except KeyError:
                     raise NameError('Could not find column {!r} in the table'.format(column))
 
+    @cached_property
+    def _is_header_in_body(self):
+        return len(self.browser.elements(self.HEADER_IN_ROWS, parent=self)) > 0
+
     def rows(self, *extra_filters, **filters):
         if not (filters or extra_filters):
             return self._all_rows()
@@ -1137,6 +1142,7 @@ class Table(Widget):
 
     def _all_rows(self):
         for row_pos in range(len(self.browser.elements(self.ROWS, parent=self))):
+            row_pos = row_pos if not self._is_header_in_body else row_pos + 1
             yield self.Row(self, row_pos, logger=self.logger)
 
     def _filtered_rows(self, *extra_filters, **filters):
@@ -1246,8 +1252,10 @@ class Table(Widget):
         # Preload the rows to prevent stale element exceptions
         rows = []
         for row_element in self.browser.elements(query, parent=self):
+            row_pos = self._get_number_preceeding_rows(row_element)
+            row_pos = row_pos if not self._is_header_in_body else row_pos + 1
             rows.append(
-                self.Row(self, self._get_number_preceeding_rows(row_element), logger=self.logger))
+                self.Row(self, row_pos, logger=self.logger))
 
         for row in rows:
             if regexp_filters:
