@@ -91,6 +91,7 @@ def test_nested_views_read_fill(browser):
 def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
+        other_table = Table('#untypical_header')
 
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
@@ -159,6 +160,12 @@ def test_table(browser):
 
     with pytest.raises(TypeError):
         view.table['boom!']
+
+    # headers are read correctly when those aren't in thead
+    assert len(view.other_table.headers) == 2
+
+    row = next(view.other_table.rows())
+    assert row.event.text == 'Some Event'
 
 
 def test_simple_select(browser):
