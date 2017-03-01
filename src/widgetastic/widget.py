@@ -152,8 +152,22 @@ class WidgetMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
+        desc_name_mapping = {}
+        for base in bases:
+            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
+                desc_name_mapping[key] = value
         for key, value in six.iteritems(attrs):
-            if key == 'fill':
+            if inspect.isclass(value) and issubclass(value, View):
+                new_attrs[key] = WidgetDescriptor(value)
+                desc_name_mapping[new_attrs[key]] = key
+            elif isinstance(value, Widgetable):
+                new_attrs[key] = value
+                desc_name_mapping[value] = key
+                for widget in value.child_items:
+                    if not isinstance(widget, (Widgetable, Widget)):
+                        continue
+                    desc_name_mapping[widget] = key
+            elif key == 'fill':
                 # handle fill() specifics
                 new_attrs[key] = logged(log_args=True, log_result=True)(wrap_fill_method(value))
             elif key == 'read':
@@ -163,12 +177,14 @@ class WidgetMetaclass(type):
                 # Do nothing
                 new_attrs[key] = value
         if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
-            # For handling the root locator of the Widget
+            # For handling the root locator of the View
             root = new_attrs['ROOT']
             if isinstance(root, ParametrizedLocator):
                 new_attrs['__locator__'] = _gen_locator_root()
             else:
                 new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
+
+        new_attrs['_desc_name_mapping'] = desc_name_mapping
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
@@ -219,6 +235,31 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             # We need a PrependParentsAdapter here.
             self.logger = create_widget_logger(type(self).__name__, logger)
         self.extra = ExtraData(self)
+        self._widget_cache = {}
+
+    def flush_widget_cache(self):
+        """FLush the widget cache recursively for the whole View tree structure"""
+        for view in self.cached_sub_views:
+            try:
+                view.flush_widget_cache()
+            except AttributeError:
+                # ParametrizedViewRequest does this, we can safely ignore that
+                pass
+        self._widget_cache.clear()
+
+    @classmethod
+    def widget_names(cls):
+        """Returns a list of widget names in the order they were defined on the class.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget` instances.
+        """
+        result = []
+        for key in dir(cls):
+            value = getattr(cls, key)
+            if isinstance(value, Widgetable):
+                result.append((key, value))
+        return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
 
     @property
     def hierarchy(self):
@@ -381,6 +422,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 action()
         return changed
 
+    def __iter__(self):
+        """Allows iterating over the widgets on the view."""
+        for widget_attr in self.widget_names():
+            yield getattr(self, widget_attr)
+
 
 def _gen_locator_meth(loc):
     def __locator__(self):  # noqa
@@ -394,44 +440,7 @@ def _gen_locator_root():
     return __locator__
 
 
-class ViewMetaclass(WidgetMetaclass):
-    """metaclass that ensures nested widgets' functionality from the declaration point of view.
-
-    When you pass a ``ROOT`` class attribute, it is used to generate a ``__locator__`` method on
-    the view that ensures the view is resolvable.
-    """
-    def __new__(cls, name, bases, attrs):
-        new_attrs = {}
-        desc_name_mapping = {}
-        for base in bases:
-            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
-                desc_name_mapping[key] = value
-        for key, value in six.iteritems(attrs):
-            if inspect.isclass(value) and issubclass(value, View):
-                new_attrs[key] = WidgetDescriptor(value)
-                desc_name_mapping[new_attrs[key]] = key
-            elif isinstance(value, Widgetable):
-                new_attrs[key] = value
-                desc_name_mapping[value] = key
-                for widget in value.child_items:
-                    if not isinstance(widget, (Widgetable, Widget)):
-                        continue
-                    desc_name_mapping[widget] = key
-            else:
-                new_attrs[key] = value
-        if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
-            # For handling the root locator of the View
-            root = new_attrs['ROOT']
-            if isinstance(root, ParametrizedLocator):
-                new_attrs['__locator__'] = _gen_locator_root()
-            else:
-                new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
-
-        new_attrs['_desc_name_mapping'] = desc_name_mapping
-        return super(ViewMetaclass, cls).__new__(cls, name, bases, new_attrs)
-
-
-class View(six.with_metaclass(ViewMetaclass, Widget)):
+class View(Widget):
     """View is a kind of abstract widget that can hold another widgets. Remembers the order,
     so therefore it can function like a form with defined filling order.
 
@@ -463,17 +472,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
-        self._widget_cache = {}
-
-    def flush_widget_cache(self):
-        """FLush the widget cache recursively for the whole View tree structure"""
-        for view in self.cached_sub_views:
-            try:
-                view.flush_widget_cache()
-            except AttributeError:
-                # ParametrizedViewRequest does this, we can safely ignore that
-                pass
-        self._widget_cache.clear()
 
     @property
     def browser(self):
@@ -528,20 +526,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             view_class: A subclass of :py:class:`View`
         """
         return WidgetDescriptor(view_class)
-
-    @classmethod
-    def widget_names(cls):
-        """Returns a list of widget names in the order they were defined on the class.
-
-        Returns:
-            A :py:class:`list` of :py:class:`Widget` instances.
-        """
-        result = []
-        for key in dir(cls):
-            value = getattr(cls, key)
-            if isinstance(value, Widgetable):
-                result.append((key, value))
-        return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
 
     @property
     def sub_view_names(self):
@@ -695,11 +679,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
         """
         pass
-
-    def __iter__(self):
-        """Allows iterating over the widgets on the view."""
-        for widget_attr in self.widget_names():
-            yield getattr(self, widget_attr)
 
 
 class ParametrizedView(View):
