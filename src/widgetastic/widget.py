@@ -239,21 +239,22 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
     def flush_widget_cache(self):
         """FLush the widget cache recursively for the whole View tree structure"""
-        for view in self.cached_sub_views:
+        for widget in self.cached_sub_widgets:
             try:
-                view.flush_widget_cache()
+                widget.flush_widget_cache()
             except AttributeError:
                 # ParametrizedViewRequest does this, we can safely ignore that
                 pass
         self._widget_cache.clear()
 
-    @classmethod
-    def widget_names(cls):
+    @property
+    def widget_names(self):
         """Returns a list of widget names in the order they were defined on the class.
 
         Returns:
             A :py:class:`list` of :py:class:`Widget` instances.
         """
+        cls = type(self)
         result = []
         for key in dir(cls):
             value = getattr(cls, key)
@@ -422,9 +423,31 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 action()
         return changed
 
+    @property
+    def sub_widgets(self):
+        """Returns all sub-widgets of this widget.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget`
+        """
+        return [getattr(self, widget_name) for widget_name in self.widget_names]
+
+    @property
+    def cached_sub_widgets(self):
+        """Returns all cached sub-widgets of this widgets.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget`
+        """
+        return [
+            getattr(self, widget_name)
+            for widget_name in self.widget_names
+            # Grab the descriptor
+            if getattr(type(self), widget_name) in self._widget_cache]
+
     def __iter__(self):
         """Allows iterating over the widgets on the view."""
-        for widget_attr in self.widget_names():
+        for widget_attr in self.widget_names:
             yield getattr(self, widget_attr)
 
 
@@ -528,48 +551,6 @@ class View(Widget):
         return WidgetDescriptor(view_class)
 
     @property
-    def sub_view_names(self):
-        """Returns all sub-views' names of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`str`
-        """
-        cls = type(self)
-        views = []
-        for widget_name in cls.widget_names():
-            widget_class = getattr(cls, widget_name)
-            if (
-                    (inspect.isclass(widget_class) and issubclass(widget_class, View)) or
-                    (
-                        isinstance(widget_class, WidgetDescriptor) and
-                        issubclass(widget_class.klass, View))):
-                views.append(widget_name)
-
-        return views
-
-    @property
-    def sub_views(self):
-        """Returns all sub-views of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`View`
-        """
-        return [getattr(self, view_name) for view_name in self.sub_view_names]
-
-    @property
-    def cached_sub_views(self):
-        """Returns all cached sub-views of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`View`
-        """
-        return [
-            getattr(self, view_name)
-            for view_name in self.sub_view_names
-            # Grab the descriptor
-            if getattr(type(self), view_name) in self._widget_cache]
-
-    @property
     def is_displayed(self):
         """Overrides the :py:meth:`Widget.is_displayed`. The difference is that if the view does
         not have the root locator, it assumes it is displayed.
@@ -610,7 +591,7 @@ class View(Widget):
         """
         was_change = False
         self.before_fill(values)
-        for name in self.widget_names():
+        for name in self.widget_names:
             if name not in values or values[name] is None:
                 continue
 
@@ -641,7 +622,7 @@ class View(Widget):
             using the :py:meth:`Widget.read`.
         """
         result = {}
-        for widget_name in self.widget_names():
+        for widget_name in self.widget_names:
             widget = getattr(self, widget_name)
             try:
                 if isinstance(widget, ParametrizedViewRequest):

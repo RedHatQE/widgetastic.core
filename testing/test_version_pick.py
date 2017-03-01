@@ -75,8 +75,7 @@ def test_versionpick_on_view(browser):
         })
 
     view = MyView(browser)
-    assert 'widget' in view.widget_names()
-    assert 'widget' in MyView.widget_names()
+    assert 'widget' in view.widget_names
     assert isinstance(view.widget, TextInput)
     assert view.widget.fill('test text')
     assert view.widget.read() == 'test text'

@@ -31,20 +31,20 @@ def test_view_root_locator(browser):
     assert view.__locator__() == ('css selector', '#foo')
 
 
-def test_view_widget_names():
+def test_view_widget_names(browser):
     class MyView(View):
         w1 = Widget()
         w2 = Widget()
 
-    assert MyView.widget_names() == ['w1', 'w2']
+    assert MyView(browser).widget_names == ['w1', 'w2']
 
 
 def test_view_no_subviews(browser):
     class MyView(View):
-        w = Widget()
+        pass
 
-    assert not MyView(browser).sub_views
-    assert not MyView(browser).cached_sub_views
+    assert not MyView(browser).sub_widgets
+    assert not MyView(browser).cached_sub_widgets
 
 
 def test_view_with_subviews(browser):
@@ -58,15 +58,16 @@ def test_view_with_subviews(browser):
             bar = Widget()
 
     view = MyView(browser)
+    assert not view.cached_sub_widgets
     assert isinstance(view.w, Widget)
-    assert not view.cached_sub_views
+    assert view.cached_sub_widgets == [view.w]
     assert isinstance(view.AnotherView, View)
-    assert view.cached_sub_views == [view.AnotherView]
+    assert set(view.cached_sub_widgets) == {view.AnotherView, view.w}
     assert isinstance(view.Foo, View)
-    assert set(view.cached_sub_views) == {view.AnotherView, view.Foo}
+    assert set(view.cached_sub_widgets) == {view.AnotherView, view.Foo, view.w}
     assert isinstance(view.AnotherView.another_widget, Widget)
     assert isinstance(view.Foo.bar, Widget)
-    assert {type(v).__name__ for v in view.sub_views} == {'AnotherView', 'Foo'}
+    assert {type(v).__name__ for v in view.sub_widgets} == {'AnotherView', 'Foo', 'Widget'}
 
 
 def test_view_is_displayed_without_root_locator(browser):
@@ -289,8 +290,9 @@ def test_view_iteration(browser):
 
     view = MyView(browser)
     assert len(view._widget_cache.keys()) == 0
-    assert len(view.sub_views) == 2
-    assert set(view._widget_cache.keys()) == {getattr(MyView, 'y'), getattr(MyView, 'z')}
+    assert len(view.sub_widgets) == 4
+    assert set(view._widget_cache.keys()) == {
+        getattr(MyView, 'y'), getattr(MyView, 'z'), getattr(MyView, 'w'), getattr(MyView, 'x')}
 
 
 def test_indirect_positive(browser):
