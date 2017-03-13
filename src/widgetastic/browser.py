@@ -440,7 +440,7 @@ class Browser(object):
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
             self.element(*args, **kwargs), attr, value)
 
-    def size(self, *args, **kwargs):
+    def size_of(self, *args, **kwargs):
         """Returns element's size as a tuple of width/height."""
         size = self.element(*args, **kwargs).size
         return (size['width'], size['height'])

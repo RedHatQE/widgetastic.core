@@ -447,11 +447,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
     @property
     def width(self):
-        return self.browser.size(self, parent=self.parent)[0]
+        return self.browser.size_of(self, parent=self.parent)[0]
 
     @property
     def height(self):
-        return self.browser.size(self, parent=self.parent)[1]
+        return self.browser.size_of(self, parent=self.parent)[1]
 
     def __iter__(self):
         """Allows iterating over the widgets on the view."""
