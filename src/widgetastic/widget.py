@@ -157,7 +157,7 @@ class WidgetMetaclass(type):
             for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
                 desc_name_mapping[key] = value
         for key, value in six.iteritems(attrs):
-            if inspect.isclass(value) and issubclass(value, View):
+            if inspect.isclass(value) and issubclass(value, Widget):
                 new_attrs[key] = WidgetDescriptor(value)
                 desc_name_mapping[new_attrs[key]] = key
             elif isinstance(value, Widgetable):

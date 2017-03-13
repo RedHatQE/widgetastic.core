@@ -291,8 +291,7 @@ def test_view_iteration(browser):
     view = MyView(browser)
     assert len(view._widget_cache.keys()) == 0
     assert len(view.sub_widgets) == 4
-    assert set(view._widget_cache.keys()) == {
-        getattr(MyView, 'y'), getattr(MyView, 'z'), getattr(MyView, 'w'), getattr(MyView, 'x')}
+    assert set(view._widget_cache.keys()) == {MyView.y, MyView.z, MyView.w, MyView.x}
 
 
 def test_indirect_positive(browser):
