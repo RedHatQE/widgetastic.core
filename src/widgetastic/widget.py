@@ -157,7 +157,7 @@ class WidgetMetaclass(type):
             for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
                 desc_name_mapping[key] = value
         for key, value in six.iteritems(attrs):
-            if inspect.isclass(value) and issubclass(value, Widget):
+            if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
                 desc_name_mapping[new_attrs[key]] = key
             elif isinstance(value, Widgetable):
@@ -598,15 +598,7 @@ class View(Widget):
             widget = getattr(self, name)
             try:
                 value = values[name]
-                if isinstance(widget, ParametrizedViewRequest):
-                    if not isinstance(value, dict):
-                        raise ValueError('When filling parametrized view a dict is required')
-                    for param_tuple, fill_value in value.items():
-                        if not isinstance(param_tuple, tuple):
-                            param_tuple = (param_tuple, )
-                        if widget(*param_tuple).fill(fill_value):
-                            was_change = True
-                elif widget.fill(value):
+                if widget.fill(value):
                     was_change = True
             except NotImplementedError:
                 continue
@@ -625,19 +617,7 @@ class View(Widget):
         for widget_name in self.widget_names:
             widget = getattr(self, widget_name)
             try:
-                if isinstance(widget, ParametrizedViewRequest):
-                    # Special handling of the parametrized views
-                    all_presences = widget.view_class.all(widget.parent_object.browser)
-                    value = {}
-                    for param_tuple in all_presences:
-                        # For each presence store it in a dictionary
-                        args = param_tuple
-                        if len(param_tuple) < 2:
-                            # Single value - no tuple
-                            param_tuple = param_tuple[0]
-                        value[param_tuple] = widget(*args).read()
-                else:
-                    value = widget.read()
+                value = widget.read()
             except (NotImplementedError, NoSuchElementException, DoNotReadThisWidget):
                 continue
 
@@ -744,6 +724,30 @@ class ParametrizedViewRequest(object):
         raise AttributeError(
             'This is not an instance of {}. You need to call this object and pass the required '
             'parameters of the view.'.format(self.view_class.__name__))
+
+    def read(self):
+        # Special handling of the parametrized views
+        all_presences = self.view_class.all(self.parent_object.browser)
+        value = {}
+        for param_tuple in all_presences:
+            # For each presence store it in a dictionary
+            args = param_tuple
+            if len(param_tuple) < 2:
+                # Single value - no tuple
+                param_tuple = param_tuple[0]
+            value[param_tuple] = self(*args).read()
+        return value
+
+    def fill(self, value):
+        was_change = False
+        if not isinstance(value, dict):
+            raise ValueError('When filling parametrized view a dict is required')
+        for param_tuple, fill_value in value.items():
+            if not isinstance(param_tuple, tuple):
+                param_tuple = (param_tuple, )
+            if self(*param_tuple).fill(fill_value):
+                was_change = True
+        return was_change
 
 
 class ClickableMixin(object):
