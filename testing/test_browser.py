@@ -187,3 +187,9 @@ def test_element_force_visibility_check_by_locator(browser):
     loc.CHECK_VISIBILITY = False  # Never check visibility no matter what
     browser.element(loc)
     browser.element(loc, check_visibility=True)
+
+
+def test_size(browser):
+    width, height = browser.size('#exact_dimensions')
+    assert width == 42
+    assert height == 69

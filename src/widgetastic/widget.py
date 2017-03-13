@@ -445,6 +445,14 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             # Grab the descriptor
             if getattr(type(self), widget_name) in self._widget_cache]
 
+    @property
+    def width(self):
+        return self.browser.size(self, parent=self.parent)[0]
+
+    @property
+    def height(self):
+        return self.browser.size(self, parent=self.parent)[1]
+
     def __iter__(self):
         """Allows iterating over the widgets on the view."""
         for widget_attr in self.widget_names:
@@ -757,20 +765,31 @@ class ClickableMixin(object):
         return self.browser.click(self)
 
 
-class Text(Widget, ClickableMixin):
-    """A widget that an represent anything that can be read from the webpage as a text content of
-    a tag.
+class GenericLocatorWidget(Widget, ClickableMixin):
+    """A base class for any widgets with a locator.
+
+    Clickable.
 
     Args:
         locator: Locator of the object ob the page.
     """
+    ROOT = ParametrizedLocator('{@locator}')
+
     def __init__(self, parent, locator, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
 
-    def __locator__(self):
-        return self.locator
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.locator)
 
+
+class Text(GenericLocatorWidget):
+    """A widget that can represent anything that can be read from the webpage as a text content of
+    a tag.
+
+    Args:
+        locator: Locator of the object on the page.
+    """
     @property
     def text(self):
         return self.browser.text(self, parent=self.parent)
@@ -778,8 +797,24 @@ class Text(Widget, ClickableMixin):
     def read(self):
         return self.text
 
-    def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.locator)
+
+class Image(GenericLocatorWidget):
+    """A widget that represents an image.
+
+    Args:
+        locator: Locator of the object on the page.
+    """
+    @property
+    def src(self):
+        return self.browser.get_attribute('src', self, parent=self.parent)
+
+    @property
+    def alt(self):
+        return self.browser.get_attribute('alt', self, parent=self.parent)
+
+    @property
+    def title(self):
+        return self.browser.get_attribute('title', self, parent=self.parent)
 
 
 class BaseInput(Widget):
