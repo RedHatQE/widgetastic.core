@@ -360,3 +360,53 @@ def test_fill_with(browser, style):
         assert 'clicked' in browser.classes(view.b2)
     else:
         pytest.fail('bad param {}'.format(style))
+
+
+def test_with_including(browser):
+    class TestForm1(View):
+        h3 = Text('.//h3')
+
+    class TestForm2(View):
+        caption = View.include(TestForm1)
+        input1 = TextInput(name='input1')
+        input2 = Checkbox(id='input2')
+
+    class TestForm3(View):
+        fileinput = FileInput(id='fileinput')
+        inputs = View.include(TestForm2)
+
+    class AFillable(Fillable):
+        def __init__(self, text):
+            self.text = text
+
+        def as_fill_value(self):
+            return self.text
+
+    form = TestForm3(browser)
+    # This repeats test_basic_widgets
+    assert isinstance(form, TestForm3)
+    data = form.read()
+    assert data['h3'] == 'test test'
+    assert data['input1'] == ''
+    assert not data['input2']
+    assert not form.fill({'input2': False})
+    assert form.fill({'input2': True})
+    assert not form.fill({'input2': True})
+    assert form.input2.read()
+
+    assert form.fill({'input1': 'foo'})
+    assert not form.fill({'input1': 'foo'})
+    assert form.fill({'input1': 'foobar'})
+    assert not form.fill({'input1': 'foobar'})
+    assert form.fill(data)
+
+    assert form.fill({'input1': AFillable('wut')})
+    assert not form.fill({'input1': AFillable('wut')})
+    assert form.read()['input1'] == 'wut'
+    assert form.input1.fill(AFillable('a_test'))
+    assert not form.input1.fill(AFillable('a_test'))
+    assert form.input1.read() == 'a_test'
+
+    assert form.fileinput.fill('foo')
+    with pytest.raises(DoNotReadThisWidget):
+        form.fileinput.read()
