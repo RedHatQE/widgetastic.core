@@ -19,7 +19,7 @@ from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
 from .utils import (
-    Widgetable, Fillable, ParametrizedLocator, ParametrizedString, attributize_string,
+    Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
     normalize_space)
 from .xpath import quote
 
@@ -42,14 +42,14 @@ def process_parameters(parent_obj, args, kwargs):
     """Processes the widget input parameters - checks if args or kwarg values are parametrized."""
     new_args = []
     for arg in args:
-        if isinstance(arg, ParametrizedString):
+        if isinstance(arg, ConstructorResolvable):
             new_args.append(arg.resolve(parent_obj))
         else:
             new_args.append(arg)
 
     new_kwargs = {}
     for k, v in kwargs.items():
-        if isinstance(v, ParametrizedString):
+        if isinstance(v, ConstructorResolvable):
             new_kwargs[k] = v.resolve(parent_obj)
         else:
             new_kwargs[k] = v
@@ -829,11 +829,15 @@ class BaseInput(Widget):
         if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
             raise TypeError('You can only pass one of name, id or locator!')
         Widget.__init__(self, parent, logger=logger)
+        self.name = None
+        self.id = None
         if name or id:
             if name is not None:
                 id_attr = '@name={}'.format(quote(name))
+                self.name = name
             elif id is not None:
                 id_attr = '@id={}'.format(quote(id))
+                self.id = id
             self.locator = './/*[(self::input or self::textarea) and {}]'.format(id_attr)
         else:
             self.locator = locator
