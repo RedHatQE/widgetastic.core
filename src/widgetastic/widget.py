@@ -142,6 +142,9 @@ class WidgetIncluder(Widgetable):
     def __init__(self, widget_class):
         self.widget_class = widget_class
 
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, self.widget_class.__name__)
+
 
 class IncludedWidget(object):
     def __init__(self, included_id, widget_name):
@@ -153,6 +156,9 @@ class IncludedWidget(object):
             return self
 
         return o._get_included_widget(self.included_id, self.widget_name)
+
+    def __repr__(self):
+        return '{}({}, {!r})'.format(type(self).__name__, self.included_id, self.widget_name)
 
 
 class WidgetMetaclass(type):
@@ -226,6 +232,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     # Helper methods
     @staticmethod
     def include(*args, **kwargs):
+        """Include another widget with exposing the given widget's widgets in this widget."""
         return WidgetIncluder(*args, **kwargs)
 
     def __new__(cls, *args, **kwargs):

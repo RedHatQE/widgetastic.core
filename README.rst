@@ -51,6 +51,7 @@ Features
 - Views can define their root locators and those are automatically honoured in the element lookup
   in the child Widgets.
 - Supports `Parametrized views`_.
+- Supports `Widget including`_.
 - Supports `Version picking`_.
 - Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
 - Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
@@ -275,3 +276,40 @@ simplification is as follows.
 You no longer have to care, the object itself know how it will be displayed in the UI. Unfortunately
 this does not work the other way (automatic instantiation of objects based on values read) as that
 would involve knowledge of metadata etc. That is a possible future feature.
+
+
+.. `Widget including`:
+
+Widget including
+----------------
+
+DRY is useful, right? Widgetastic thinks so, so it supports including widgets into other widgets.
+Think about it more like C-style include, what it does is that it makes the receiving widget aware
+of the other widgets that are going to be included and generates accessors for the widgets in
+included widgets so if "flattens" the structure. All the ordering is kept. A simple example.
+
+.. code-block:: python
+
+    class FormButtonsAdd(View):
+        add = Button('Add')
+        reset = Button('Reset')
+        cancel = Button('Cancel')
+
+    class ItemAddForm(View):
+        name = TextInput(...)
+        description = TextInput(...)
+
+        # ...
+        # ...
+
+        buttons = View.include(FormButtonsAdd)
+
+This has the same effect like putting the buttons directly in ``ItemAddForm``.
+
+You **ABSOLUTELY MUST** be aware that in background this is not including in its literal sense. It
+does not take the widget definitions and put them in the receiving class. If you access the widget
+that has been included, what happens is that you actually access a descriptor proxy that looks up
+the correct included hosting widget where the requested widget is hosted (it actually creates it on
+demand), then the correct widget is returned. This has its benefit in the fact that any logical
+structure that is built inside the included class is retained and works as one would expect, like
+parametrized locators and such.
