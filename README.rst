@@ -52,6 +52,8 @@ Features
   in the child Widgets.
 - Supports `Parametrized views`_.
 - Supports `Version picking`_.
+- Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
+- Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
 
 Projects using widgetastic
 --------------------------
@@ -150,6 +152,10 @@ automatically pick the right widget under the hood.
 
 ``VersionPick`` is not limited to resolving widgets and can be used for anything.
 
+You can also pass the ``VersionPick`` instance as a constructor parameter into widget instantiation
+on the view class. Because it utilizes `Constructor object collapsing`_, it will resolve itself
+automatically.
+
 .. `Parametrized views`:
 
 Parametrized views
@@ -228,3 +234,44 @@ defined. In that case, the code would like like this:
 
 This sample code would go through all the occurences of the parametrization. Remember that the
 ``all`` classmethod IS REQUIRED in this case.
+
+You can also pass the ``ParametrizedString`` instance as a constructor parameter into widget instantiation
+on the view class. Because it utilizes `Constructor object collapsing`_, it will resolve itself
+automatically.
+
+.. `Constructor object collapsing`:
+
+Constructor object collapsing
+-----------------------------
+
+By using ``widgetastic.utils.ConstructorResolvable`` you can create an object that can lazily resolve
+itself into a different object upon widget instantiation. This is used eg. for the `Version picking`_
+where ``VersionPick`` descends from this class or for the parametrized strings. Just subclass this
+class and implement ``.resolve(self, parent_object)`` where ``parent_object`` is the to-be parent
+of the widget.
+
+.. `Fillable objects`:
+
+Fillable objects
+----------------
+
+I bet that if you have ever used modelling approach to the entities represented in the product, you
+have come across filling values in the UI and if you wanted to select the item representing given
+object in the UI, you had to pick a correct attribute and know it. So you had to do something like
+this (simplified example)
+
+.. code-block:: python
+
+    some_form.item.fill(o.description)
+
+If you let the class of ``o`` implement ``widgetastic.utils.Fillable``, you can implement the method
+``.as_fill_value`` which should return such value that is used in the UI. In that case, the
+simplification is as follows.
+
+.. code-block:: python
+
+    some_form.item.fill(o)
+
+You no longer have to care, the object itself know how it will be displayed in the UI. Unfortunately
+this does not work the other way (automatic instantiation of objects based on values read) as that
+would involve knowledge of metadata etc. That is a possible future feature.
