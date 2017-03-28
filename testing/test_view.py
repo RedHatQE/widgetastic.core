@@ -36,7 +36,7 @@ def test_view_widget_names(browser):
         w1 = Widget()
         w2 = Widget()
 
-    assert MyView(browser).widget_names == ['w1', 'w2']
+    assert MyView(browser).widget_names == ('w1', 'w2')
 
 
 def test_view_no_subviews(browser):

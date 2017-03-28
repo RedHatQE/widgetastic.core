@@ -307,6 +307,8 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             value = getattr(cls, key)
             if isinstance(value, Widgetable):
                 result.append((key, value))
+        for includer in cls._included_widgets:
+            result.append((None, includer))
         presorted_widgets = sorted(result, key=lambda pair: pair[1]._seq_id)
         result = []
         for name, widget in presorted_widgets:
@@ -314,7 +316,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 result.extend(widget.widget_class.cls_widget_names())
             else:
                 result.append(name)
-        return result
+        return tuple(result)
 
     @property
     def widget_names(self):
