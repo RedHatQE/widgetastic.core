@@ -190,6 +190,6 @@ def test_element_force_visibility_check_by_locator(browser):
 
 
 def test_size(browser):
-    width, height = browser.size('#exact_dimensions')
+    width, height = browser.size_of('#exact_dimensions')
     assert width == 42
     assert height == 69

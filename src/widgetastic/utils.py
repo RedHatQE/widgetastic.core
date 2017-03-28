@@ -322,7 +322,15 @@ class Fillable(object):
         raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
 
 
-class ParametrizedString(object):
+class ConstructorResolvable(object):
+    """Base class for objects that should be resolvable inside constructors of Widgets etc."""
+
+    def resolve(self, parent_object):
+        raise NotImplementedError(
+            'You need to implement .resolve(parent_object) on {}'.format(type(self).__name__))
+
+
+class ParametrizedString(ConstructorResolvable):
     """Class used to generate strings based on the context passed to the view.
 
     Useful for parametrized views.

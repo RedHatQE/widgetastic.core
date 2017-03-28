@@ -19,7 +19,7 @@ from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
 from .log import PrependParentsAdapter, create_widget_logger, logged
 from .utils import (
-    Widgetable, Fillable, ParametrizedLocator, ParametrizedString, attributize_string,
+    Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
     normalize_space)
 from .xpath import quote
 
@@ -42,14 +42,14 @@ def process_parameters(parent_obj, args, kwargs):
     """Processes the widget input parameters - checks if args or kwarg values are parametrized."""
     new_args = []
     for arg in args:
-        if isinstance(arg, ParametrizedString):
+        if isinstance(arg, ConstructorResolvable):
             new_args.append(arg.resolve(parent_obj))
         else:
             new_args.append(arg)
 
     new_kwargs = {}
     for k, v in kwargs.items():
-        if isinstance(v, ParametrizedString):
+        if isinstance(v, ConstructorResolvable):
             new_kwargs[k] = v.resolve(parent_obj)
         else:
             new_kwargs[k] = v
