@@ -152,8 +152,22 @@ class WidgetMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
+        desc_name_mapping = {}
+        for base in bases:
+            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
+                desc_name_mapping[key] = value
         for key, value in six.iteritems(attrs):
-            if key == 'fill':
+            if inspect.isclass(value) and issubclass(value, View):
+                new_attrs[key] = WidgetDescriptor(value)
+                desc_name_mapping[new_attrs[key]] = key
+            elif isinstance(value, Widgetable):
+                new_attrs[key] = value
+                desc_name_mapping[value] = key
+                for widget in value.child_items:
+                    if not isinstance(widget, (Widgetable, Widget)):
+                        continue
+                    desc_name_mapping[widget] = key
+            elif key == 'fill':
                 # handle fill() specifics
                 new_attrs[key] = logged(log_args=True, log_result=True)(wrap_fill_method(value))
             elif key == 'read':
@@ -163,12 +177,14 @@ class WidgetMetaclass(type):
                 # Do nothing
                 new_attrs[key] = value
         if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
-            # For handling the root locator of the Widget
+            # For handling the root locator of the View
             root = new_attrs['ROOT']
             if isinstance(root, ParametrizedLocator):
                 new_attrs['__locator__'] = _gen_locator_root()
             else:
                 new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
+
+        new_attrs['_desc_name_mapping'] = desc_name_mapping
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
@@ -219,6 +235,32 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             # We need a PrependParentsAdapter here.
             self.logger = create_widget_logger(type(self).__name__, logger)
         self.extra = ExtraData(self)
+        self._widget_cache = {}
+
+    def flush_widget_cache(self):
+        """FLush the widget cache recursively for the whole View tree structure"""
+        for widget in self.cached_sub_widgets:
+            try:
+                widget.flush_widget_cache()
+            except AttributeError:
+                # ParametrizedViewRequest does this, we can safely ignore that
+                pass
+        self._widget_cache.clear()
+
+    @property
+    def widget_names(self):
+        """Returns a list of widget names in the order they were defined on the class.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget` instances.
+        """
+        cls = type(self)
+        result = []
+        for key in dir(cls):
+            value = getattr(cls, key)
+            if isinstance(value, Widgetable):
+                result.append((key, value))
+        return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
 
     @property
     def hierarchy(self):
@@ -381,6 +423,41 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 action()
         return changed
 
+    @property
+    def sub_widgets(self):
+        """Returns all sub-widgets of this widget.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget`
+        """
+        return [getattr(self, widget_name) for widget_name in self.widget_names]
+
+    @property
+    def cached_sub_widgets(self):
+        """Returns all cached sub-widgets of this widgets.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget`
+        """
+        return [
+            getattr(self, widget_name)
+            for widget_name in self.widget_names
+            # Grab the descriptor
+            if getattr(type(self), widget_name) in self._widget_cache]
+
+    @property
+    def width(self):
+        return self.browser.size_of(self, parent=self.parent)[0]
+
+    @property
+    def height(self):
+        return self.browser.size_of(self, parent=self.parent)[1]
+
+    def __iter__(self):
+        """Allows iterating over the widgets on the view."""
+        for widget_attr in self.widget_names:
+            yield getattr(self, widget_attr)
+
 
 def _gen_locator_meth(loc):
     def __locator__(self):  # noqa
@@ -394,44 +471,7 @@ def _gen_locator_root():
     return __locator__
 
 
-class ViewMetaclass(WidgetMetaclass):
-    """metaclass that ensures nested widgets' functionality from the declaration point of view.
-
-    When you pass a ``ROOT`` class attribute, it is used to generate a ``__locator__`` method on
-    the view that ensures the view is resolvable.
-    """
-    def __new__(cls, name, bases, attrs):
-        new_attrs = {}
-        desc_name_mapping = {}
-        for base in bases:
-            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
-                desc_name_mapping[key] = value
-        for key, value in six.iteritems(attrs):
-            if inspect.isclass(value) and issubclass(value, View):
-                new_attrs[key] = WidgetDescriptor(value)
-                desc_name_mapping[new_attrs[key]] = key
-            elif isinstance(value, Widgetable):
-                new_attrs[key] = value
-                desc_name_mapping[value] = key
-                for widget in value.child_items:
-                    if not isinstance(widget, (Widgetable, Widget)):
-                        continue
-                    desc_name_mapping[widget] = key
-            else:
-                new_attrs[key] = value
-        if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
-            # For handling the root locator of the View
-            root = new_attrs['ROOT']
-            if isinstance(root, ParametrizedLocator):
-                new_attrs['__locator__'] = _gen_locator_root()
-            else:
-                new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
-
-        new_attrs['_desc_name_mapping'] = desc_name_mapping
-        return super(ViewMetaclass, cls).__new__(cls, name, bases, new_attrs)
-
-
-class View(six.with_metaclass(ViewMetaclass, Widget)):
+class View(Widget):
     """View is a kind of abstract widget that can hold another widgets. Remembers the order,
     so therefore it can function like a form with defined filling order.
 
@@ -463,17 +503,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
-        self._widget_cache = {}
-
-    def flush_widget_cache(self):
-        """FLush the widget cache recursively for the whole View tree structure"""
-        for view in self.cached_sub_views:
-            try:
-                view.flush_widget_cache()
-            except AttributeError:
-                # ParametrizedViewRequest does this, we can safely ignore that
-                pass
-        self._widget_cache.clear()
 
     @property
     def browser(self):
@@ -529,62 +558,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         """
         return WidgetDescriptor(view_class)
 
-    @classmethod
-    def widget_names(cls):
-        """Returns a list of widget names in the order they were defined on the class.
-
-        Returns:
-            A :py:class:`list` of :py:class:`Widget` instances.
-        """
-        result = []
-        for key in dir(cls):
-            value = getattr(cls, key)
-            if isinstance(value, Widgetable):
-                result.append((key, value))
-        return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
-
-    @property
-    def sub_view_names(self):
-        """Returns all sub-views' names of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`str`
-        """
-        cls = type(self)
-        views = []
-        for widget_name in cls.widget_names():
-            widget_class = getattr(cls, widget_name)
-            if (
-                    (inspect.isclass(widget_class) and issubclass(widget_class, View)) or
-                    (
-                        isinstance(widget_class, WidgetDescriptor) and
-                        issubclass(widget_class.klass, View))):
-                views.append(widget_name)
-
-        return views
-
-    @property
-    def sub_views(self):
-        """Returns all sub-views of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`View`
-        """
-        return [getattr(self, view_name) for view_name in self.sub_view_names]
-
-    @property
-    def cached_sub_views(self):
-        """Returns all cached sub-views of this view.
-
-        Returns:
-            A :py:class:`list` of :py:class:`View`
-        """
-        return [
-            getattr(self, view_name)
-            for view_name in self.sub_view_names
-            # Grab the descriptor
-            if getattr(type(self), view_name) in self._widget_cache]
-
     @property
     def is_displayed(self):
         """Overrides the :py:meth:`Widget.is_displayed`. The difference is that if the view does
@@ -626,22 +599,14 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
         """
         was_change = False
         self.before_fill(values)
-        for name in self.widget_names():
+        for name in self.widget_names:
             if name not in values or values[name] is None:
                 continue
 
             widget = getattr(self, name)
             try:
                 value = values[name]
-                if isinstance(widget, ParametrizedViewRequest):
-                    if not isinstance(value, dict):
-                        raise ValueError('When filling parametrized view a dict is required')
-                    for param_tuple, fill_value in value.items():
-                        if not isinstance(param_tuple, tuple):
-                            param_tuple = (param_tuple, )
-                        if widget(*param_tuple).fill(fill_value):
-                            was_change = True
-                elif widget.fill(value):
+                if widget.fill(value):
                     was_change = True
             except NotImplementedError:
                 continue
@@ -657,22 +622,10 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             using the :py:meth:`Widget.read`.
         """
         result = {}
-        for widget_name in self.widget_names():
+        for widget_name in self.widget_names:
             widget = getattr(self, widget_name)
             try:
-                if isinstance(widget, ParametrizedViewRequest):
-                    # Special handling of the parametrized views
-                    all_presences = widget.view_class.all(widget.parent_object.browser)
-                    value = {}
-                    for param_tuple in all_presences:
-                        # For each presence store it in a dictionary
-                        args = param_tuple
-                        if len(param_tuple) < 2:
-                            # Single value - no tuple
-                            param_tuple = param_tuple[0]
-                        value[param_tuple] = widget(*args).read()
-                else:
-                    value = widget.read()
+                value = widget.read()
             except (NotImplementedError, NoSuchElementException, DoNotReadThisWidget):
                 continue
 
@@ -695,11 +648,6 @@ class View(six.with_metaclass(ViewMetaclass, Widget)):
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
         """
         pass
-
-    def __iter__(self):
-        """Allows iterating over the widgets on the view."""
-        for widget_attr in self.widget_names():
-            yield getattr(self, widget_attr)
 
 
 class ParametrizedView(View):
@@ -785,6 +733,30 @@ class ParametrizedViewRequest(object):
             'This is not an instance of {}. You need to call this object and pass the required '
             'parameters of the view.'.format(self.view_class.__name__))
 
+    def read(self):
+        # Special handling of the parametrized views
+        all_presences = self.view_class.all(self.parent_object.browser)
+        value = {}
+        for param_tuple in all_presences:
+            # For each presence store it in a dictionary
+            args = param_tuple
+            if len(param_tuple) < 2:
+                # Single value - no tuple
+                param_tuple = param_tuple[0]
+            value[param_tuple] = self(*args).read()
+        return value
+
+    def fill(self, value):
+        was_change = False
+        if not isinstance(value, dict):
+            raise ValueError('When filling parametrized view a dict is required')
+        for param_tuple, fill_value in value.items():
+            if not isinstance(param_tuple, tuple):
+                param_tuple = (param_tuple, )
+            if self(*param_tuple).fill(fill_value):
+                was_change = True
+        return was_change
+
 
 class ClickableMixin(object):
 
@@ -793,20 +765,31 @@ class ClickableMixin(object):
         return self.browser.click(self)
 
 
-class Text(Widget, ClickableMixin):
-    """A widget that an represent anything that can be read from the webpage as a text content of
-    a tag.
+class GenericLocatorWidget(Widget, ClickableMixin):
+    """A base class for any widgets with a locator.
+
+    Clickable.
 
     Args:
         locator: Locator of the object ob the page.
     """
+    ROOT = ParametrizedLocator('{@locator}')
+
     def __init__(self, parent, locator, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
 
-    def __locator__(self):
-        return self.locator
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.locator)
 
+
+class Text(GenericLocatorWidget):
+    """A widget that can represent anything that can be read from the webpage as a text content of
+    a tag.
+
+    Args:
+        locator: Locator of the object on the page.
+    """
     @property
     def text(self):
         return self.browser.text(self, parent=self.parent)
@@ -814,8 +797,24 @@ class Text(Widget, ClickableMixin):
     def read(self):
         return self.text
 
-    def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.locator)
+
+class Image(GenericLocatorWidget):
+    """A widget that represents an image.
+
+    Args:
+        locator: Locator of the object on the page.
+    """
+    @property
+    def src(self):
+        return self.browser.get_attribute('src', self, parent=self.parent)
+
+    @property
+    def alt(self):
+        return self.browser.get_attribute('alt', self, parent=self.parent)
+
+    @property
+    def title(self):
+        return self.browser.get_attribute('title', self, parent=self.parent)
 
 
 class BaseInput(Widget):

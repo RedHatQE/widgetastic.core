@@ -6,6 +6,7 @@ import six
 import time
 
 from cached_property import cached_property
+from collections import namedtuple
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -31,6 +32,8 @@ def is_valid(cls, strategy):
 
 
 By.is_valid = classmethod(is_valid)
+
+Size = namedtuple('Size', ['width', 'height'])
 
 
 class DefaultPlugin(object):
@@ -439,6 +442,11 @@ class Browser(object):
         return self.execute_script(
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
             self.element(*args, **kwargs), attr, value)
+
+    def size_of(self, *args, **kwargs):
+        """Returns element's size as a tuple of width/height."""
+        size = self.element(*args, **kwargs).size
+        return Size(size['width'], size['height'])
 
     def clear(self, locator, *args, **kwargs):
         """Clears a text input with given locator."""
