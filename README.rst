@@ -313,3 +313,9 @@ the correct included hosting widget where the requested widget is hosted (it act
 demand), then the correct widget is returned. This has its benefit in the fact that any logical
 structure that is built inside the included class is retained and works as one would expect, like
 parametrized locators and such.
+
+All the included widgets in the structure share their parent with the widget where you started
+including. So when instantiated, the underlying ``FormButtonsAdd`` has the same parent widget as
+the ``ItemAddForm``. I did not think it would be wise to make the including widget a parent for the
+included widgets due to the fact widgetastic fences the element lookup if ``ROOT`` is present on a
+widget/view.
