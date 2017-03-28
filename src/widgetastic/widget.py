@@ -137,6 +137,24 @@ class ExtraData(object):
                 attr, ', '.join(self._extra_objects_list)))
 
 
+class WidgetIncluder(Widgetable):
+    """Includes widgets from another widget. Useful for sharing pieces of code."""
+    def __init__(self, widget_class):
+        self.widget_class = widget_class
+
+
+class IncludedWidget(object):
+    def __init__(self, included_id, widget_name):
+        self.included_id = included_id
+        self.widget_name = widget_name
+
+    def __get__(self, o, t=None):
+        if o is None:
+            return self
+
+        return o._get_included_widget(self.included_id, self.widget_name)
+
+
 class WidgetMetaclass(type):
     """Metaclass that ensures that ``fill`` and ``read`` methods are logged and coerce Fillable
     properly.
@@ -153,6 +171,7 @@ class WidgetMetaclass(type):
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
         desc_name_mapping = {}
+        included_widgets = []
         for base in bases:
             for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
                 desc_name_mapping[key] = value
@@ -160,6 +179,11 @@ class WidgetMetaclass(type):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
                 desc_name_mapping[new_attrs[key]] = key
+            elif isinstance(value, WidgetIncluder):
+                included_widgets.append(value)
+                # Now generate accessors for each included widget
+                for widget_name in value.widget_class.cls_widget_names():
+                    new_attrs[widget_name] = IncludedWidget(value._seq_id, widget_name)
             elif isinstance(value, Widgetable):
                 new_attrs[key] = value
                 desc_name_mapping[value] = key
@@ -183,7 +207,7 @@ class WidgetMetaclass(type):
                 new_attrs['__locator__'] = _gen_locator_root()
             else:
                 new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
-
+        new_attrs['_included_widgets'] = tuple(sorted(included_widgets, key=lambda w: w._seq_id))
         new_attrs['_desc_name_mapping'] = desc_name_mapping
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
@@ -198,6 +222,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
           instance and instantiates the widget with underlying browser.
         * Implements some basic interface for all widgets.
     """
+
+    # Helper methods
+    @staticmethod
+    def include(*args, **kwargs):
+        return WidgetIncluder(*args, **kwargs)
 
     def __new__(cls, *args, **kwargs):
         """Implement some typing saving magic.
@@ -236,6 +265,18 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             self.logger = create_widget_logger(type(self).__name__, logger)
         self.extra = ExtraData(self)
         self._widget_cache = {}
+        self._initialized_included_widgets = {}
+
+    def _get_included_widget(self, includer_id, widget_name):
+        if includer_id not in self._initialized_included_widgets:
+            for widget_includer in self._included_widgets:
+                if widget_includer._seq_id == includer_id:
+                    self._initialized_included_widgets[widget_includer._seq_id] =\
+                        widget_includer.widget_class(self.parent, self.logger)
+                    break
+            else:
+                raise ValueError('Could not find includer #{}'.format(includer_id))
+        return getattr(self._initialized_included_widgets[includer_id], widget_name)
 
     def flush_widget_cache(self):
         """FLush the widget cache recursively for the whole View tree structure"""
@@ -246,6 +287,34 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 # ParametrizedViewRequest does this, we can safely ignore that
                 pass
         self._widget_cache.clear()
+        for widget in self._initialized_included_widgets.values():
+            try:
+                widget.flush_widget_cache()
+            except AttributeError:
+                # ParametrizedViewRequest does this, we can safely ignore that
+                pass
+        self._initialized_included_widgets.clear()
+
+    @classmethod
+    def cls_widget_names(cls):
+        """Returns a list of widget names in the order they were defined on the class.
+
+        Returns:
+            A :py:class:`list` of :py:class:`Widget` instances.
+        """
+        result = []
+        for key in dir(cls):
+            value = getattr(cls, key)
+            if isinstance(value, Widgetable):
+                result.append((key, value))
+        presorted_widgets = sorted(result, key=lambda pair: pair[1]._seq_id)
+        result = []
+        for name, widget in presorted_widgets:
+            if isinstance(widget, WidgetIncluder):
+                result.extend(widget.widget_class.cls_widget_names())
+            else:
+                result.append(name)
+        return result
 
     @property
     def widget_names(self):
@@ -254,13 +323,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         Returns:
             A :py:class:`list` of :py:class:`Widget` instances.
         """
-        cls = type(self)
-        result = []
-        for key in dir(cls):
-            value = getattr(cls, key)
-            if isinstance(value, Widgetable):
-                result.append((key, value))
-        return [name for name, _ in sorted(result, key=lambda pair: pair[1]._seq_id)]
+        return self.cls_widget_names()
 
     @property
     def hierarchy(self):
