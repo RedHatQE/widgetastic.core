@@ -829,11 +829,15 @@ class BaseInput(Widget):
         if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
             raise TypeError('You can only pass one of name, id or locator!')
         Widget.__init__(self, parent, logger=logger)
+        self.name = None
+        self.id = None
         if name or id:
             if name is not None:
                 id_attr = '@name={}'.format(quote(name))
+                self.name = name
             elif id is not None:
                 id_attr = '@id={}'.format(quote(id))
+                self.id = id
             self.locator = './/*[(self::input or self::textarea) and {}]'.format(id_attr)
         else:
             self.locator = locator

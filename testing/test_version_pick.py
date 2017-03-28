@@ -81,3 +81,12 @@ def test_versionpick_on_view(browser):
     assert view.widget.read() == 'test text'
 
     assert view.read() == {'widget': 'test text'}
+
+
+def test_verpick_in_constructor(browser):
+    class MyView(View):
+        widget = TextInput(id=VersionPick({Version.lowest(): 'nonexisting', '1.0.0': 'input1'}))
+
+    view = MyView(browser)
+    assert 'widget' in view.widget_names
+    assert view.widget.id == 'input1'
