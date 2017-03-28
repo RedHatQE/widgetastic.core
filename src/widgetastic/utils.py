@@ -220,7 +220,15 @@ class Version(object):
         return ".".join(self.vstring.split(".")[:n])
 
 
-class VersionPick(Widgetable):
+class ConstructorResolvable(object):
+    """Base class for objects that should be resolvable inside constructors of Widgets etc."""
+
+    def resolve(self, parent_object):
+        raise NotImplementedError(
+            'You need to implement .resolve(parent_object) on {}'.format(type(self).__name__))
+
+
+class VersionPick(Widgetable, ConstructorResolvable):
     """A class that implements the version picking functionality.
 
     Basic usage is a descriptor in which you place instances of :py:class:`VersionPick` in a view.
@@ -295,6 +303,9 @@ class VersionPick(Widgetable):
         else:
             return result
 
+    def resolve(self, parent_object):
+        return self.__get__(parent_object)
+
 
 class Fillable(object):
     @classmethod
@@ -320,14 +331,6 @@ class Fillable(object):
 
     def as_fill_value(self):
         raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
-
-
-class ConstructorResolvable(object):
-    """Base class for objects that should be resolvable inside constructors of Widgets etc."""
-
-    def resolve(self, parent_object):
-        raise NotImplementedError(
-            'You need to implement .resolve(parent_object) on {}'.format(type(self).__name__))
 
 
 class ParametrizedString(ConstructorResolvable):
