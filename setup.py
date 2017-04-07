@@ -17,7 +17,6 @@ setup(
     install_requires=[
         'cached_property',
         'jsmin',
-        'selenium',
         'selenium-smart-locator',
         'six',
         'wait_for',
