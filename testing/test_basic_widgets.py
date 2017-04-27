@@ -168,6 +168,39 @@ def test_table(browser):
     assert row.event.text == 'Some Event'
 
 
+def test_table_with_widgets(browser):
+    class TestForm(View):
+        table = Table('#withwidgets', column_widgets={
+            'Column 2': TextInput(locator='./input'),
+            'Column 3': TextInput(locator='./input')})
+
+    view = TestForm(browser)
+
+    assert view.read() == {
+        'table': [
+            {0: 'foo', 'Column 2': '', 'Column 3': 'foo col 3'},
+            {0: 'bar', 'Column 2': 'bar col 2', 'Column 3': ''}
+        ]}
+    assert view.fill({'table': [{'Column 2': 'foobaaar'}]})
+    assert not view.fill({'table': [{'Column 2': 'foobaaar'}]})
+    assert view.read() == {
+        'table': [
+            {0: 'foo', 'Column 2': 'foobaaar', 'Column 3': 'foo col 3'},
+            {0: 'bar', 'Column 2': 'bar col 2', 'Column 3': ''}
+        ]}
+
+    assert view.fill({'table': [{}, {'Column 3': 'yolo'}]})
+    assert view.read() == {
+        'table': [
+            {0: 'foo', 'Column 2': 'foobaaar', 'Column 3': 'foo col 3'},
+            {0: 'bar', 'Column 2': 'bar col 2', 'Column 3': 'yolo'}
+        ]}
+
+    with pytest.raises(TypeError):
+        # There is nothing to be filled
+        view.fill({'table': [{0: 'explode'}]})
+
+
 def test_simple_select(browser):
     class TestForm(View):
         select = Select(name='testselect1')
