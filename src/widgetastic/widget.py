@@ -1037,12 +1037,16 @@ class TableColumn(Widget, ClickableMixin):
         return self.row.table
 
     def read(self):
+        """Reads the content of the cell. If widget is present and visible, it is read, otherwise
+        the text of the cell is returned.
+        """
         if self.widget is not None and self.widget.is_displayed:
             return self.widget.read()
         else:
             return self.text
 
     def fill(self, value):
+        """Fills the cell with the value if the widget is present. If not, raises a TypeError."""
         if self.widget is not None:
             return self.widget.fill(value)
         else:
@@ -1103,6 +1107,7 @@ class TableRow(Widget, ClickableMixin):
             yield header, self[i]
 
     def read(self):
+        """Read the row - the result is a dictionary"""
         result = {}
         for i, (header, cell) in enumerate(self):
             if header is None:
@@ -1111,14 +1116,17 @@ class TableRow(Widget, ClickableMixin):
         return result
 
     def fill(self, value):
+        """Row filling.
+
+        Accepts either a dictionary or an iterable that can be zipped with headers to create a dict.
+        """
         if isinstance(value, (list, tuple)):
             # make it a dict
             value = dict(zip(self.table.headers, value))
         changed = False
         for key, value in value.items():
-            if value is not None:
-                if self[key].fill(value):
-                    changed = True
+            if value is not None and self[key].fill(value):
+                changed = True
         return changed
 
 
@@ -1427,12 +1435,14 @@ class Table(Widget):
                 yield row
 
     def read(self):
+        """Reads the table. Returns a list, every item in the list is contents read from the row."""
         result = []
         for row in self:
             result.append(row.read())
         return result
 
     def fill(self, value):
+        """Fills the table, accepts list which is dispatched to respective rows."""
         if not isinstance(value, (list, tuple)):
             value = [value]
         changed = False
