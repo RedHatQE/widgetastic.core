@@ -1131,7 +1131,6 @@ class TableRow(Widget, ClickableMixin):
         return any(self[key].fill(value) for key, value in value.items() if value is not None)
 
 
-# TODO: read/fill? How would that work?
 class Table(Widget):
     """Basic table-handling class.
 
@@ -1185,9 +1184,23 @@ class Table(Widget):
         Table(locator, column_widgets={column_name_or_index: widget_class_or_definition, ...})
         # The on TableColumn instances you can access .widget
         # This is also taken into account with reading or filling
+        # For filling such table, fill takes a list, one entry per row, goes from start
+        table.fill([{'Column1': 'value1'}, ...])
 
-    If you subclass Table, Row, or Column, do not forget to update the Row in Table and Column in
-    Row in order for the classes to use the correct class.
+        # You can also designate one column as "special" associative column using assoc_column
+        # You can specify it with column name
+        Table(locator, column_widgets={...}, assoc_column='Display Name')
+        # Or by the column index
+        Table(locator, column_widgets={...}, assoc_column=0)
+        # When you use assoc_column, you can use dictionary instead of the list, which means that
+        # you can pick the rows to fill by the value in given column.
+        # The same example as previous article
+        table.fill({'foo': {'Column1': 'value1'}})  # Given that the assoc_column column has 'foo'
+                                                    # on that line
+
+    If you subclass :py:class:`Table`, :py:class:`TableRow`, or :py:class:`TableColumn`, do not
+    forget to update the :py:attr:`Table.Row` and :py:attr:`TableRow.Column` in order for the
+    classes to use the correct class.
 
     Args:
         locator: A locator to the table ``<table>`` tag.
