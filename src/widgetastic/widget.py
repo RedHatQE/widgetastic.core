@@ -1123,11 +1123,12 @@ class TableRow(Widget, ClickableMixin):
         if isinstance(value, (list, tuple)):
             # make it a dict
             value = dict(zip(self.table.headers, value))
-        changed = False
-        for key, value in value.items():
-            if value is not None and self[key].fill(value):
-                changed = True
-        return changed
+        elif not isinstance(value, dict):
+            if self.table.assoc_column_position is None:
+                raise ValueError(
+                    'For filling rows with single value you need to specify assoc_column')
+            value = {self.table.assoc_column_position: value}
+        return any(self[key].fill(value) for key, value in value.items() if value is not None)
 
 
 # TODO: read/fill? How would that work?
@@ -1192,6 +1193,7 @@ class Table(Widget):
         locator: A locator to the table ``<table>`` tag.
         column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
             value is the widget definition.
+        assoc_column: Index or name of the column used for associative filling.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
@@ -1200,10 +1202,11 @@ class Table(Widget):
 
     Row = TableRow
 
-    def __init__(self, parent, locator, column_widgets=None, logger=None):
+    def __init__(self, parent, locator, column_widgets=None, assoc_column=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
         self.column_widgets = column_widgets or {}
+        self.assoc_column = assoc_column
 
     def __repr__(self):
         return '{}({!r}, column_widgets={!r})'.format(
@@ -1214,7 +1217,8 @@ class Table(Widget):
 
     def clear_cache(self):
         for item in [
-                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping']:
+                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping',
+                'assoc_column_position']:
             try:
                 delattr(self, item)
             except AttributeError:
@@ -1256,6 +1260,28 @@ class Table(Widget):
     def index_header_mapping(self):
         """Contains mapping between hposition index and header name (pretty)."""
         return {i: h for h, i in self.header_index_mapping.items()}
+
+    @cached_property
+    def assoc_column_position(self):
+        """Returns the position of the column specified as associative. If not specified, None
+        returned.
+        """
+        if self.assoc_column is None:
+            return None
+        elif isinstance(self.assoc_column, int):
+            return self.assoc_column
+        elif isinstance(self.assoc_column, six.string_types):
+            if self.assoc_column in self.attributized_headers:
+                header = self.attributized_headers[self.assoc_column]
+            elif self.assoc_column in self.headers:
+                header = self.assoc_column
+            else:
+                raise ValueError(
+                    'Could not find the assoc_value={!r} in headers'.format(self.assoc_column))
+            return self.header_index_mapping[header]
+        else:
+            raise TypeError(
+                'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
     def __getitem__(self, at_index):
         if not isinstance(at_index, int):
@@ -1436,20 +1462,39 @@ class Table(Widget):
 
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
-        result = []
-        for row in self:
-            result.append(row.read())
-        return result
+        if self.assoc_column_position is None:
+            return [row.read() for row in self]
+        else:
+            result = {}
+            for row in self:
+                row_read = row.read()
+                try:
+                    key = row_read.pop(self.header_index_mapping[self.assoc_column_position])
+                except KeyError:
+                    try:
+                        key = row_read.pop(self.assoc_column_position)
+                    except KeyError:
+                        raise ValueError(
+                            'The assoc_column={!r} could not be retrieved'.format(
+                                self.assoc_column))
+                if key in result:
+                    raise ValueError('Duplicate value for {}={!r}'.format(key, result[key]))
+                result[key] = row_read
+            return result
 
     def fill(self, value):
         """Fills the table, accepts list which is dispatched to respective rows."""
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-        changed = False
-        for row, value in zip(self, value):
-            if row.fill(value):
-                changed = True
-        return changed
+        if isinstance(value, dict):
+            if self.assoc_column_position is None:
+                raise TypeError('In order to support dict you need to specify assoc_column')
+            return any(
+                self.row((self.assoc_column_position, key)).fill(fill_value)
+                for key, fill_value
+                in six.iteritems(value))
+        else:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            return any(row.fill(value) for row, value in zip(self, value))
 
 
 class Select(Widget):
