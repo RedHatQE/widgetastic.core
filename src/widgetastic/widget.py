@@ -355,6 +355,9 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     def browser(self):
         """Returns the instance of parent browser.
 
+        If the view defines ``__locator__`` or ``ROOT`` then a new wrapper is created that injects
+        the ``parent=``
+
         Returns:
             :py:class:`widgetastic.browser.Browser` instance
 
@@ -362,7 +365,13 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            return self.parent.browser
+            super_browser = self.parent.browser
+            if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
+                # Wrap it so we have automatic parent injection
+                return BrowserParentWrapper(self, super_browser)
+            else:
+                # This view has no locator, therefore just use the parent browser
+                return super_browser
         except AttributeError:
             raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
 
@@ -575,30 +584,6 @@ class View(Widget):
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
-
-    @property
-    def browser(self):
-        """Returns the instance of parent browser.
-
-        If the view defines ``__locator__`` or ``ROOT`` then a new wrapper is created that injects
-        the ``parent=``
-
-        Returns:
-            :py:class:`widgetastic.browser.Browser` instance
-
-        Raises:
-            :py:class:`ValueError` when the browser is not defined, which is an error.
-        """
-        try:
-            super_browser = super(View, self).browser
-            if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
-                # Wrap it so we have automatic parent injection
-                return BrowserParentWrapper(self, super_browser)
-            else:
-                # This view has no locator, therefore just use the parent browser
-                return super_browser
-        except AttributeError:
-            raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
 
     @staticmethod
     def nested(view_class):
@@ -1007,8 +992,65 @@ class TableColumn(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
 
     @property
+    def column_name(self):
+        """If there is a name associated with this column, return it. Otherwise returns None."""
+        try:
+            return self.row.position_to_column_name(self.position)
+        except KeyError:
+            return None
+
+    @cached_property
+    def widget(self):
+        """Returns the associated widget if defined. If there is none defined, returns None."""
+        args = ()
+        kwargs = {}
+        if self.column_name is None:
+            if self.position not in self.table.column_widgets:
+                return None
+            wcls = self.table.column_widgets[self.position]
+        else:
+            if self.column_name not in self.table.column_widgets:
+                return None
+            wcls = self.table.column_widgets[self.column_name]
+
+        # We cannot use WidgetDescriptor's facility for instantiation as it does caching and all
+        # that stuff
+        if isinstance(wcls, WidgetDescriptor):
+            args = wcls.args
+            kwargs = wcls.kwargs
+            wcls = wcls.klass
+        kwargs = copy(kwargs)
+        if 'logger' not in kwargs:
+            kwargs['logger'] = self.logger
+        return wcls(self, *args, **kwargs)
+
+    @property
     def text(self):
         return self.browser.text(self)
+
+    @property
+    def row(self):
+        return self.parent
+
+    @property
+    def table(self):
+        return self.row.table
+
+    def read(self):
+        """Reads the content of the cell. If widget is present and visible, it is read, otherwise
+        the text of the cell is returned.
+        """
+        if self.widget is not None and self.widget.is_displayed:
+            return self.widget.read()
+        else:
+            return self.text
+
+    def fill(self, value):
+        """Fills the cell with the value if the widget is present. If not, raises a TypeError."""
+        if self.widget is not None:
+            return self.widget.fill(value)
+        else:
+            raise TypeError('Cannot fill column {}, no widget'.format(self.column_name))
 
 
 class TableRow(Widget, ClickableMixin):
@@ -1026,6 +1068,10 @@ class TableRow(Widget, ClickableMixin):
         Widget.__init__(self, parent, logger=logger)
         self.index = index
 
+    @property
+    def table(self):
+        return self.parent
+
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
@@ -1033,31 +1079,58 @@ class TableRow(Widget, ClickableMixin):
         loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
         return self.browser.element(loc, parent=self.parent)
 
+    def position_to_column_name(self, position):
+        """Maps the position index into the column name (pretty)"""
+        return self.table.index_header_mapping[position]
+
     def __getitem__(self, item):
         if isinstance(item, int):
             return self.Column(self, item, logger=self.logger)
         elif isinstance(item, six.string_types):
-            return self[self.parent.header_index_mapping[item]]
+            return self[self.table.header_index_mapping[self.table.ensure_normal(item)]]
         else:
             raise TypeError('row[] accepts only integers and strings')
 
     def __getattr__(self, attr):
         try:
-            return self[self.parent.attributized_headers[attr]]
+            return self[self.table.ensure_normal(attr)]
         except KeyError:
             raise AttributeError('Cannot find column {} in the table'.format(attr))
 
     def __dir__(self):
         result = super(TableRow, self).__dir__()
-        result.extend(self.parent.attributized_headers.keys())
+        result.extend(self.table.attributized_headers.keys())
         return sorted(result)
 
     def __iter__(self):
-        for i, header in enumerate(self.parent.headers):
+        for i, header in enumerate(self.table.headers):
             yield header, self[i]
 
+    def read(self):
+        """Read the row - the result is a dictionary"""
+        result = {}
+        for i, (header, cell) in enumerate(self):
+            if header is None:
+                header = i
+            result[header] = cell.read()
+        return result
 
-# TODO: read/fill? How would that work?
+    def fill(self, value):
+        """Row filling.
+
+        Accepts either a dictionary or an iterable that can be zipped with headers to create a dict.
+        """
+        if isinstance(value, (list, tuple)):
+            # make it a dict
+            value = dict(zip(self.table.headers, value))
+        elif not isinstance(value, dict):
+            if self.table.assoc_column_position is None:
+                raise ValueError(
+                    'For filling rows with single value you need to specify assoc_column')
+            value = {self.table.assoc_column_position: value}
+        return any(self[key].fill(value) for key, value in value.items() if value is not None)
+
+
 class Table(Widget):
     """Basic table-handling class.
 
@@ -1107,11 +1180,33 @@ class Table(Widget):
         # Or you can click at it
         assert row.column_name.click()
 
-    If you subclass Table, Row, or Column, do not forget to update the Row in Table and Column in
-    Row in order for the classes to use the correct class.
+        # Table cells can contain widgets or whole groups of widgets:
+        Table(locator, column_widgets={column_name_or_index: widget_class_or_definition, ...})
+        # The on TableColumn instances you can access .widget
+        # This is also taken into account with reading or filling
+        # For filling such table, fill takes a list, one entry per row, goes from start
+        table.fill([{'Column1': 'value1'}, ...])
+
+        # You can also designate one column as "special" associative column using assoc_column
+        # You can specify it with column name
+        Table(locator, column_widgets={...}, assoc_column='Display Name')
+        # Or by the column index
+        Table(locator, column_widgets={...}, assoc_column=0)
+        # When you use assoc_column, you can use dictionary instead of the list, which means that
+        # you can pick the rows to fill by the value in given column.
+        # The same example as previous article
+        table.fill({'foo': {'Column1': 'value1'}})  # Given that the assoc_column column has 'foo'
+                                                    # on that line
+
+    If you subclass :py:class:`Table`, :py:class:`TableRow`, or :py:class:`TableColumn`, do not
+    forget to update the :py:attr:`Table.Row` and :py:attr:`TableRow.Column` in order for the
+    classes to use the correct class.
 
     Args:
         locator: A locator to the table ``<table>`` tag.
+        column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
+            value is the widget definition.
+        assoc_column: Index or name of the column used for associative filling.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
@@ -1120,19 +1215,23 @@ class Table(Widget):
 
     Row = TableRow
 
-    def __init__(self, parent, locator, logger=None):
+    def __init__(self, parent, locator, column_widgets=None, assoc_column=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
+        self.column_widgets = column_widgets or {}
+        self.assoc_column = assoc_column
 
     def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.locator)
+        return '{}({!r}, column_widgets={!r})'.format(
+            type(self).__name__, self.locator, self.column_widgets)
 
     def __locator__(self):
         return self.locator
 
     def clear_cache(self):
         for item in [
-                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping']:
+                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping',
+                'assoc_column_position']:
             try:
                 delattr(self, item)
             except AttributeError:
@@ -1153,17 +1252,49 @@ class Table(Widget):
 
         return tuple(result)
 
+    def ensure_normal(self, name):
+        """When you pass string in, it ensures it comes out as non-attributized string."""
+        if name in self.attributized_headers:
+            return self.attributized_headers[name]
+        else:
+            return name
+
     @cached_property
     def attributized_headers(self):
+        """Contains mapping between attributized headers and pretty headers"""
         return {attributize_string(h): h for h in self.headers if h is not None}
 
     @cached_property
     def header_index_mapping(self):
+        """Contains mapping between header name (pretty) and position index."""
         return {h: i for i, h in enumerate(self.headers) if h is not None}
 
     @cached_property
     def index_header_mapping(self):
+        """Contains mapping between hposition index and header name (pretty)."""
         return {i: h for h, i in self.header_index_mapping.items()}
+
+    @cached_property
+    def assoc_column_position(self):
+        """Returns the position of the column specified as associative. If not specified, None
+        returned.
+        """
+        if self.assoc_column is None:
+            return None
+        elif isinstance(self.assoc_column, int):
+            return self.assoc_column
+        elif isinstance(self.assoc_column, six.string_types):
+            if self.assoc_column in self.attributized_headers:
+                header = self.attributized_headers[self.assoc_column]
+            elif self.assoc_column in self.headers:
+                header = self.assoc_column
+            else:
+                raise ValueError(
+                    'Could not find the assoc_value={!r} in headers'.format(self.assoc_column))
+            return self.header_index_mapping[header]
+        else:
+            raise TypeError(
+                'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
     def __getitem__(self, at_index):
         if not isinstance(at_index, int):
@@ -1341,6 +1472,42 @@ class Table(Widget):
                     yield row
             else:
                 yield row
+
+    def read(self):
+        """Reads the table. Returns a list, every item in the list is contents read from the row."""
+        if self.assoc_column_position is None:
+            return [row.read() for row in self]
+        else:
+            result = {}
+            for row in self:
+                row_read = row.read()
+                try:
+                    key = row_read.pop(self.header_index_mapping[self.assoc_column_position])
+                except KeyError:
+                    try:
+                        key = row_read.pop(self.assoc_column_position)
+                    except KeyError:
+                        raise ValueError(
+                            'The assoc_column={!r} could not be retrieved'.format(
+                                self.assoc_column))
+                if key in result:
+                    raise ValueError('Duplicate value for {}={!r}'.format(key, result[key]))
+                result[key] = row_read
+            return result
+
+    def fill(self, value):
+        """Fills the table, accepts list which is dispatched to respective rows."""
+        if isinstance(value, dict):
+            if self.assoc_column_position is None:
+                raise TypeError('In order to support dict you need to specify assoc_column')
+            return any(
+                self.row((self.assoc_column_position, key)).fill(fill_value)
+                for key, fill_value
+                in six.iteritems(value))
+        else:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            return any(row.fill(value) for row, value in zip(self, value))
 
 
 class Select(Widget):
