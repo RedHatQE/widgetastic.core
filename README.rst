@@ -55,6 +55,7 @@ Features
 - Supports `Version picking`_.
 - Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
 - Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
+- Supports many Pythons! 2.7, 3.3, 3.4, 3.5, 3.6 and PyPy are all supported.
 
 Projects using widgetastic
 --------------------------
