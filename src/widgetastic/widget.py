@@ -648,6 +648,9 @@ class View(Widget):
 
         ``None`` values will be ignored.
 
+        It will log any skipped fill items.
+        It will log a warning if you pass any extra values for filling.
+
         Args:
             values: A dictionary of ``widget_name: value_to_fill``.
 
@@ -656,8 +659,19 @@ class View(Widget):
         """
         was_change = False
         self.before_fill(values)
+        extra_keys = set(values.keys()) - set(self.widget_names)
+        if extra_keys:
+            self.logger.warning(
+                'Extra values that have no corresponding fill fields passed: ',
+                ', '.join(extra_keys))
         for name in self.widget_names:
             if name not in values or values[name] is None:
+                if name not in values:
+                    self.logger.debug(
+                        'Skipping fill of %r because value was not specified', name)
+                else:
+                    self.logger.debug(
+                        'Skipping fill of %r because value was None', name)
                 continue
 
             widget = getattr(self, name)
