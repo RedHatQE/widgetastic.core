@@ -6,6 +6,7 @@ import re
 import six
 import string
 from cached_property import cached_property
+from functools import wraps
 from smartloc import Locator
 from threading import Lock
 
@@ -545,3 +546,34 @@ def crop_string_middle(s, length=32, cropper='...'):
         return s
     half = (length - len(cropper)) / 2
     return s[:half] + cropper + s[-half - 1:]
+
+
+def repeat_once_on_exceptions(*exception_classes, **set_key_to_what):
+    """This decorator serves as DRY repeater of method or function execution.
+
+    Works the way that when any of the exception classes is caught, the kwargs of the method call
+    is updated with ``set_key_to_what`` and invoked once more.
+
+    Args:
+        *exception_classes: Exception classes on which this decorator should react
+        **set_key_to_what: kwargs override used when the exception is hit and call retried.
+
+    Returns:
+        Whatever the wrapped function/method returns.
+
+    """
+    if not set_key_to_what:
+        raise TypeError('set_key_to_what is not set!')
+
+    def g(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except exception_classes:
+                kwargs.update(set_key_to_what)
+                return f(*args, **kwargs)
+
+        return wrapped
+
+    return g

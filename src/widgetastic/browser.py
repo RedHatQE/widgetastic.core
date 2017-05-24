@@ -21,7 +21,8 @@ from wait_for import wait_for
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
-from .log import create_widget_logger, null_logger
+from .log import create_widget_logger, logged, null_logger
+from .utils import repeat_once_on_exceptions
 from .xpath import normalize_space
 from .utils import crop_string_middle
 
@@ -269,6 +270,7 @@ class Browser(object):
 
         return result
 
+    @repeat_once_on_exceptions(NoSuchElementException, check_safe=True)
     def element(self, locator, *args, **kwargs):
         """Returns one :py:class:`selenium.webdriver.remote.webelement.WebElement`
 
@@ -280,6 +282,8 @@ class Browser(object):
         Raises:
             :py:class:`selenium.common.exceptions.NoSuchElementException`
         """
+        if 'check_safe' not in kwargs:
+            kwargs['check_safe'] = False
         try:
             vcheck = self._locator_force_visibility_check(locator)
             if vcheck is not None:
@@ -294,7 +298,7 @@ class Browser(object):
             else:
                 return elements[0]
         except IndexError:
-            raise NoSuchElementException('Could not find an element {}'.format(repr(locator)))
+            raise NoSuchElementException('Could not find an element {!r}'.format(locator))
 
     def perform_click(self):
         """Clicks the left mouse button at the current mouse position."""
@@ -304,12 +308,12 @@ class Browser(object):
         """Double-clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).double_click().perform()
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def click(self, locator, *args, **kwargs):
         """Clicks at a specific element using two separate events (mouse move, mouse click).
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
@@ -325,6 +329,7 @@ class Browser(object):
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def double_click(self, locator, *args, **kwargs):
         """Double-clicks at a specific element using two separate events (mouse move, mouse click).
 
@@ -346,12 +351,12 @@ class Browser(object):
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def raw_click(self, locator, *args, **kwargs):
         """Clicks at a specific element using the direct event.
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('raw_click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el)
@@ -394,6 +399,10 @@ class Browser(object):
         # Just in case
         return False
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
+    @repeat_once_on_exceptions(
+        StaleElementReferenceException, MoveTargetOutOfBoundsException,
+        check_safe=True)
     def move_to_element(self, locator, *args, **kwargs):
         """Moves the mouse cursor to the middle of the element represented by the locator.
 
@@ -402,23 +411,31 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
 
+        Keywords:
+            workaround: Default True, tells whether it can or can not perform the JS workaround.
+
         Returns:
             :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
-        self.logger.debug('move_to_element: %r', locator)
+        if 'check_safe' not in kwargs:
+            kwargs['check_safe'] = False
+        workaround = kwargs.pop('workaround', True)
         el = self.element(locator, *args, **kwargs)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
-            parent = self.element("..", parent=el)
+            parent = self.element("..", parent=el, check_safe=False)
             if parent.tag_name == "select":
-                self.move_to_element(parent)
+                self.move_to_element(parent, workaround=workaround)
                 return el
         move_to = ActionChains(self.selenium).move_to_element(el)
         try:
             move_to.perform()
         except MoveTargetOutOfBoundsException:
+            if not workaround:
+                # No workaround, reraise
+                raise
             # ff workaround
-            self.execute_script("arguments[0].scrollIntoView();", el)
+            self.execute_script("arguments[0].scrollIntoView();", el, silent=True)
             try:
                 move_to.perform()
             except MoveTargetOutOfBoundsException:  # This has become desperate now.
@@ -427,6 +444,7 @@ class Browser(object):
                         locator))
         return el
 
+    @logged(log_args=True, only_after=True, log_full_exception=False)
     def drag_and_drop(self, source, target):
         """Drags the source element and drops it into target.
 
@@ -439,6 +457,7 @@ class Browser(object):
             .drag_and_drop(self.element(source), self.element(target))\
             .perform()
 
+    @logged(log_args=True, only_after=True, log_full_exception=False)
     def drag_and_drop_by_offset(self, source, by_x, by_y):
         """Drags the source element and drops it into target.
 
@@ -451,6 +470,7 @@ class Browser(object):
             .drag_and_drop_by_offset(self.element(source), by_x, by_y)\
             .perform()
 
+    @logged(log_args=True, only_after=True, log_full_exception=False)
     def drag_and_drop_to(self, source, to_x=None, to_y=None):
         """Drags an element to a target location specified by ``to_x`` and ``to_y``
 
@@ -471,20 +491,26 @@ class Browser(object):
             to_y = middle.y
         return self.drag_and_drop_by_offset(source, to_x - middle.x, to_y - middle.y)
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def move_by_offset(self, x, y):
-        self.logger.debug('move_by_offset X:%r Y:%r', x, y)
+        """Moves mouse pointer by given values."""
         ActionChains(self.selenium).move_by_offset(x, y).perform()
+        self.plugin.ensure_page_safe()
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
+        result = self.selenium.execute_script(dedent(script), *args, **kwargs)
         if not kwargs.pop('silent', False):
-            self.logger.debug('execute_script: %r', script)
-        return self.selenium.execute_script(dedent(script), *args, **kwargs)
+            self.logger.debug('execute_script(%r) => %r', script, result)
+        return result
 
+    @logged(only_after=True, log_full_exception=False)
     def refresh(self):
         """Triggers a page refresh."""
         return self.selenium.refresh()
 
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def classes(self, locator, *args, **kwargs):
         """Return a list of classes attached to the element.
 
@@ -493,11 +519,11 @@ class Browser(object):
         Returns:
             A :py:class:`set` of strings with classes.
         """
-        result = set(self.execute_script(
+        return set(self.execute_script(
             "return arguments[0].classList;", self.element(locator, *args, **kwargs), silent=True))
-        self.logger.debug('css classes for %r => %r', locator, result)
-        return result
 
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.
 
@@ -508,6 +534,8 @@ class Browser(object):
         """
         return self.element(*args, **kwargs).tag_name
 
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def text(self, locator, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
 
@@ -520,7 +548,7 @@ class Browser(object):
             :py:class:`str` with the text
         """
         try:
-            text = self.element(locator, *args, **kwargs).text
+            text = self.move_to_element(locator, *args, **dict(kwargs, workaround=False)).text
         except MoveTargetOutOfBoundsException:
             text = ''
 
@@ -537,42 +565,61 @@ class Browser(object):
         self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
         return result
 
-    def get_attribute(self, attr, *args, **kwargs):
-        return self.element(*args, **kwargs).get_attribute(attr)
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
+    def get_attribute(self, attr, locator, *args, **kwargs):
+        """Get attribute value from an element."""
+        return self.element(locator, *args, **kwargs).get_attribute(attr)
 
-    def set_attribute(self, attr, value, *args, **kwargs):
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
+    def set_attribute(self, attr, value, locator, *args, **kwargs):
         return self.execute_script(
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
-            self.element(*args, **kwargs), attr, value)
+            self.element(locator, *args, **kwargs), attr, value, silent=True)
 
-    def size_of(self, *args, **kwargs):
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
+    def size_of(self, locator, *args, **kwargs):
         """Returns element's size as a tuple of width/height."""
-        size = self.element(*args, **kwargs).size
+        size = self.element(locator, *args, **kwargs).size
         return Size(size['width'], size['height'])
 
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def location_of(self, *args, **kwargs):
         """Returns element's location as a tuple of x/y."""
         location = self.element(*args, **kwargs).location
         return Location(location['x'], location['y'])
 
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def middle_of(self, *args, **kwargs):
         """Returns element's location as a tuple of x/y."""
         size = self.size_of(*args, **kwargs)
         location = self.location_of(*args, **kwargs)
         return Location(location.x + size.width / 2, location.y + size.height / 2)
 
+    @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def clear(self, locator, *args, **kwargs):
         """Clears a text input with given locator."""
-        self.logger.debug('clear: %r', locator)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
         result = el.clear()
+        self.plugin.ensure_page_safe()
         self.plugin.after_keyboard_input(el, None)
         return result
 
-    def is_selected(self, *args, **kwargs):
-        return self.element(*args, **kwargs).is_selected()
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
+    def is_selected(self, locator, *args, **kwargs):
+        """Returns whether the element (checkbox) is selected.
 
+        Returns:
+            :py:class:`bool`
+        """
+        return self.element(locator, *args, **kwargs).is_selected()
+
+    @logged(log_args=True, debug_only=True, log_full_exception=False)
     def send_keys(self, text, locator, *args, **kwargs):
         """Sends keys to the element. Detects the file inputs automatically.
 
@@ -594,8 +641,9 @@ class Browser(object):
                 self.selenium.file_detector = LocalFileDetector()
             el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
-            self.logger.debug('send_keys %r to %r', text, locator)
             result = el.send_keys(text)
+            # Ensure the page input was safe
+            self.plugin.ensure_page_safe()
             if Keys.ENTER not in text:
                 try:
                     self.plugin.after_keyboard_input(el, text)
@@ -623,6 +671,8 @@ class Browser(object):
         return self.selenium.switch_to_alert()
 
     @property
+    @logged(
+        log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
     def alert_present(self):
         """Checks whether there is any alert present.
 
@@ -637,6 +687,7 @@ class Browser(object):
         else:
             return True
 
+    @logged(log_args=True, log_full_exception=False)
     def dismiss_any_alerts(self):
         """Loops until there are no further alerts present to dismiss.
 
@@ -650,6 +701,7 @@ class Browser(object):
         except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
 
+    @logged(log_args=True, log_result=True, log_full_exception=False)
     def handle_alert(self, cancel=False, wait=30.0, squash=False, prompt=None, check_present=False):
         """Handles an alert popup.
 
