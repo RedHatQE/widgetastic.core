@@ -220,6 +220,8 @@ def test_parametrized_view(browser):
 
     assert len(view.table_row) == 3
 
+    assert False
+
 
 def test_parametrized_view_read_without_all(browser):
     class MyView(View):

@@ -17,7 +17,7 @@ from wait_for import wait_for
 from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
-from .log import PrependParentsAdapter, create_widget_logger, logged
+from .log import PrependParentsAdapter, create_widget_logger, logged, call_sig
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
     normalize_space)
@@ -768,6 +768,21 @@ class ParametrizedViewRequest(object):
         if 'additional_context' not in self.kwargs:
             new_kwargs['additional_context'] = {}
         new_kwargs['additional_context'].update(param_dict)
+        # And finally, set up a nice logger
+        parent_logger = self.parent_object.logger
+        current_name = self.view_class.__name__
+        # Now add the params to the name so it is class_name(args)
+        current_name += call_sig((), param_dict)  # no args because we process everything into dict
+        if isinstance(parent_logger, PrependParentsAdapter):
+            # If it already is adapter, then pull the logger itself out and append
+            # the widget name
+            widget_path = '{}/{}'.format(parent_logger.extra['widget_path'], current_name)
+            parent_logger = parent_logger.logger
+        else:
+            # Seems like first in the line.
+            widget_path = current_name
+
+        new_kwargs['logger'] = create_widget_logger(widget_path, parent_logger)
         result = self.view_class(self.parent_object, *self.args, **new_kwargs)
         self.parent_object.child_widget_accessed(result)
         return result
