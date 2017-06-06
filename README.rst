@@ -371,6 +371,17 @@ same way. They display the same informations in the end.
 
 You can see it gives you the flexibility of decision based on the values in the view.
 
-This example as shown (with Views) will behave like the ``action_form`` was a nested view. And
-nothing is theoretically preventing you for using a widget in it, but so far this system can only
-handle **classes** of Views/Widgets, not instances. That is an RFE.
+This example as shown (with Views) will behave like the ``action_form`` was a nested view. You can
+also make a switchable widget. You can use it like this:
+
+.. code-block:: python
+
+    class SomeForm(View):
+        foo = Input('...')
+        bar = Select(name='bar')
+
+        switched_widget = ConditionalSwitchableView(reference='bar')
+
+        switched_widget.register('Action type 1', default=True, widget=Widget())
+
+Then instead of switching views, it switches widgets.

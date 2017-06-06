@@ -1881,7 +1881,15 @@ class ConditionalSwitchableView(Widgetable):
         self.registered_views = []
         self.default_view = None
 
-    def register(self, condition, default=False):
+    @property
+    def child_items(self):
+        return [
+            descriptor
+            for _, descriptor
+            in self.registered_views
+            if isinstance(descriptor, WidgetDescriptor)]
+
+    def register(self, condition, default=False, widget=None):
         """Register a view class against given condition.
 
         Args:
@@ -1892,21 +1900,34 @@ class ConditionalSwitchableView(Widgetable):
                 then it is compared with the value read from the widget specified as ``reference``.
             default: If no other condition matches any registered view, use this one. Can only be
                 specified for one registration.
+            widget: In case you do not want to use this as a decorator, you can pass the widget
+                class or instantiated widget as this parameter.
         """
-        def view_process(cls):
-            self.registered_views.append((condition, cls))
+        def view_process(cls_or_descriptor):
+            if not (
+                    isinstance(cls_or_descriptor, WidgetDescriptor) or
+                    (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
+                raise TypeError(
+                    'Unsupported object registered into the selector (!r})'.format(
+                        cls_or_descriptor))
+            self.registered_views.append((condition, cls_or_descriptor))
             if default:
                 if self.default_view is not None:
                     raise TypeError('Multiple default views specified')
-                self.default_view = cls
-        return view_process
+                self.default_view = cls_or_descriptor
+            # We explicitly return None
+            return None
+        if widget is None:
+            return view_process
+        else:
+            return view_process(widget)
 
     def __get__(self, o, t):
         if o is None:
             return self
 
         condition_arg_cache = {}
-        for condition, cls in self.registered_views:
+        for condition, cls_or_descriptor in self.registered_views:
             if not callable(condition):
                 # Compare it to a known value (if present)
                 if self.reference is None:
@@ -1922,7 +1943,7 @@ class ConditionalSwitchableView(Widgetable):
                                 'Wrong widget name specified as reference=: {}'.format(
                                     self.reference))
                     if condition == condition_arg_cache[self.reference]:
-                        view_class = cls
+                        view_object = cls_or_descriptor
                         break
             else:
                 # Parse the callable's args and inject the correct args
@@ -1940,12 +1961,20 @@ class ConditionalSwitchableView(Widgetable):
                     arg_values.append(condition_arg_cache[arg])
 
                 if condition(*arg_values):
-                    view_class = cls
+                    view_object = cls_or_descriptor
                     break
         else:
             if self.default_view is not None:
-                view_class = self.default_view
+                view_object = self.default_view
             else:
                 raise ValueError('Could not find a corresponding registered view.')
+        if inspect.isclass(view_object):
+            view_class = view_object
+        else:
+            view_class = type(view_object)
         o.logger.info('Picked %s', view_class.__name__)
-        return view_class(o, additional_context=o.context)
+        if isinstance(view_object, Widgetable):
+            # We init the widget descriptor here
+            return view_object.__get__(o, t)
+        else:
+            return view_object(o, additional_context=o.context)

@@ -346,6 +346,22 @@ def test_switchable_view_with_reference_only(browser):
     assert view.the_switchable_view.widget.read() == 'bartest'
 
 
+def test_switchable_view_with_reference_only_and_widgetdescriptors(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_widget = ConditionalSwitchableView(reference='the_reference')
+
+        the_switchable_widget.register('foo', widget=Text('//h3[@id="switchabletesting-1"]'))
+        the_switchable_widget.register('bar', widget=Text('//h3[@id="switchabletesting-2"]'))
+
+    view = MyView(browser)
+    view.the_reference.fill('foo')
+    assert view.the_switchable_widget.read() == 'footest'
+    view.the_reference.fill('bar')
+    assert view.the_switchable_widget.read() == 'bartest'
+
+
 def test_switchable_view_with_callables(browser):
     class MyView(View):
         the_reference = Select(id='switchabletesting-select')

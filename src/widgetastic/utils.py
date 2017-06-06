@@ -27,6 +27,15 @@ class Widgetable(object):
 
     @property
     def child_items(self):
+        """If you implement your own class based on :py:class:`Widgetable`, you need to override
+        this property.
+
+        This property tells the widget processing system all instances of
+        :py:class:`WidgetDescriptor` that this object may provide. That system then in turn makes
+        sure that the appropriate entries in name/descriptor mapping are in place so when the
+        descriptor gets instantiated, it can find its name in the mapping, making the instantiation
+        possible.
+        """
         return []
 
 
