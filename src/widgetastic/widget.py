@@ -1833,12 +1833,66 @@ class Select(Widget):
 
 
 class ConditionalSwitchableView(Widgetable):
+    """Conditional switchable view implementation.
+
+    This widget proxy is useful when you have a form whose parts displayed depend on certain
+    conditions. Eg. when you select certain value from a dropdown, one form is displayed next,
+    when other value is selected, a different form is displayed next. This widget proxy is designed
+    to register those multiple views and then upon accessing decide which view to use based on the
+    registration conditions.
+
+    The resulting widget proxy acts similarly like a nested view (if you use view of course).
+
+    Example:
+
+        .. code-block:: python
+
+            class SomeForm(View):
+                foo = Input('...')
+                action_type = Select(name='action_type')
+
+                action_form = ConditionalSwitchableView(reference='action_type')
+
+                # Simple value matching. If Action type 1 is selected in the select, use this view.
+                # And if the action_type value does not get matched, use this view as default
+                @action_form.register('Action type 1', default=True)
+                class ActionType1Form(View):
+                    widget = Widget()
+
+                # You can use a callable to declare the widget values to compare
+                @action_form.register(lambda action_type: action_type == 'Action type 2')
+                class ActionType2Form(View):
+                    widget = Widget()
+
+                # With callable, you can use values from multiple widgets
+                @action_form.register(
+                    lambda action_type, foo: action_type == 'Action type 2' and foo == 2)
+                class ActionType2Form(View):
+                    widget = Widget()
+
+        You can see it gives you the flexibility of decision based on the values in the view.
+
+    Args:
+        reference: For using non-callable conditions, this must be specified. Specifies the name of
+            the widget whose value will be used for comparing non-callable conditions.
+    """
     def __init__(self, reference=None):
         self.reference = reference
         self.registered_views = []
         self.default_view = None
 
     def register(self, condition, default=False):
+        """Register a view class against given condition.
+
+        Args:
+            condition: Condition check for switching to appropriate view. Can be callable or
+                non-callable. If callable, then callable parameters are resolved as values from
+                widgets resolved by the argument name, then the callable is invoked with the params.
+                If the invocation result is truthy, that view class is used. If it is a non-callable
+                then it is compared with the value read from the widget specified as ``reference``.
+            default: If no other condition matches any registered view, use this one. Can only be
+                specified for one registration.
+        """
         def view_process(cls):
             self.registered_views.append((condition, cls))
             if default:
