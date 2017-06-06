@@ -1830,3 +1830,68 @@ class Select(Widget):
             self.select_by_value(*values_to_select)
 
         return bool(options_to_select or values_to_select or deselected)
+
+
+class ConditionalSwitchableView(Widgetable):
+    def __init__(self, reference=None):
+        self.reference = reference
+        self.registered_views = []
+        self.default_view = None
+
+    def register(self, condition, default=False):
+        def view_process(cls):
+            self.registered_views.append((condition, cls))
+            if default:
+                if self.default_view is not None:
+                    raise TypeError('Multiple default views specified')
+                self.default_view = cls
+        return view_process
+
+    def __get__(self, o, t):
+        if o is None:
+            return self
+
+        condition_arg_cache = {}
+        for condition, cls in self.registered_views:
+            if not callable(condition):
+                # Compare it to a known value (if present)
+                if self.reference is None:
+                    # No reference to check against
+                    raise TypeError(
+                        'reference= not set so you cannot use non-callables as conditions')
+                else:
+                    if self.reference not in condition_arg_cache:
+                        try:
+                            condition_arg_cache[self.reference] = getattr(o, self.reference).read()
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as reference=: {}'.format(
+                                    self.reference))
+                    if condition == condition_arg_cache[self.reference]:
+                        view_class = cls
+                        break
+            else:
+                # Parse the callable's args and inject the correct args
+                c_args, c_varargs, c_keywords, c_defaults = inspect.getargspec(condition)
+                if c_varargs or c_keywords or c_defaults:
+                    raise TypeError('You can only use simple arguments in lambda conditions')
+                arg_values = []
+                for arg in c_args:
+                    if arg not in condition_arg_cache:
+                        try:
+                            condition_arg_cache[arg] = getattr(o, arg).read()
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as parameter {}'.format(arg))
+                    arg_values.append(condition_arg_cache[arg])
+
+                if condition(*arg_values):
+                    view_class = cls
+                    break
+        else:
+            if self.default_view is not None:
+                view_class = self.default_view
+            else:
+                raise ValueError('Could not find a corresponding registered view.')
+        o.logger.info('Picked %s', view_class.__name__)
+        return view_class(o, additional_context=o.context)

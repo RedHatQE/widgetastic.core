@@ -5,7 +5,7 @@ import pytest
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox)
+    Checkbox, Select, ConditionalSwitchableView)
 
 
 def test_can_create_view(browser):
@@ -325,3 +325,23 @@ def test_indirect_negative(browser):
     view = MyView(browser)
     assert not view.is_displayed
     assert not view.nested.is_displayed
+
+
+def test_switchable_view_with_reference_only(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+
+        @the_switchable_view.register('foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+        @the_switchable_view.register('bar')
+        class BarView(View):
+            widget = Text('//h3[@id="switchabletesting-2"]')
+
+    view = MyView(browser)
+    assert view.the_switchable_view.widget.read() == 'footest'
+    view.the_reference.fill('bar')
+    assert view.the_switchable_view.widget.read() == 'bartest'
