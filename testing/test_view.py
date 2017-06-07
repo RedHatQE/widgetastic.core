@@ -5,7 +5,7 @@ import pytest
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox)
+    Checkbox, Select, ConditionalSwitchableView)
 
 
 def test_can_create_view(browser):
@@ -220,8 +220,6 @@ def test_parametrized_view(browser):
 
     assert len(view.table_row) == 3
 
-    assert False
-
 
 def test_parametrized_view_read_without_all(browser):
     class MyView(View):
@@ -325,3 +323,168 @@ def test_indirect_negative(browser):
     view = MyView(browser)
     assert not view.is_displayed
     assert not view.nested.is_displayed
+
+
+def test_switchable_view_with_reference_only(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+
+        @the_switchable_view.register('foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+        @the_switchable_view.register('bar')
+        class BarView(View):
+            widget = Text('//h3[@id="switchabletesting-2"]')
+
+    view = MyView(browser)
+    view.the_reference.fill('foo')
+    assert view.the_switchable_view.widget.read() == 'footest'
+    view.the_reference.fill('bar')
+    assert view.the_switchable_view.widget.read() == 'bartest'
+
+
+def test_switchable_view_with_reference_only_and_widgetdescriptors(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_widget = ConditionalSwitchableView(reference='the_reference')
+
+        the_switchable_widget.register('foo', widget=Text('//h3[@id="switchabletesting-1"]'))
+        the_switchable_widget.register('bar', widget=Text('//h3[@id="switchabletesting-2"]'))
+
+    view = MyView(browser)
+    view.the_reference.fill('foo')
+    assert view.the_switchable_widget.read() == 'footest'
+    view.the_reference.fill('bar')
+    assert view.the_switchable_widget.read() == 'bartest'
+
+
+def test_switchable_view_with_callables(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register(lambda the_reference: the_reference == 'foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+        @the_switchable_view.register(lambda the_reference: the_reference == 'bar')
+        class BarView(View):
+            widget = Text('//h3[@id="switchabletesting-2"]')
+
+    view = MyView(browser)
+    view.the_reference.fill('foo')
+    assert view.the_switchable_view.widget.read() == 'footest'
+    view.the_reference.fill('bar')
+    assert view.the_switchable_view.widget.read() == 'bartest'
+
+
+def test_switchable_view_with_default(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register(lambda the_reference: the_reference == 'foo', default=True)
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    view.the_reference.fill('bar')
+    assert view.the_reference.read() == 'bar'
+    # The bar is not handled but it should get to the default view anyway
+    assert view.the_switchable_view.widget.read() == 'footest'
+
+
+def test_switchable_view_without_default_and_unhandled_value(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register(lambda the_reference: the_reference == 'foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    view.the_reference.fill('bar')
+    assert view.the_reference.read() == 'bar'
+    with pytest.raises(ValueError):
+        assert view.the_switchable_view.widget.read() == 'footest'
+
+
+def test_switchable_view_multiple_default_error():
+    view = ConditionalSwitchableView()
+
+    @view.register('foo', default=True)
+    class SomeView(View):
+        pass
+
+    with pytest.raises(TypeError):
+        @view.register('foo', default=True)
+        class SomeAnotherView(View):
+            pass
+
+
+def test_switchable_view_string_without_reference(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register('foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    with pytest.raises(TypeError):
+        view.the_switchable_view
+
+
+def test_switchable_view_string_bad_reference(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView(reference='lalapapa')
+
+        @the_switchable_view.register('foo')
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    with pytest.raises(TypeError):
+        view.the_switchable_view
+
+
+def test_switchable_view_string_nonsimple_lambda(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register(lambda *args: None)
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    with pytest.raises(TypeError):
+        view.the_switchable_view
+
+
+def test_switchable_view_string_lambda_bad_argument_widget(browser):
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+
+        the_switchable_view = ConditionalSwitchableView()
+
+        @the_switchable_view.register(lambda foobar: None)
+        class FooView(View):
+            widget = Text('//h3[@id="switchabletesting-1"]')
+
+    view = MyView(browser)
+    with pytest.raises(TypeError):
+        view.the_switchable_view

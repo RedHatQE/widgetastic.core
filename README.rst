@@ -25,6 +25,15 @@ Licensed under Apache license, Version 2.0
 
 *WARNING:* Until this library reaches v1.0, the interfaces may change!
 
+Currently the documentation build on RTD is partially broken. You can generate and browse it like
+this:
+
+.. code-block:: bash
+
+    cd widgetastic.core/    # Your git repository's root folder
+    tox -e docs
+    google-chrome gbuild/htmldocs/index.html   # Or a browser of your choice
+
 Introduction
 ------------
 
@@ -51,6 +60,7 @@ Features
 - Views can define their root locators and those are automatically honoured in the element lookup
   in the child Widgets.
 - Supports `Parametrized views`_.
+- Supports `Switchable conditional views`_.
 - Supports `Widget including`_.
 - Supports `Version picking`_.
 - Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
@@ -320,3 +330,58 @@ including. So when instantiated, the underlying ``FormButtonsAdd`` has the same 
 the ``ItemAddForm``. I did not think it would be wise to make the including widget a parent for the
 included widgets due to the fact widgetastic fences the element lookup if ``ROOT`` is present on a
 widget/view.
+
+
+.. `Switchable conditional views`:
+
+Switchable conditional views
+----------------------------
+
+If you have forms in your product whose parts change depending on previous selections, you might
+like to use the ``ConditionalSwitchableView``. It will allow you to represent different kinds of
+views under one widget name. An example might be a view of items that can use icons, table, or
+something else. You can make views that have the same interface for all the variants and then
+put them together using this tool. That will allow you to interact with the different views the
+same way. They display the same informations in the end.
+
+.. code-block:: python
+
+    class SomeForm(View):
+        foo = Input('...')
+        action_type = Select(name='action_type')
+
+        action_form = ConditionalSwitchableView(reference='action_type')
+
+        # Simple value matching. If Action type 1 is selected in the select, use this view.
+        # And if the action_type value does not get matched, use this view as default
+        @action_form.register('Action type 1', default=True)
+        class ActionType1Form(View):
+            widget = Widget()
+
+        # You can use a callable to declare the widget values to compare
+        @action_form.register(lambda action_type: action_type == 'Action type 2')
+        class ActionType2Form(View):
+            widget = Widget()
+
+        # With callable, you can use values from multiple widgets
+        @action_form.register(
+            lambda action_type, foo: action_type == 'Action type 2' and foo == 2)
+        class ActionType2Form(View):
+            widget = Widget()
+
+You can see it gives you the flexibility of decision based on the values in the view.
+
+This example as shown (with Views) will behave like the ``action_form`` was a nested view. You can
+also make a switchable widget. You can use it like this:
+
+.. code-block:: python
+
+    class SomeForm(View):
+        foo = Input('...')
+        bar = Select(name='bar')
+
+        switched_widget = ConditionalSwitchableView(reference='bar')
+
+        switched_widget.register('Action type 1', default=True, widget=Widget())
+
+Then instead of switching views, it switches widgets.

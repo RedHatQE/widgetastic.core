@@ -1830,3 +1830,151 @@ class Select(Widget):
             self.select_by_value(*values_to_select)
 
         return bool(options_to_select or values_to_select or deselected)
+
+
+class ConditionalSwitchableView(Widgetable):
+    """Conditional switchable view implementation.
+
+    This widget proxy is useful when you have a form whose parts displayed depend on certain
+    conditions. Eg. when you select certain value from a dropdown, one form is displayed next,
+    when other value is selected, a different form is displayed next. This widget proxy is designed
+    to register those multiple views and then upon accessing decide which view to use based on the
+    registration conditions.
+
+    The resulting widget proxy acts similarly like a nested view (if you use view of course).
+
+    Example:
+
+        .. code-block:: python
+
+            class SomeForm(View):
+                foo = Input('...')
+                action_type = Select(name='action_type')
+
+                action_form = ConditionalSwitchableView(reference='action_type')
+
+                # Simple value matching. If Action type 1 is selected in the select, use this view.
+                # And if the action_type value does not get matched, use this view as default
+                @action_form.register('Action type 1', default=True)
+                class ActionType1Form(View):
+                    widget = Widget()
+
+                # You can use a callable to declare the widget values to compare
+                @action_form.register(lambda action_type: action_type == 'Action type 2')
+                class ActionType2Form(View):
+                    widget = Widget()
+
+                # With callable, you can use values from multiple widgets
+                @action_form.register(
+                    lambda action_type, foo: action_type == 'Action type 2' and foo == 2)
+                class ActionType2Form(View):
+                    widget = Widget()
+
+        You can see it gives you the flexibility of decision based on the values in the view.
+
+    Args:
+        reference: For using non-callable conditions, this must be specified. Specifies the name of
+            the widget whose value will be used for comparing non-callable conditions.
+    """
+    def __init__(self, reference=None):
+        self.reference = reference
+        self.registered_views = []
+        self.default_view = None
+
+    @property
+    def child_items(self):
+        return [
+            descriptor
+            for _, descriptor
+            in self.registered_views
+            if isinstance(descriptor, WidgetDescriptor)]
+
+    def register(self, condition, default=False, widget=None):
+        """Register a view class against given condition.
+
+        Args:
+            condition: Condition check for switching to appropriate view. Can be callable or
+                non-callable. If callable, then callable parameters are resolved as values from
+                widgets resolved by the argument name, then the callable is invoked with the params.
+                If the invocation result is truthy, that view class is used. If it is a non-callable
+                then it is compared with the value read from the widget specified as ``reference``.
+            default: If no other condition matches any registered view, use this one. Can only be
+                specified for one registration.
+            widget: In case you do not want to use this as a decorator, you can pass the widget
+                class or instantiated widget as this parameter.
+        """
+        def view_process(cls_or_descriptor):
+            if not (
+                    isinstance(cls_or_descriptor, WidgetDescriptor) or
+                    (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
+                raise TypeError(
+                    'Unsupported object registered into the selector (!r})'.format(
+                        cls_or_descriptor))
+            self.registered_views.append((condition, cls_or_descriptor))
+            if default:
+                if self.default_view is not None:
+                    raise TypeError('Multiple default views specified')
+                self.default_view = cls_or_descriptor
+            # We explicitly return None
+            return None
+        if widget is None:
+            return view_process
+        else:
+            return view_process(widget)
+
+    def __get__(self, o, t):
+        if o is None:
+            return self
+
+        condition_arg_cache = {}
+        for condition, cls_or_descriptor in self.registered_views:
+            if not callable(condition):
+                # Compare it to a known value (if present)
+                if self.reference is None:
+                    # No reference to check against
+                    raise TypeError(
+                        'reference= not set so you cannot use non-callables as conditions')
+                else:
+                    if self.reference not in condition_arg_cache:
+                        try:
+                            condition_arg_cache[self.reference] = getattr(o, self.reference).read()
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as reference=: {}'.format(
+                                    self.reference))
+                    if condition == condition_arg_cache[self.reference]:
+                        view_object = cls_or_descriptor
+                        break
+            else:
+                # Parse the callable's args and inject the correct args
+                c_args, c_varargs, c_keywords, c_defaults = inspect.getargspec(condition)
+                if c_varargs or c_keywords or c_defaults:
+                    raise TypeError('You can only use simple arguments in lambda conditions')
+                arg_values = []
+                for arg in c_args:
+                    if arg not in condition_arg_cache:
+                        try:
+                            condition_arg_cache[arg] = getattr(o, arg).read()
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as parameter {}'.format(arg))
+                    arg_values.append(condition_arg_cache[arg])
+
+                if condition(*arg_values):
+                    view_object = cls_or_descriptor
+                    break
+        else:
+            if self.default_view is not None:
+                view_object = self.default_view
+            else:
+                raise ValueError('Could not find a corresponding registered view.')
+        if inspect.isclass(view_object):
+            view_class = view_object
+        else:
+            view_class = type(view_object)
+        o.logger.info('Picked %s', view_class.__name__)
+        if isinstance(view_object, Widgetable):
+            # We init the widget descriptor here
+            return view_object.__get__(o, t)
+        else:
+            return view_object(o, additional_context=o.context)
