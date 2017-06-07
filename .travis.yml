@@ -6,7 +6,7 @@ python:
 - '3.5'
 - '3.6'
 - pypy
-install: pip install tox-travis coveralls
+install: pip install -U setuptools tox tox-travis coveralls
 script:
 - tox
 after_success:
