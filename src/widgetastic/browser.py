@@ -152,6 +152,19 @@ class Browser(object):
         self.extra_objects = extra_objects or {}
 
     @property
+    def url(self):
+        """Returns the current URL of the browser."""
+        result = self.selenium.current_url
+        self.logger.debug('current_url -> %r', result)
+        return result
+
+    @url.setter
+    def url(self, address):
+        """Opens the address in the browser."""
+        self.logger.info('Opening URL: %r', address)
+        self.selenium.get(address)
+
+    @property
     def handles_alerts(self):
         """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
         handling functions do nothing."""
@@ -376,6 +389,16 @@ class Browser(object):
                         locator))
         return el
 
+    def drag_and_drop(self, source, target):
+        """Drags the source element and drops it into target.
+
+        Args:
+            source: Locator or the source element itself
+            target: Locator or the target element itself.
+        """
+        self.logger.debug('drag_and_drop %r to %r', source, target)
+        ActionChains(self.selenium).drag_and_drop(self.element(source), self.element(target))
+
     def move_by_offset(self, x, y):
         self.logger.debug('move_by_offset X:%r Y:%r', x, y)
         ActionChains(self.selenium).move_by_offset(x, y)
@@ -385,6 +408,10 @@ class Browser(object):
         if not kwargs.pop('silent', False):
             self.logger.debug('execute_script: %r', script)
         return self.selenium.execute_script(dedent(script), *args, **kwargs)
+
+    def refresh(self):
+        """Triggers a page refresh."""
+        return self.selenium.refresh()
 
     def classes(self, locator, *args, **kwargs):
         """Return a list of classes attached to the element.

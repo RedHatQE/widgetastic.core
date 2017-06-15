@@ -33,7 +33,8 @@ def selenium(request):
 def browser(selenium, httpserver, request):
     this_module = sys.modules[__name__]
     path = os.path.dirname(this_module.__file__)
-    testfilename = path + '/testing_page.html'
+    testfilename = os.path.join(path, 'testing_page.html')
     httpserver.serve_content(codecs.open(testfilename, mode='r', encoding='utf-8').read())
-    selenium.get(httpserver.url)
-    return CustomBrowser(selenium)
+    b = CustomBrowser(selenium)
+    b.url = httpserver.url
+    return b
