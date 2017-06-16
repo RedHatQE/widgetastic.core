@@ -238,6 +238,9 @@ def test_table_with_widgets_and_assoc_column(browser):
             'bar': {'Column 2': 'bar col 2', 'Column 3': 'yolo'}
         }}
 
+    with pytest.raises(TypeError):
+        view.fill({'table': {'doesntexist': {'Column 3': 'yolo'}}})
+
 
 def test_simple_select(browser):
     class TestForm(View):

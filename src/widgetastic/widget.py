@@ -662,7 +662,7 @@ class View(Widget):
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
-                'Extra values that have no corresponding fill fields passed: ',
+                'Extra values that have no corresponding fill fields passed: %s',
                 ', '.join(extra_keys))
         for name in self.widget_names:
             if name not in values or values[name] is None:
@@ -1236,6 +1236,8 @@ class Table(Widget):
         column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
             value is the widget definition.
         assoc_column: Index or name of the column used for associative filling.
+        rows_ignore_top: Ignore N top rows for purpose of some operations (read, ...)
+        rows_ignore_bottom: Ignore N bottom rows for purpose of some operations (read, ...)
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
@@ -1244,11 +1246,21 @@ class Table(Widget):
 
     Row = TableRow
 
-    def __init__(self, parent, locator, column_widgets=None, assoc_column=None, logger=None):
+    def __init__(
+            self,
+            parent,
+            locator,
+            column_widgets=None,
+            assoc_column=None,
+            rows_ignore_top=None,
+            rows_ignore_bottom=None,
+            logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
         self.column_widgets = column_widgets or {}
         self.assoc_column = assoc_column
+        self.rows_ignore_top = rows_ignore_top
+        self.rows_ignore_bottom = rows_ignore_bottom
 
     def __repr__(self):
         return '{}({!r}, column_widgets={!r})'.format(
@@ -1325,9 +1337,20 @@ class Table(Widget):
             raise TypeError(
                 'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
+    def _process_negative_index(self, nindex):
+        """The semantics is pretty much the same like for ordinary list."""
+        rc = self.row_count
+        if (- nindex) > rc:
+            raise ValueError(
+                'Negative index {} wanted but we only have {} rows'.format(nindex, rc))
+        return rc + nindex
+
     def __getitem__(self, at_index):
         if not isinstance(at_index, int):
             raise TypeError('table indexing only accepts integers')
+        if at_index < 0:
+            # Row class cannot handle negative indices, so we need to convert it ourselves.
+            at_index = self._process_negative_index(at_index)
         return self.Row(self, at_index, logger=self.logger)
 
     def row(self, *extra_filters, **filters):
@@ -1346,12 +1369,12 @@ class Table(Widget):
         How simple.
         """
         return self.browser.execute_script(
-            """\
+            jsmin("""\
             var prev = []; var element = arguments[0];
             while (element.previousElementSibling)
                 prev.push(element = element.previousElementSibling);
             return prev.length;
-            """, row_el)
+            """), row_el)
 
     def map_column(self, column):
         if isinstance(column, int):
@@ -1504,6 +1527,11 @@ class Table(Widget):
 
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
+        rows = list(self)
+        if self.rows_ignore_top is not None:
+            rows = rows[self.rows_ignore_top:]
+        if self.rows_ignore_bottom is not None and self.rows_ignore_bottom > 0:
+            rows = rows[:-self.rows_ignore_bottom]
         if self.assoc_column_position is None:
             return [row.read() for row in self]
         else:
@@ -1529,14 +1557,55 @@ class Table(Widget):
         if isinstance(value, dict):
             if self.assoc_column_position is None:
                 raise TypeError('In order to support dict you need to specify assoc_column')
-            return any(
-                self.row((self.assoc_column_position, key)).fill(fill_value)
-                for key, fill_value
-                in six.iteritems(value))
+            changed = False
+            for key, fill_value in six.iteritems(value):
+                row_added = False
+                try:
+                    row = self.row((self.assoc_column_position, key))
+                except IndexError:
+                    row_id = self.add_row_handler()
+                    if row_id is None:
+                        raise TypeError('Could not add a row into table {!r}'.format(self))
+                    row_added = True
+                    row = self[row_id]
+                if isinstance(fill_value, dict):
+                    new_fill_value = {}
+                    new_fill_value.update(fill_value)
+                    new_fill_value[self.assoc_column_position] = key
+                    fill_value = new_fill_value
+                if row.fill(fill_value):
+                    changed = True
+                if row_added:
+                    self.after_added_row_fill(row_id)
+            return changed
         else:
             if not isinstance(value, (list, tuple)):
                 value = [value]
-            return any(row.fill(value) for row, value in zip(self, value))
+            rows = list(self)
+            value_row_mapping = list(zip(value, rows))
+            extra_row_values = value[len(value_row_mapping):]
+
+            changed = any(row.fill(value) for value, row in value_row_mapping)
+            for extra_value in extra_row_values:
+                row_id = self.add_row_handler()
+                if row_id is None:
+                    raise TypeError('Could not add a row into table {!r}'.format(self))
+                row = self[row_id]
+                if row.fill(extra_value):
+                    changed = True
+                self.after_added_row_fill(row_id)
+            return changed
+
+    @property
+    def row_count(self):
+        return len(self.browser.elements(self.ROWS, parent=self))
+
+    def add_row_handler(self):
+        """Implement a custom row-adding logic. Must return None in case of error or row id."""
+        return None
+
+    def after_added_row_fill(self, row_index):
+        """Implement a custom row-confirmation logic."""
 
 
 class Select(Widget):
