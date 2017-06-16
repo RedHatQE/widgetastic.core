@@ -662,7 +662,7 @@ class View(Widget):
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
-                'Extra values that have no corresponding fill fields passed: ',
+                'Extra values that have no corresponding fill fields passed: %s',
                 ', '.join(extra_keys))
         for name in self.widget_names:
             if name not in values or values[name] is None:
@@ -1558,16 +1558,25 @@ class Table(Widget):
             if self.assoc_column_position is None:
                 raise TypeError('In order to support dict you need to specify assoc_column')
             changed = False
-            for key, value in six.iteritems(value):
+            for key, fill_value in six.iteritems(value):
+                row_added = False
                 try:
                     row = self.row((self.assoc_column_position, key))
                 except IndexError:
                     row_id = self.add_row_handler()
                     if row_id is None:
                         raise TypeError('Could not add a row into table {!r}'.format(self))
-                    row = self[row]
-                if row.fill(value):
+                    row_added = True
+                    row = self[row_id]
+                if isinstance(fill_value, dict):
+                    new_fill_value = {}
+                    new_fill_value.update(fill_value)
+                    new_fill_value[self.assoc_column_position] = key
+                    fill_value = new_fill_value
+                if row.fill(fill_value):
                     changed = True
+                if row_added:
+                    self.after_added_row_fill(row_id)
             return changed
         else:
             if not isinstance(value, (list, tuple)):
@@ -1584,15 +1593,19 @@ class Table(Widget):
                 row = self[row_id]
                 if row.fill(extra_value):
                     changed = True
+                self.after_added_row_fill(row_id)
             return changed
 
     @property
     def row_count(self):
-        return len(self)
+        return len(self.browser.elements(self.ROWS, parent=self))
 
     def add_row_handler(self):
         """Implement a custom row-adding logic. Must return None in case of error or row id."""
         return None
+
+    def after_added_row_fill(self, row_index):
+        """Implement a custom row-confirmation logic."""
 
 
 class Select(Widget):
