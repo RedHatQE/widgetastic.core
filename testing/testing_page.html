@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>Test page</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 </head>
 <body>
 <h1 id="hello" class="foo bar">Hello</h1>
@@ -137,5 +138,28 @@
     <h3 id="switchabletesting-2">bartest</h3>
 
 </div>
+
+    <table border="1" cellspacing="0" id="dynamic">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <button type="button" class='addmore' id='dynamicadd'>Add More</button>
+<script>
+    var i=1;
+    $(".addmore").on('click',function(){
+        $('#dynamic').append(
+            '<tr><td>' + i + '.</td><td><input type="text"/></td><td><input type="text"/></td></tr>'
+        );
+    i++;
+    });
+</script>
 </body>
 </html>

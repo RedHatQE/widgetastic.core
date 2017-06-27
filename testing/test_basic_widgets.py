@@ -239,6 +239,123 @@ def test_table_with_widgets_and_assoc_column(browser):
         }}
 
 
+def test_table_row_ignore_bottom(browser):
+    class TestForm(View):
+        table = Table(
+            '#withwidgets',
+            column_widgets={
+                'Column 2': TextInput(locator='./input'),
+                'Column 3': TextInput(locator='./input')},
+            rows_ignore_bottom=1)
+
+    view = TestForm(browser)
+
+    assert view.read() == {
+        'table': [
+            {0: 'foo', 'Column 2': '', 'Column 3': 'foo col 3'}
+        ]}
+
+
+def test_table_row_ignore_top(browser):
+    class TestForm(View):
+        table = Table(
+            '#withwidgets',
+            column_widgets={
+                'Column 2': TextInput(locator='./input'),
+                'Column 3': TextInput(locator='./input')},
+            rows_ignore_top=1)
+
+    view = TestForm(browser)
+
+    assert view.read() == {
+        'table': [
+            {0: 'bar', 'Column 2': 'bar col 2', 'Column 3': ''}
+        ]}
+
+
+def test_table_row_ignore_bottom_and_top(browser):
+    class TestForm(View):
+        table = Table(
+            '#withwidgets',
+            column_widgets={
+                'Column 2': TextInput(locator='./input'),
+                'Column 3': TextInput(locator='./input')},
+            rows_ignore_bottom=1,
+            rows_ignore_top=1)
+
+    view = TestForm(browser)
+
+    assert view.read() == {'table': []}
+
+
+def test_table_dynamic_add_not_assoc(browser):
+    class MyTable(Table):
+        def row_add(self):
+            self.browser.click('//button[@id="dynamicadd"]')
+            return -1
+
+    class MyView(View):
+        table = MyTable(
+            '#dynamic',
+            column_widgets={
+                'First Name': TextInput(locator='./input'),
+                'Last Name': TextInput(locator='./input'),
+            })
+
+    view = MyView(browser)
+    assert view.table.read() == []
+    assert view.table.fill([{'First Name': 'John', 'Last Name': 'Doe'}])
+    assert view.table.read() == [{'ID': '1.', 'First Name': 'John', 'Last Name': 'Doe'}]
+    assert not view.table.fill([{'First Name': 'John', 'Last Name': 'Doe'}])
+    assert not view.table.fill(view.table.read())
+    changes = view.table.read()
+    changes[0]['First Name'] = 'Jane'
+    assert view.table.fill(changes)
+    del changes[0]['First Name']
+    changes[0][1] = 'John'
+    assert view.table.fill(changes)
+    assert view.table.read() == [{'ID': '1.', 'First Name': 'John', 'Last Name': 'Doe'}]
+
+    # Now the error test!
+    changes[0]['ID'] = 'blabber!'
+    with pytest.raises(TypeError):
+        view.table.fill(changes)
+
+
+def test_table_dynamic_add_assoc(browser):
+    class MyTable(Table):
+        def row_add(self):
+            self.browser.click('//button[@id="dynamicadd"]')
+            return -1
+
+    class MyView(View):
+        table = MyTable(
+            '#dynamic',
+            column_widgets={
+                'First Name': TextInput(locator='./input'),
+                'Last Name': TextInput(locator='./input'),
+            },
+            assoc_column='First Name')
+
+    view = MyView(browser)
+    assert view.table.read() == {}
+    assert view.table.row_count == 0
+    assert view.table.fill({'John': {'Last Name': 'Doe'}})
+    assert view.table.row_count == 1
+    assert view.table.read() == {'John': {'Last Name': 'Doe', 'ID': '1.'}}
+    assert view.table.row_count == 1
+    assert view.table.fill({'John': {'Last Name': 'Doh'}})
+    assert view.table.row_count == 1
+    assert view.table.read() == {'John': {'Last Name': 'Doh', 'ID': '1.'}}
+    assert view.table.fill({'Pepa': {'Last Name': 'Z Depa'}})
+    assert view.table.row_count == 2
+    assert view.table.read() == {
+        'John': {'Last Name': 'Doh', 'ID': '1.'},
+        'Pepa': {'Last Name': 'Z Depa', 'ID': '2.'}}
+    assert not view.table.fill(view.table.read())
+    assert not view.fill(view.read())
+
+
 def test_simple_select(browser):
     class TestForm(View):
         select = Select(name='testselect1')
