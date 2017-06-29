@@ -1626,6 +1626,7 @@ class Table(Widget):
                     fill_value = copy(fill_value)
                     fill_value[self.assoc_column_position] = key
                 if row.fill(fill_value):
+                    self.row_save()
                     changed = True
             return changed
         else:
@@ -1661,6 +1662,10 @@ class Table(Widget):
     def row_add(self):
         raise NotImplementedError(
             'You need to implement the row_add in order to use dynamic adding')
+
+    def row_save(self):
+        raise NotImplementedError(
+            'You need to implement the row_save in order to use dynamic adding')
 
 
 class Select(Widget):
