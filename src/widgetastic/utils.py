@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 """This module contains some supporting classes."""
 
 import re
+import six
 import string
 from cached_property import cached_property
 from smartloc import Locator
@@ -450,3 +451,29 @@ def normalize_space(text):
         string.*
     """
     return _replace_spaces_with(text.strip(), ' ')
+
+
+def nested_getattr(o, steps):
+    """Works exactly like :py:func:`getattr`, however it treats ``.`` as the resolution steps,
+    therefore allowing you to grab an attribute across objects.
+
+    Args:
+        o: Object to get the attributes from.
+        steps: A string with attribute name path separated by dots or a list.
+
+    Returns:
+        The value of required attribute.
+    """
+    if isinstance(steps, six.string_types):
+        steps = steps.split('.')
+    if not isinstance(steps, (list, tuple)):
+        raise TypeError(
+            'nested_getattr only accepts strings, lists, or tuples!, You passed {}'.format(
+                type(steps).__name__))
+    steps = [step.strip() for step in steps if step.strip()]
+    if not steps:
+        raise ValueError('steps are empty!')
+    result = o
+    for step in steps:
+        result = getattr(result, step)
+    return result
