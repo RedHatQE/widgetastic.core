@@ -2019,11 +2019,14 @@ class ConditionalSwitchableView(Widgetable):
         reference: For using non-callable conditions, this must be specified. Specifies the name of
             the widget whose value will be used for comparing non-callable conditions. Supports
             going across objects using ``.``.
+        ignore_bad_reference: If this is enabled, then when the widget representing the reference
+            is not displayed or otherwise broken, it will then use the default view.
     """
-    def __init__(self, reference=None):
+    def __init__(self, reference=None, ignore_bad_reference=False):
         self.reference = reference
         self.registered_views = []
         self.default_view = None
+        self.ignore_bad_reference = ignore_bad_reference
 
     @property
     def child_items(self):
@@ -2087,6 +2090,12 @@ class ConditionalSwitchableView(Widgetable):
                             raise TypeError(
                                 'Wrong widget name specified as reference=: {}'.format(
                                     self.reference))
+                        except NoSuchElementException:
+                            if self.ignore_bad_reference:
+                                # reference is not displayed? We are probably aware of this so skip.
+                                continue
+                            else:
+                                raise
                     if condition == condition_arg_cache[self.reference]:
                         view_object = cls_or_descriptor
                         break
