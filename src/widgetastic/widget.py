@@ -21,7 +21,7 @@ from .exceptions import (
 from .log import PrependParentsAdapter, create_widget_logger, logged, call_sig
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
-    normalize_space)
+    normalize_space, nested_getattr)
 from .xpath import quote
 
 
@@ -2017,7 +2017,8 @@ class ConditionalSwitchableView(Widgetable):
 
     Args:
         reference: For using non-callable conditions, this must be specified. Specifies the name of
-            the widget whose value will be used for comparing non-callable conditions.
+            the widget whose value will be used for comparing non-callable conditions. Supports
+            going across objects using ``.``.
     """
     def __init__(self, reference=None):
         self.reference = reference
@@ -2080,7 +2081,8 @@ class ConditionalSwitchableView(Widgetable):
                 else:
                     if self.reference not in condition_arg_cache:
                         try:
-                            condition_arg_cache[self.reference] = getattr(o, self.reference).read()
+                            ref_value = nested_getattr(o, self.reference).read()
+                            condition_arg_cache[self.reference] = ref_value
                         except AttributeError:
                             raise TypeError(
                                 'Wrong widget name specified as reference=: {}'.format(
