@@ -57,7 +57,7 @@ class DefaultPlugin(object):
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
 
         def _check():
-            result = self.browser.execute_script(self.ENSURE_PAGE_SAFE)
+            result = self.browser.execute_script(self.ENSURE_PAGE_SAFE, silent=True)
             # TODO: Logging
             try:
                 return all(result.values())
