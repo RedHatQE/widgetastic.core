@@ -1660,12 +1660,26 @@ class Table(Widget):
         return len(self.browser.elements(self.ROWS, parent=self))
 
     def row_add(self):
+        """To be implemented if the table has dynamic rows.
+
+        This method is called when adding a new row is necessary.
+
+        Default implementation shouts :py:class:`NotImplementedError`.
+
+        Returns:
+            An index (position) of the new row. ``None`` in case of error.
+        """
         raise NotImplementedError(
             'You need to implement the row_add in order to use dynamic adding')
 
     def row_save(self):
-        raise NotImplementedError(
-            'You need to implement the row_save in order to use dynamic adding')
+        """To be implemented if the table has dynamic rows.
+
+        Used when the table needs confirming saving of each row.
+
+        Default implementation just writes a debug message that it is not used.
+        """
+        self.logger.debug('Row saving not used.')
 
 
 class Select(Widget):
