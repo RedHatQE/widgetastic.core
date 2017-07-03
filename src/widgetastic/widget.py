@@ -16,7 +16,8 @@ from wait_for import wait_for
 
 from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
-    NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget)
+    NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
+    RowNotFound)
 from .log import PrependParentsAdapter, create_widget_logger, logged, call_sig
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
@@ -105,7 +106,7 @@ class WidgetDescriptor(Widgetable):
         return widget
 
     def __repr__(self):
-        return '<Descriptor: {}, {!r}, {!r}>'.format(self.klass.__name__, self.args, self.kwargs)
+        return '{}{}'.format(self.klass.__name__, call_sig(self.args, self.kwargs))
 
 
 class ExtraData(object):
@@ -1079,7 +1080,18 @@ class TableColumn(Widget, ClickableMixin):
         if self.widget is not None:
             return self.widget.fill(value)
         else:
-            raise TypeError('Cannot fill column {}, no widget'.format(self.column_name))
+            if self.text == str(value):
+                self.logger.debug(
+                    'Not filling %d because it already has value %r even though there is no widget',
+                    self.column_name or self.position,
+                    value)
+                return False
+            else:
+                raise TypeError(
+                    (
+                        'Cannot fill column {}, no widget and the value differs '
+                        '(wanted to fill {!r} but there is {!r}').format(
+                            self.column_name or self.position, value, self.text))
 
 
 class TableRow(Widget, ClickableMixin):
@@ -1157,7 +1169,18 @@ class TableRow(Widget, ClickableMixin):
                 raise ValueError(
                     'For filling rows with single value you need to specify assoc_column')
             value = {self.table.assoc_column_position: value}
-        return any(self[key].fill(value) for key, value in value.items() if value is not None)
+
+        changed = False
+        for key, value in value.items():
+            if value is None:
+                self.logger.info('Skipping fill of %r because the value is None', key)
+                continue
+            else:
+                self.logger.info('Filling column %r', key)
+
+            if self[key].fill(value):
+                changed = True
+        return changed
 
 
 class Table(Widget):
@@ -1236,28 +1259,50 @@ class Table(Widget):
         column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
             value is the widget definition.
         assoc_column: Index or name of the column used for associative filling.
+        rows_ignore_top: Number of rows to ignore from top when reading/filling.
+        rows_ignore_bottom: Number of rows to ignore from bottom when reading/filling.
+        top_ignore_fill: Whether to also strip these top rows for fill.
+        bottom_ignore_fill: Whether to also strip these top rows for fill.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
     HEADERS = './thead/tr/th|./tr/th' + '|' + HEADER_IN_ROWS
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
+    ROOT = ParametrizedLocator('{@locator}')
+
     Row = TableRow
 
-    def __init__(self, parent, locator, column_widgets=None, assoc_column=None, logger=None):
+    def __init__(
+            self, parent, locator, column_widgets=None, assoc_column=None,
+            rows_ignore_top=None, rows_ignore_bottom=None, top_ignore_fill=False,
+            bottom_ignore_fill=False, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
         self.column_widgets = column_widgets or {}
         self.assoc_column = assoc_column
+        self.rows_ignore_top = rows_ignore_top
+        self.rows_ignore_bottom = rows_ignore_bottom
+        self.top_ignore_fill = top_ignore_fill
+        self.bottom_ignore_fill = bottom_ignore_fill
 
     def __repr__(self):
-        return '{}({!r}, column_widgets={!r})'.format(
-            type(self).__name__, self.locator, self.column_widgets)
+        return (
+            '{}({!r}, column_widgets={!r}, assoc_column={!r}, rows_ignore_top={!r}, '
+            'rows_ignore_bottom={!r})').format(
+                type(self).__name__, self.locator, self.column_widgets, self.assoc_column,
+                self.rows_ignore_top, self.rows_ignore_bottom)
 
-    def __locator__(self):
-        return self.locator
+    def _process_negative_index(self, nindex):
+        """The semantics is pretty much the same like for ordinary list."""
+        rc = self.row_count
+        if (- nindex) > rc:
+            raise ValueError(
+                'Negative index {} wanted but we only have {} rows'.format(nindex, rc))
+        return rc + nindex
 
     def clear_cache(self):
+        """Clear all cached properties."""
         for item in [
                 'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping',
                 'assoc_column_position']:
@@ -1328,10 +1373,17 @@ class Table(Widget):
     def __getitem__(self, at_index):
         if not isinstance(at_index, int):
             raise TypeError('table indexing only accepts integers')
+        if at_index < 0:
+            # To mimic the list handling
+            at_index = self._process_negative_index(at_index)
         return self.Row(self, at_index, logger=self.logger)
 
     def row(self, *extra_filters, **filters):
-        return list(self.rows(*extra_filters, **filters))[0]
+        try:
+            return six.next(self.rows(*extra_filters, **filters))
+        except StopIteration:
+            raise RowNotFound(
+                'Row not found when using filters {!r}/{!r}'.format(extra_filters, filters))
 
     def __iter__(self):
         return self.rows()
@@ -1346,14 +1398,15 @@ class Table(Widget):
         How simple.
         """
         return self.browser.execute_script(
-            """\
-            var prev = []; var element = arguments[0];
-            while (element.previousElementSibling)
-                prev.push(element = element.previousElementSibling);
-            return prev.length;
-            """, row_el)
+            jsmin("""\
+            var p = []; var e = arguments[0];
+            while (e.previousElementSibling)
+                p.push(e = e.previousElementSibling);
+            return p.length;
+            """), row_el)
 
     def map_column(self, column):
+        """Return column position. Can accept int, normal name, attributized name."""
         if isinstance(column, int):
             return column
         else:
@@ -1367,6 +1420,7 @@ class Table(Widget):
 
     @cached_property
     def _is_header_in_body(self):
+        """Checks whether the header is erroneously specified in the body of table."""
         return len(self.browser.elements(self.HEADER_IN_ROWS, parent=self)) > 0
 
     def rows(self, *extra_filters, **filters):
@@ -1489,8 +1543,7 @@ class Table(Widget):
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
             row_pos = row_pos if not self._is_header_in_body else row_pos + 1
-            rows.append(
-                self.Row(self, row_pos, logger=self.logger))
+            rows.append(self.Row(self, row_pos, logger=self.logger))
 
         for row in rows:
             if regexp_filters:
@@ -1502,13 +1555,45 @@ class Table(Widget):
             else:
                 yield row
 
+    def row_by_cell_or_widget_value(self, column, key):
+        """Row queries do not work with embedded widgets. Therefore you can use this method.
+
+        Args:
+            column: Position or name fo the column where you are looking the value for.
+            key: The value looked for
+
+        Returns:
+            :py:class:`TableRow` instance
+
+        Raises:
+            :py:class:`RowNotFound`
+        """
+        try:
+            return self.row((column, key))
+        except RowNotFound:
+            for row in self.rows():
+                if row[column].widget is None:
+                    continue
+                if not row[column].widget.is_displayed:
+                    continue
+                if row[column].widget.read() == key:
+                    return row
+            else:
+                raise RowNotFound('Row not found by {!r}/{!r}'.format(column, key))
+
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
+        rows = list(self)
+        # Cut the unwanted rows if necessary
+        if self.rows_ignore_top is not None:
+            rows = rows[self.rows_ignore_top:]
+        if self.rows_ignore_bottom is not None and self.rows_ignore_bottom > 0:
+            rows = rows[:-self.rows_ignore_bottom]
         if self.assoc_column_position is None:
-            return [row.read() for row in self]
+            return [row.read() for row in rows]
         else:
             result = {}
-            for row in self:
+            for row in rows:
                 row_read = row.read()
                 try:
                     key = row_read.pop(self.header_index_mapping[self.assoc_column_position])
@@ -1516,9 +1601,12 @@ class Table(Widget):
                     try:
                         key = row_read.pop(self.assoc_column_position)
                     except KeyError:
-                        raise ValueError(
-                            'The assoc_column={!r} could not be retrieved'.format(
-                                self.assoc_column))
+                        try:
+                            key = row_read.pop(self.assoc_column)
+                        except KeyError:
+                            raise ValueError(
+                                'The assoc_column={!r} could not be retrieved'.format(
+                                    self.assoc_column))
                 if key in result:
                     raise ValueError('Duplicate value for {}={!r}'.format(key, result[key]))
                 result[key] = row_read
@@ -1529,14 +1617,69 @@ class Table(Widget):
         if isinstance(value, dict):
             if self.assoc_column_position is None:
                 raise TypeError('In order to support dict you need to specify assoc_column')
-            return any(
-                self.row((self.assoc_column_position, key)).fill(fill_value)
-                for key, fill_value
-                in six.iteritems(value))
+            changed = False
+            for key, fill_value in six.iteritems(value):
+                try:
+                    row = self.row_by_cell_or_widget_value(self.assoc_column_position, key)
+                except RowNotFound:
+                    row = self[self.row_add()]
+                    fill_value = copy(fill_value)
+                    fill_value[self.assoc_column_position] = key
+                if row.fill(fill_value):
+                    self.row_save()
+                    changed = True
+            return changed
         else:
             if not isinstance(value, (list, tuple)):
                 value = [value]
-            return any(row.fill(value) for row, value in zip(self, value))
+            total_values = len(value)
+            rows = list(self)
+            # Adapt the behaviour similar to read
+            if self.top_ignore_fill and self.rows_ignore_top is not None:
+                rows = rows[self.rows_ignore_top:]
+            if (
+                    self.bottom_ignore_fill and
+                    self.rows_ignore_bottom is not None and
+                    self.rows_ignore_bottom > 0):
+                rows = rows[:-self.rows_ignore_bottom]
+            row_count = len(rows)
+            present_row_values = value[:row_count]
+            if total_values > row_count:
+                extra_row_values = value[row_count:]
+            else:
+                extra_row_values = []
+            changed = any(row.fill(value) for row, value in zip(rows, present_row_values))
+            for extra_value in extra_row_values:
+                if self[self.row_add()].fill(extra_value):
+                    changed = True
+            return changed
+
+    @property
+    def row_count(self):
+        """Returns how many rows are currently in the table."""
+        return len(self.browser.elements(self.ROWS, parent=self))
+
+    def row_add(self):
+        """To be implemented if the table has dynamic rows.
+
+        This method is called when adding a new row is necessary.
+
+        Default implementation shouts :py:class:`NotImplementedError`.
+
+        Returns:
+            An index (position) of the new row. ``None`` in case of error.
+        """
+        raise NotImplementedError(
+            'You need to implement the row_add in order to use dynamic adding')
+
+    def row_save(self):
+        """To be implemented if the table has dynamic rows.
+
+        Used when the table needs confirming saving of each row.
+
+        Default implementation just writes a debug message that it is not used.
+        """
+        self.logger.debug('Row saving not used.')
 
 
 class Select(Widget):

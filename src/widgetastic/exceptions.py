@@ -16,3 +16,7 @@ class WidgetOperationFailed(Exception):
 
 class DoNotReadThisWidget(Exception):
     pass
+
+
+class RowNotFound(IndexError):
+    pass
