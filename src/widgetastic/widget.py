@@ -18,7 +18,9 @@ from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
     RowNotFound)
-from .log import PrependParentsAdapter, create_widget_logger, logged, call_sig
+from .log import (
+    PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
+    create_item_logger)
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
     normalize_space, nested_getattr)
@@ -80,18 +82,7 @@ class WidgetDescriptor(Widgetable):
         if self not in obj._widget_cache:
             kwargs = copy(self.kwargs)
             try:
-                parent_logger = obj.logger
-                current_name = obj._desc_name_mapping[self]
-                if isinstance(parent_logger, PrependParentsAdapter):
-                    # If it already is adapter, then pull the logger itself out and append
-                    # the widget name
-                    widget_path = '{}/{}'.format(parent_logger.extra['widget_path'], current_name)
-                    parent_logger = parent_logger.logger
-                else:
-                    # Seems like first in the line.
-                    widget_path = current_name
-
-                kwargs['logger'] = create_widget_logger(widget_path, parent_logger)
+                kwargs['logger'] = create_child_logger(obj.logger, obj._desc_name_mapping[self])
             except AttributeError:
                 pass
 
@@ -265,7 +256,9 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 Widget.__init__(self, parent, logger=logger)
         """
         self.parent = parent
-        if isinstance(logger, PrependParentsAdapter):
+        if logger is None:
+            self.logger = create_child_logger(parent.logger, type(self).__name__)
+        elif isinstance(logger, PrependParentsAdapter):
             # The logger is already prepared
             self.logger = logger
         else:
@@ -774,16 +767,7 @@ class ParametrizedViewRequest(object):
         current_name = self.view_class.__name__
         # Now add the params to the name so it is class_name(args)
         current_name += call_sig((), param_dict)  # no args because we process everything into dict
-        if isinstance(parent_logger, PrependParentsAdapter):
-            # If it already is adapter, then pull the logger itself out and append
-            # the widget name
-            widget_path = '{}/{}'.format(parent_logger.extra['widget_path'], current_name)
-            parent_logger = parent_logger.logger
-        else:
-            # Seems like first in the line.
-            widget_path = current_name
-
-        new_kwargs['logger'] = create_widget_logger(widget_path, parent_logger)
+        new_kwargs['logger'] = create_child_logger(parent_logger, current_name)
         result = self.view_class(self.parent_object, *self.args, **new_kwargs)
         self.parent_object.child_widget_accessed(result)
         return result
@@ -1051,7 +1035,7 @@ class TableColumn(Widget, ClickableMixin):
             wcls = wcls.klass
         kwargs = copy(kwargs)
         if 'logger' not in kwargs:
-            kwargs['logger'] = self.logger
+            kwargs['logger'] = create_child_logger(self.logger, wcls.__name__)
         return wcls(self, *args, **kwargs)
 
     @property
@@ -1126,9 +1110,10 @@ class TableRow(Widget, ClickableMixin):
 
     def __getitem__(self, item):
         if isinstance(item, int):
-            return self.Column(self, item, logger=self.logger)
+            return self.Column(self, item, logger=create_item_logger(self.logger, item))
         elif isinstance(item, six.string_types):
-            return self[self.table.header_index_mapping[self.table.ensure_normal(item)]]
+            index = self.table.header_index_mapping[self.table.ensure_normal(item)]
+            return self.Column(self, index, logger=create_item_logger(self.logger, item))
         else:
             raise TypeError('row[] accepts only integers and strings')
 
@@ -1370,13 +1355,25 @@ class Table(Widget):
             raise TypeError(
                 'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
-    def __getitem__(self, at_index):
-        if not isinstance(at_index, int):
-            raise TypeError('table indexing only accepts integers')
+    def __getitem__(self, item):
+        if isinstance(item, six.string_types):
+            if self.assoc_column is None:
+                raise TypeError('You cannot use string indices when no assoc_column specified!')
+            try:
+                row = self.row((self.assoc_column, item))
+            except RowNotFound:
+                raise KeyError(
+                    'Row {!r} not found in table by associative column {!r}'.format(
+                        item, self.assoc_column))
+            at_index = row.index
+        elif isinstance(item, int):
+            at_index = item
+        else:
+            raise TypeError('Table [] accepts only strings or integers.')
         if at_index < 0:
             # To mimic the list handling
             at_index = self._process_negative_index(at_index)
-        return self.Row(self, at_index, logger=self.logger)
+        return self.Row(self, at_index, logger=create_item_logger(self.logger, item))
 
     def row(self, *extra_filters, **filters):
         try:
@@ -1403,7 +1400,7 @@ class Table(Widget):
             while (e.previousElementSibling)
                 p.push(e = e.previousElementSibling);
             return p.length;
-            """), row_el)
+            """), row_el, silent=True)
 
     def map_column(self, column):
         """Return column position. Can accept int, normal name, attributized name."""
@@ -1432,7 +1429,7 @@ class Table(Widget):
     def _all_rows(self):
         for row_pos in range(len(self.browser.elements(self.ROWS, parent=self))):
             row_pos = row_pos if not self._is_header_in_body else row_pos + 1
-            yield self.Row(self, row_pos, logger=self.logger)
+            yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
 
     def _filtered_rows(self, *extra_filters, **filters):
         # Pre-process the filters
@@ -1543,7 +1540,7 @@ class Table(Widget):
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
             row_pos = row_pos if not self._is_header_in_body else row_pos + 1
-            rows.append(self.Row(self, row_pos, logger=self.logger))
+            rows.append(self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos)))
 
         for row in rows:
             if regexp_filters:
