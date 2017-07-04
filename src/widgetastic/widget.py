@@ -1112,7 +1112,8 @@ class TableRow(Widget, ClickableMixin):
         if isinstance(item, int):
             return self.Column(self, item, logger=create_item_logger(self.logger, item))
         elif isinstance(item, six.string_types):
-            return self[self.table.header_index_mapping[self.table.ensure_normal(item)]]
+            index = self.table.header_index_mapping[self.table.ensure_normal(item)]
+            return self.Column(self, index, logger=create_item_logger(self.logger, item))
         else:
             raise TypeError('row[] accepts only integers and strings')
 
@@ -1354,13 +1355,25 @@ class Table(Widget):
             raise TypeError(
                 'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
-    def __getitem__(self, at_index):
-        if not isinstance(at_index, int):
-            raise TypeError('table indexing only accepts integers')
+    def __getitem__(self, item):
+        if isinstance(item, six.string_types):
+            if self.assoc_column is None:
+                raise TypeError('You cannot use string indices when no assoc_column specified!')
+            try:
+                row = self.row((self.assoc_column, item))
+            except RowNotFound:
+                raise KeyError(
+                    'Row {!r} not found in table by associative column {!r}'.format(
+                        item, self.assoc_column))
+            at_index = row.index
+        elif isinstance(item, int):
+            at_index = item
+        else:
+            raise TypeError('Table [] accepts only strings or integers.')
         if at_index < 0:
             # To mimic the list handling
             at_index = self._process_negative_index(at_index)
-        return self.Row(self, at_index, logger=create_item_logger(self.logger, at_index))
+        return self.Row(self, at_index, logger=create_item_logger(self.logger, item))
 
     def row(self, *extra_filters, **filters):
         try:

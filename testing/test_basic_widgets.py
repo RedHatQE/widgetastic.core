@@ -238,6 +238,8 @@ def test_table_with_widgets_and_assoc_column(browser):
             'bar': {'Column 2': 'bar col 2', 'Column 3': 'yolo'}
         }}
 
+    assert view.table['bar']['Column 2'].read() == 'bar col 2'
+
 
 def test_table_row_ignore_bottom(browser):
     class TestForm(View):

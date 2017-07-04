@@ -32,7 +32,7 @@ def call_sig(args, kwargs):
 class PrependParentsAdapter(logging.LoggerAdapter):
     """This class ensures the path to the widget is represented in the log records."""
     def process(self, msg, kwargs):
-        return '[{}]: {}'.format(self.extra['widget_path'].lstrip('/'), msg), kwargs
+        return '[{}]: {}'.format(self.extra['widget_path'], msg), kwargs
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.logger, self.extra['widget_path'])
@@ -61,7 +61,7 @@ def _create_logger_appender(parent_logger, suffix):
     else:
         widget_path = suffix
         logger = parent_logger
-    return PrependParentsAdapter(logger, {'widget_path': widget_path})
+    return PrependParentsAdapter(logger, {'widget_path': widget_path.lstrip('/')})
 
 
 def create_child_logger(parent_logger, child_name):
