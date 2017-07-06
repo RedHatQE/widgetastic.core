@@ -565,6 +565,9 @@ def test_with_including(browser):
         fileinput = FileInput(id='fileinput')
         inputs = View.include(TestForm2)
 
+    class TestForm4(TestForm3):
+        pass
+
     class AFillable(Fillable):
         def __init__(self, text):
             self.text = text
@@ -572,9 +575,9 @@ def test_with_including(browser):
         def as_fill_value(self):
             return self.text
 
-    form = TestForm3(browser)
+    form = TestForm4(browser)
     # This repeats test_basic_widgets
-    assert isinstance(form, TestForm3)
+    assert isinstance(form, TestForm4)
     data = form.read()
     assert data['h3'] == 'test test'
     assert data['input1'] == ''
