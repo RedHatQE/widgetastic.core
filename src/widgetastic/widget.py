@@ -273,7 +273,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             for widget_includer in self._included_widgets:
                 if widget_includer._seq_id == includer_id:
                     self._initialized_included_widgets[widget_includer._seq_id] =\
-                        widget_includer.widget_class(self.parent, self.logger)
+                        widget_includer.widget_class(self, self.logger)
                     break
             else:
                 raise ValueError('Could not find includer #{}'.format(includer_id))
