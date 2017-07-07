@@ -20,6 +20,7 @@ setup(
         'selenium-smart-locator',
         'six',
         'wait_for',
+        'pytest-localserver'
     ],
     setup_requires=[
         'setuptools_scm',
@@ -40,4 +41,7 @@ setup(
         'Topic :: Software Development :: Quality Assurance',
         'Topic :: Software Development :: Testing',
     ],
+    entry_points={
+        'pytest11': ['localserver = pytest_localserver.plugin']
+    },
 )
