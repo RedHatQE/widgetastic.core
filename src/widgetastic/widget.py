@@ -173,6 +173,11 @@ class WidgetMetaclass(type):
         for base in bases:
             for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
                 desc_name_mapping[key] = value
+            for widget_includer in getattr(base, '_included_widgets', ()):
+                included_widgets.append(widget_includer)
+                for widget_name in widget_includer.widget_class.cls_widget_names():
+                    new_attrs[widget_name] = IncludedWidget(widget_includer._seq_id, widget_name)
+
         for key, value in six.iteritems(attrs):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
