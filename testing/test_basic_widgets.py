@@ -568,6 +568,14 @@ def test_with_including(browser):
     class TestForm4(TestForm3):
         pass
 
+    class TestForm5(View):
+        fileinput = FileInput(id='fileinput')
+        inputs = View.include(TestForm2, use_parent=True)
+
+    class TestForm6(TestForm5):
+        pass
+
+
     class AFillable(Fillable):
         def __init__(self, text):
             self.text = text
@@ -599,6 +607,12 @@ def test_with_including(browser):
     assert form.input1.fill(AFillable('a_test'))
     assert not form.input1.fill(AFillable('a_test'))
     assert form.input1.read() == 'a_test'
+
+    # checking use_parent option
+    some_form = TestForm4(browser)
+    assert isinstance(some_form.input1.parent.parent, type(browser))
+    some_form2 = TestForm6(browser)
+    assert isinstance(some_form2.input1.parent.parent, TestForm6)
 
     assert form.fileinput.fill('foo')
     with pytest.raises(DoNotReadThisWidget):
