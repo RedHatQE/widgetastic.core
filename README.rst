@@ -329,7 +329,8 @@ All the included widgets in the structure share their parent with the widget whe
 including. So when instantiated, the underlying ``FormButtonsAdd`` has the same parent widget as
 the ``ItemAddForm``. I did not think it would be wise to make the including widget a parent for the
 included widgets due to the fact widgetastic fences the element lookup if ``ROOT`` is present on a
-widget/view.
+widget/view. However, ``View.include`` supports ``use_parent=True`` option which makes included
+widgets use including widget as a parent for rare cases when it is really necessary.
 
 
 .. `Switchable conditional views`:
