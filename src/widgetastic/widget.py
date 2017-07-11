@@ -131,23 +131,25 @@ class ExtraData(object):
 
 class WidgetIncluder(Widgetable):
     """Includes widgets from another widget. Useful for sharing pieces of code."""
-    def __init__(self, widget_class):
+    def __init__(self, widget_class, use_parent=False):
         self.widget_class = widget_class
+        self.use_parent = use_parent
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, self.widget_class.__name__)
 
 
 class IncludedWidget(object):
-    def __init__(self, included_id, widget_name):
+    def __init__(self, included_id, widget_name, use_parent):
         self.included_id = included_id
         self.widget_name = widget_name
+        self.use_parent = use_parent
 
     def __get__(self, o, t=None):
         if o is None:
             return self
 
-        return o._get_included_widget(self.included_id, self.widget_name)
+        return o._get_included_widget(self.included_id, self.widget_name, self.use_parent)
 
     def __repr__(self):
         return '{}({}, {!r})'.format(type(self).__name__, self.included_id, self.widget_name)
@@ -173,6 +175,12 @@ class WidgetMetaclass(type):
         for base in bases:
             for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
                 desc_name_mapping[key] = value
+            for widget_includer in getattr(base, '_included_widgets', ()):
+                included_widgets.append(widget_includer)
+                for widget_name in widget_includer.widget_class.cls_widget_names():
+                    new_attrs[widget_name] = IncludedWidget(widget_includer._seq_id, widget_name,
+                                                            widget_includer.use_parent)
+
         for key, value in six.iteritems(attrs):
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
@@ -181,7 +189,8 @@ class WidgetMetaclass(type):
                 included_widgets.append(value)
                 # Now generate accessors for each included widget
                 for widget_name in value.widget_class.cls_widget_names():
-                    new_attrs[widget_name] = IncludedWidget(value._seq_id, widget_name)
+                    new_attrs[widget_name] = IncludedWidget(value._seq_id, widget_name,
+                                                            value.use_parent)
             elif isinstance(value, Widgetable):
                 new_attrs[key] = value
                 desc_name_mapping[value] = key
@@ -268,12 +277,13 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self._widget_cache = {}
         self._initialized_included_widgets = {}
 
-    def _get_included_widget(self, includer_id, widget_name):
+    def _get_included_widget(self, includer_id, widget_name, use_parent):
         if includer_id not in self._initialized_included_widgets:
             for widget_includer in self._included_widgets:
                 if widget_includer._seq_id == includer_id:
+                    parent = self if use_parent else self.parent
                     self._initialized_included_widgets[widget_includer._seq_id] =\
-                        widget_includer.widget_class(self.parent, self.logger)
+                        widget_includer.widget_class(parent, self.logger)
                     break
             else:
                 raise ValueError('Could not find includer #{}'.format(includer_id))

@@ -565,6 +565,16 @@ def test_with_including(browser):
         fileinput = FileInput(id='fileinput')
         inputs = View.include(TestForm2)
 
+    class TestForm4(TestForm3):
+        title = Text(locator='//h1')
+
+    class TestForm5(View):
+        fileinput = FileInput(id='fileinput')
+        inputs = View.include(TestForm2, use_parent=True)
+
+    class TestForm6(TestForm5):
+        input6 = TextInput(id='input')
+
     class AFillable(Fillable):
         def __init__(self, text):
             self.text = text
@@ -572,9 +582,9 @@ def test_with_including(browser):
         def as_fill_value(self):
             return self.text
 
-    form = TestForm3(browser)
+    form = TestForm4(browser)
     # This repeats test_basic_widgets
-    assert isinstance(form, TestForm3)
+    assert isinstance(form, TestForm4)
     data = form.read()
     assert data['h3'] == 'test test'
     assert data['input1'] == ''
@@ -596,6 +606,18 @@ def test_with_including(browser):
     assert form.input1.fill(AFillable('a_test'))
     assert not form.input1.fill(AFillable('a_test'))
     assert form.input1.read() == 'a_test'
+    assert form.title.text == 'Hello'
+    assert isinstance(form.input1.parent.parent, type(browser))
+
+    form2 = TestForm6(browser)
+    assert isinstance(form2.input1.parent.parent, TestForm6)
+
+    form2.fill({'input6': 'some input'})
+    assert form2.input6.read() == 'some input'
+    form2.fill({'fileinput': 'blabla'})
+    assert form2.fill({'input1': 'typed into input 1'})
+    assert form2.input1.read() == 'typed into input 1'
+    assert form2.h3.read() == 'test test'
 
     assert form.fileinput.fill('foo')
     with pytest.raises(DoNotReadThisWidget):
