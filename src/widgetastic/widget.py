@@ -666,7 +666,7 @@ class View(Widget):
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
-                'Extra values that have no corresponding fill fields passed: ',
+                'Extra values that have no corresponding fill fields passed: %s',
                 ', '.join(extra_keys))
         for name in self.widget_names:
             if name not in values or values[name] is None:
