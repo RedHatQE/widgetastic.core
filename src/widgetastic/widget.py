@@ -842,8 +842,11 @@ class ParametrizedViewRequest(object):
 class ClickableMixin(object):
 
     @logged()
-    def click(self):
-        return self.browser.click(self)
+    def click(self, handle_alert=None):
+        self.browser.click(self, ignore_ajax=(handle_alert is not None))
+        if handle_alert is not None:
+            self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
+            self.browser.plugin.ensure_page_safe()
 
 
 class GenericLocatorWidget(Widget, ClickableMixin):
