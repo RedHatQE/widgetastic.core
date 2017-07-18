@@ -645,7 +645,9 @@ class BrowserParentWrapper(object):
             self, locator, parent=None, check_visibility=False, check_safe=True,
             force_check_safe=False):
         if parent is None:
-            parent = self._o
+            grandparent = getattr(self._o, 'parent', None)
+            parent = grandparent if grandparent else self._o
+
         if parent is locator:
             # This happens when a __locator__ is resolved on a nested View using other browser ops
             # We need to shift it by one in the hierarchy then.
