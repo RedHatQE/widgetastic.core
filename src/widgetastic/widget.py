@@ -229,6 +229,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
           instance and instantiates the widget with underlying browser.
         * Implements some basic interface for all widgets.
     """
+    INDIRECT = False
 
     # Helper methods
     @staticmethod
@@ -350,7 +351,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     def locatable_parent(self):
         """If the widget has a parent that is locatable, returns it. Otherwise returns None"""
         for locatable in list(reversed(self.hierarchy))[1:]:
-            if hasattr(locatable, '__locator__') and not getattr(locatable, 'INDIRECT', False):
+            if hasattr(locatable, '__locator__') and not locatable.INDIRECT:
                 return locatable
         else:
             return None
@@ -360,22 +361,28 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         """Returns the instance of parent browser.
 
         If the view defines ``__locator__`` or ``ROOT`` then a new wrapper is created that injects
-        the ``parent=``
+        the ``parent=``.
+
+        If the widget specifies a class attribute ``INDIRECT`` as ``True``, then no wrapping occurs.
 
         Returns:
-            :py:class:`widgetastic.browser.Browser` instance
+            :py:class:`widgetastic.browser.Browser` or
+            :py:class:`widgetastic.browser.BrowserParentWrapper` instance
 
         Raises:
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            super_browser = self.parent.browser
-            if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
-                # Wrap it so we have automatic parent injection
-                return BrowserParentWrapper(self, super_browser)
+            locatable_parent = self.locatable_parent
+            if locatable_parent is None:
+                # parent browser is the pure browser for sure in this case
+                parent_browser = self.parent.browser
             else:
-                # This view has no locator, therefore just use the parent browser
-                return super_browser
+                parent_browser = locatable_parent.browser
+            if hasattr(self, '__locator__') and not self.INDIRECT:
+                return BrowserParentWrapper(self, parent_browser)
+            else:
+                return parent_browser
         except AttributeError:
             raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
 
