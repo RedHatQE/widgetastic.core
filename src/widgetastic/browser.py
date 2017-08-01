@@ -177,6 +177,10 @@ class Browser(object):
         return self
 
     @property
+    def root_browser(self):
+        return self
+
+    @property
     def product_version(self):
         """In order for :py:class:`widgetastic.utils.VersionPick` to work on
         :py:class:`widgetastic.widget.Widget` instances, you need to override this property
@@ -189,6 +193,8 @@ class Browser(object):
         """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
         if isinstance(locator, WebElement):
             return locator
+        if hasattr(locator, '__element__'):
+            return locator.__element__()
         try:
             return Locator(locator)
         except TypeError:
@@ -234,6 +240,7 @@ class Browser(object):
         if (check_safe and not isinstance(locator, WebElement)) or force_check_safe:
             # If we have a webelement so it is pointless to check it
             self.plugin.ensure_page_safe()
+        from .widget import Widget
         locator = self._process_locator(locator)
         # Get result
         if isinstance(locator, WebElement):
@@ -242,7 +249,11 @@ class Browser(object):
             if parent:
                 if isinstance(parent, Browser):
                     root_element = parent.selenium
-                elif isinstance(parent, (WebElement)) or hasattr(parent, '__locator__'):
+                elif isinstance(parent, WebElement):
+                    root_element = parent
+                elif isinstance(parent, Widget):
+                    root_element = self.element(parent, parent=parent.locatable_parent)
+                elif hasattr(parent, '__locator__'):
                     root_element = self.element(parent, check_visibility=check_visibility)
                 else:
                     # TODO: handle intermediate views that do not have __locator__
@@ -644,18 +655,9 @@ class BrowserParentWrapper(object):
     def elements(
             self, locator, parent=None, check_visibility=False, check_safe=True,
             force_check_safe=False):
-        if parent is None:
-            parent = self._o
-        if parent is locator:
-            # This happens when a __locator__ is resolved on a nested View using other browser ops
-            # We need to shift it by one in the hierarchy then.
-            try:
-                parent = parent.locatable_parent
-            except AttributeError:
-                parent = None
         return self._browser.elements(
             locator,
-            parent=parent,
+            parent=parent or self._o,
             check_visibility=check_visibility,
             check_safe=check_safe,
             force_check_safe=force_check_safe)

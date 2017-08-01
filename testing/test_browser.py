@@ -150,8 +150,6 @@ def test_nested_views_parent_injection(browser):
 
     view = MyView(browser)
     assert isinstance(view.browser, BrowserParentWrapper)
-    assert view.browser == view.without.browser
-    assert view.browser == view.without.nested.browser
     assert len(view.c1.browser.elements('.lookmeup')) == 1
     assert view.c1.w.text == 'C1'
     assert view.c1.browser.text('.lookmeup') == 'C1'
