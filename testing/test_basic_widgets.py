@@ -88,6 +88,39 @@ def test_nested_views_read_fill(browser):
     assert form.Nested1.Nested2.input2.locatable_parent is None
 
 
+def test_nested_views_read_fill_flat(browser):
+    class TestForm(View):
+        h3 = Text('.//h3')
+
+        class Nested1(View):
+            input1 = TextInput(name='input1')
+
+            class Nested2(View):
+                input2 = Checkbox(id='input2')
+
+    form = TestForm(browser)
+    assert isinstance(form, TestForm)
+    data = form.read()
+
+    assert data['h3'] == 'test test'
+    assert data['Nested1']['input1'] == ''
+    assert not data['Nested1']['Nested2']['input2']
+
+    assert form.fill({
+        'Nested1.input1': 'foobar',
+        'Nested1.Nested2.input2': True,
+    })
+
+    assert form.Nested1.input1.read() == 'foobar'
+    assert form.Nested1.Nested2.input2.read()
+
+    assert form.Nested1.Nested2.input2.hierarchy == [
+        form, form.Nested1, form.Nested1.Nested2, form.Nested1.Nested2.input2]
+    assert form.hierarchy == [form]
+
+    assert form.Nested1.Nested2.input2.locatable_parent is None
+
+
 def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
