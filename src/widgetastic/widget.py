@@ -1194,6 +1194,10 @@ class TableRow(Widget, ClickableMixin):
             else:
                 self.logger.info('Filling column %r', key)
 
+            # if the row widgets aren't visible the row needs to be clicked to edit
+            if not self[key].widget.is_displayed:
+                self.click()
+                changed = True
             if self[key].fill(value):
                 changed = True
         return changed
@@ -1654,7 +1658,7 @@ class Table(Widget):
                     fill_value = copy(fill_value)
                     fill_value[self.assoc_column_position] = key
                 if row.fill(fill_value):
-                    self.row_save()
+                    self.row_save(row=row.index)
                     changed = True
             return changed
         else:
@@ -1700,7 +1704,7 @@ class Table(Widget):
         raise NotImplementedError(
             'You need to implement the row_add in order to use dynamic adding')
 
-    def row_save(self):
+    def row_save(self, row=None):
         """To be implemented if the table has dynamic rows.
 
         Used when the table needs confirming saving of each row.
