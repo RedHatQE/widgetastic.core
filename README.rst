@@ -134,6 +134,31 @@ Basic usage
     a_view.an_input.is_displayed
 
 
+``__locator__()`` and ``__element__()`` protocol
+------------------------------------------------
+
+To ensure good structure, a protocol of two methods was introduced. Let's talk a bit about them.
+
+``__locator__()`` method is not implemented by default on ``Widget`` class. Its sole purpose is to
+serve a locator of the object itself, so when the object is thrown in element lookup, it returns the
+result for the locator returned by this method. This method must return a locator, be it a valid
+locator string, tuple or another locatable object.
+
+``__locator__()`` is auto-generated when ``ROOT`` attribute is present on the class with a valid
+locator.
+
+``__element__()`` method has a default implementation on every widget. Its purpose is to look up the
+root element from ``__locator__()``. It is present because the machinery that digests the objects
+for element lookup will try it first. ``__element__()``'s default implementation looks up the
+``__locator__()`` in the *parent browser*. That is important, because that allows simpler structure
+for the browser wrapper.
+
+Combination of these methods ensures, that while the widget's root element is looked up in parent
+browser, which fences the lookup into the parent widget, all lookups inside the widget, like child
+widgets or other browser operations operate within the widget's root element, eliminating the need
+of passing the parent element.
+
+
 .. `Version picking`:
 
 Version picking

@@ -11,6 +11,7 @@ from collections import defaultdict, namedtuple
 from copy import copy
 from jsmin import jsmin
 from selenium.webdriver.remote.file_detector import LocalFileDetector
+from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
 from wait_for import wait_for
 
@@ -277,6 +278,18 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self._widget_cache = {}
         self._initialized_included_widgets = {}
 
+    def __element__(self):
+        try:
+            locator = self.__locator__()
+        except AttributeError:
+            raise AttributeError(
+                '__locator__() is not defined on {} class'.format(type(self).__name__))
+        else:
+            if isinstance(locator, WebElement):
+                return locator
+            else:
+                return self.parent_browser.element(locator)
+
     def _get_included_widget(self, includer_id, widget_name, use_parent):
         if includer_id not in self._initialized_included_widgets:
             for widget_includer in self._included_widgets:
@@ -356,6 +369,14 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             return None
 
     @property
+    def root_browser(self):
+        return self.parent.root_browser
+
+    @property
+    def parent_browser(self):
+        return self.parent.browser
+
+    @property
     def browser(self):
         """Returns the instance of parent browser.
 
@@ -369,13 +390,12 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            super_browser = self.parent.browser
             if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
                 # Wrap it so we have automatic parent injection
-                return BrowserParentWrapper(self, super_browser)
+                return BrowserParentWrapper(self, self.root_browser)
             else:
                 # This view has no locator, therefore just use the parent browser
-                return super_browser
+                return self.root_browser
         except AttributeError:
             raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
 
@@ -628,8 +648,8 @@ class View(Widget):
             :py:class:`bool`
         """
         try:
-            return self.parent.browser.is_displayed(self)
-        except LocatorNotImplemented:
+            return super(View, self).is_displayed
+        except (LocatorNotImplemented, AttributeError):
             return True
 
     def move_to(self):
