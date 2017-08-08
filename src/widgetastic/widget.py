@@ -1195,9 +1195,9 @@ class TableRow(Widget, ClickableMixin):
                 self.logger.info('Filling column %r', key)
 
             # if the row widgets aren't visible the row needs to be clicked to edit
-            if not self[key].widget.is_displayed:
-                self.click()
-                changed = True
+            if hasattr(self.parent, 'action_row') and getattr(self[key], 'widget', False):
+                if not self[key].widget.is_displayed:
+                    self.click()
             if self[key].fill(value):
                 changed = True
         return changed
