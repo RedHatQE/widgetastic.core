@@ -159,6 +159,31 @@ widgets or other browser operations operate within the widget's root element, el
 of passing the parent element.
 
 
+Simplified nested form fill
+---------------------------
+
+When you want to separate widgets into logical groups but you don't want to have a visual clutter in
+the code, you can use dots in fill keys to signify the dictionary boundaries:
+
+.. code-block:: python
+
+    # This:
+    view.fill({
+        'x': 1,
+        'foo.bar': 2,
+        'foo.baz': 3,
+    })
+
+    # Is equivalent to this:
+    view.fill({
+        'x': 1,
+        'foo': {
+            'bar': 2,
+            'baz': 3,
+        }
+    })
+
+
 .. `Version picking`:
 
 Version picking
