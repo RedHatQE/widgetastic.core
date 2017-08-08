@@ -24,7 +24,7 @@ from .log import (
     create_item_logger)
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
-    normalize_space, nested_getattr)
+    normalize_space, nested_getattr, deflatten_dict)
 from .xpath import quote
 
 
@@ -681,6 +681,7 @@ class View(Widget):
         Returns:
             :py:class:`bool` if the fill changed any value.
         """
+        values = deflatten_dict(values)
         was_change = False
         self.before_fill(values)
         extra_keys = set(values.keys()) - set(self.widget_names)

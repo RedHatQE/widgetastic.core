@@ -477,3 +477,48 @@ def nested_getattr(o, steps):
     for step in steps:
         result = getattr(result, step)
     return result
+
+
+def deflatten_dict(d):
+    """Expands nested dictionary from dot-separated string keys.
+
+    Useful when one needs filling a nested view, this can reduce the visual nesting
+
+    Turns this:
+
+    .. code-block:: python
+
+        {'a.b': 1}
+
+    Into this:
+
+    .. code-block:: python
+
+        {'a': {'b': 1}}
+
+    The conversion recursively follows dictionaries as values.
+
+    Args:
+        d: Dictionary
+
+    Returns:
+        A dictionary.
+    """
+    current_dict = {}
+    for key, value in six.iteritems(d):
+        if not isinstance(key, six.string_types):
+            current_dict[key] = value
+            continue
+        local_dict = current_dict
+        if isinstance(key, tuple):
+            attrs = list(key)
+        else:
+            attrs = [x.strip() for x in key.split('.')]
+        dict_lookup = attrs[:-1]
+        attr_set = attrs[-1]
+        for attr_name in dict_lookup:
+            if attr_name not in local_dict:
+                local_dict[attr_name] = {}
+            local_dict = local_dict[attr_name]
+        local_dict[attr_set] = deflatten_dict(value) if isinstance(value, dict) else value
+    return current_dict
