@@ -374,7 +374,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
     @property
     def parent_browser(self):
-        return self.parent.browser
+        try:
+            return self.locatable_parent.browser
+        except AttributeError:
+            # locatable_parent == None
+            return self.root_browser
 
     @property
     def browser(self):
@@ -390,7 +394,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            if hasattr(self, '__locator__') and not getattr(self, 'INDIRECT', False):
+            if hasattr(self, '__locator__'):
                 # Wrap it so we have automatic parent injection
                 return BrowserParentWrapper(self, self.root_browser)
             else:
