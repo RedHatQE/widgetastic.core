@@ -2120,7 +2120,11 @@ class ConditionalSwitchableView(Widgetable):
                 else:
                     if self.reference not in condition_arg_cache:
                         try:
-                            ref_value = nested_getattr(o, self.reference).read()
+                            ref_o = nested_getattr(o, self.reference)
+                            if isinstance(ref_o, Widget):
+                                ref_value = ref_o.read()
+                            else:
+                                ref_value = ref_o
                             condition_arg_cache[self.reference] = ref_value
                         except AttributeError:
                             raise TypeError(
