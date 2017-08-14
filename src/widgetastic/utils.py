@@ -524,7 +524,7 @@ def deflatten_dict(d):
     return current_dict
 
 
-def crop_string_middle(s, length=32):
+def crop_string_middle(s, length=32, cropper='...'):
     """Crops string by adding ... in the middle.
 
     Args:
@@ -534,7 +534,7 @@ def crop_string_middle(s, length=32):
     Returns:
         Cropped string
     """
-    if len(s) <= 32:
+    if len(s) <= length:
         return s
-    half = (length - 3) / 2
-    return s[:half] + '...' + s[-half - 1:]
+    half = (length - len(cropper)) / 2
+    return s[:half] + cropper + s[-half - 1:]
