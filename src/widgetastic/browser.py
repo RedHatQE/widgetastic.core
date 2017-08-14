@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from smartloc import Locator
 from textwrap import dedent
+from threading import RLock
 from wait_for import wait_for
 
 from .exceptions import (
@@ -136,17 +137,26 @@ class Browser(object):
     something like ``/tmp/someawfulhashadmin`` for obvious reasons that however might not be obvious
     to the ordinary users of Selenium.
 
+    This wrapper uses a reentrant lock to ensure the thread safety. All methods and properties
+    called on an instance of this class should be thread-safe. If you want to dig into selenium and
+    call something directly from it, use the ``selenium_access`` attribute as a context manager.
+
+    .. code-block:: python
+
+        with wtbrowser.selenium_access:
+            wtbrowser.selenium.do_something_nasty()
+
     Args:
         selenium: Any :py:class:`selenium.webdriver.remote.webdriver.WebDriver` descendant
         plugin_class: If you want to alter the behaviour of some aspects, you can specify your own
             class as plugin.
-        logger: a logger, if not specified, default is used.
+        logger: a logger, if not specified, ``null_logger`` is used.
         extra_objects: If the testing system needs to know more about the environment, you can pass
             a dictionary in this parameter, where you can store all these additional objects.
     """
-    def __init__(self, selenium, plugin_class=None, logger=None, extra_objects=None):
+    def __init__(self, selenium, plugin_class=DefaultPlugin, logger=None, extra_objects=None):
+        self.selenium_access = RLock()
         self.selenium = selenium
-        plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
         self.logger = logger or null_logger
         self.extra_objects = extra_objects or {}
@@ -168,7 +178,8 @@ class Browser(object):
     def handles_alerts(self):
         """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
         handling functions do nothing."""
-        return self.selenium.capabilities.get('handlesAlerts', True)
+        with self.selenium_access:
+            return self.selenium.capabilities.get('handlesAlerts', True)
 
     @property
     def browser(self):
@@ -188,8 +199,7 @@ class Browser(object):
         """
         raise NotImplementedError('You have to implement product_version')
 
-    @staticmethod
-    def _process_locator(locator):
+    def _process_locator(self, locator):
         """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
         if isinstance(locator, WebElement):
             return locator
@@ -202,6 +212,8 @@ class Browser(object):
                 # Deal with the case when __locator__ returns a webelement.
                 loc = locator.__locator__()
                 if isinstance(loc, WebElement):
+                    # But warn that it is not good
+                    self.logger.warning('%r has __locator__() that returns a webelement!', locator)
                     return loc
             raise LocatorNotImplemented(
                 'You have to implement __locator__ on {!r}'.format(type(locator)))
@@ -260,7 +272,8 @@ class Browser(object):
                     root_element = self.selenium
             else:
                 root_element = self.selenium
-            result = root_element.find_elements(*locator)
+            with self.selenium_access:
+                result = root_element.find_elements(*locator)
 
         if check_visibility:
             result = [e for e in result if self.is_displayed(e)]
@@ -296,7 +309,8 @@ class Browser(object):
 
     def perform_click(self):
         """Clicks the left mouse button at the current mouse position."""
-        ActionChains(self.selenium).click().perform()
+        with self.selenium_access:
+            ActionChains(self.selenium).click().perform()
 
     def click(self, locator, *args, **kwargs):
         """Clicks at a specific element using two separate events (mouse move, mouse click).
@@ -328,7 +342,8 @@ class Browser(object):
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el)
-        el.click()
+        with self.selenium_access:
+            el.click()
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
@@ -353,7 +368,9 @@ class Browser(object):
         while retry:
             retry = False
             try:
-                return self.move_to_element(locator, *args, **kwargs).is_displayed()
+                element = self.move_to_element(locator, *args, **kwargs)
+                with self.selenium_access:
+                    return element.is_displayed()
             except (NoSuchElementException, MoveTargetOutOfBoundsException):
                 return False
             except StaleElementReferenceException:
@@ -388,12 +405,14 @@ class Browser(object):
                 return el
         move_to = ActionChains(self.selenium).move_to_element(el)
         try:
-            move_to.perform()
+            with self.selenium_access:
+                move_to.perform()
         except MoveTargetOutOfBoundsException:
             # ff workaround
             self.execute_script("arguments[0].scrollIntoView();", el)
             try:
-                move_to.perform()
+                with self.selenium_access:
+                    move_to.perform()
             except MoveTargetOutOfBoundsException:  # This has become desperate now.
                 raise MoveTargetOutOfBoundsException(
                     "Despite all the workarounds, scrolling to `{}` was unsuccessful.".format(
@@ -412,13 +431,15 @@ class Browser(object):
 
     def move_by_offset(self, x, y):
         self.logger.debug('move_by_offset X:%r Y:%r', x, y)
-        ActionChains(self.selenium).move_by_offset(x, y)
+        with self.selenium_access:
+            ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
         if not kwargs.pop('silent', False):
             self.logger.debug('execute_script: %r', script)
-        return self.selenium.execute_script(dedent(script), *args, **kwargs)
+        with self.selenium_access:
+            return self.selenium.execute_script(dedent(script), *args, **kwargs)
 
     def refresh(self):
         """Triggers a page refresh."""
@@ -445,7 +466,9 @@ class Browser(object):
         Returns:
             :py:class:`str` with the tag name
         """
-        return self.element(*args, **kwargs).tag_name
+        e = self.element(*args, **kwargs)
+        with self.selenium_access:
+            return e.tag_name
 
     def text(self, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
@@ -459,7 +482,9 @@ class Browser(object):
             :py:class:`str` with the text
         """
         try:
-            text = self.element(*args, **kwargs).text
+            e = self.element(*args, **kwargs)
+            with self.selenium_access:
+                text = e.text
         except MoveTargetOutOfBoundsException:
             text = ''
 
@@ -474,7 +499,9 @@ class Browser(object):
         return normalize_space(text)
 
     def get_attribute(self, attr, *args, **kwargs):
-        return self.element(*args, **kwargs).get_attribute(attr)
+        e = self.element(*args, **kwargs)
+        with self.selenium_access:
+            return e.get_attribute(attr)
 
     def set_attribute(self, attr, value, *args, **kwargs):
         return self.execute_script(
@@ -491,12 +518,15 @@ class Browser(object):
         self.logger.debug('clear: %r', locator)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
-        result = el.clear()
+        with self.selenium_access:
+            result = el.clear()
         self.plugin.after_keyboard_input(el, None)
         return result
 
     def is_selected(self, *args, **kwargs):
-        return self.element(*args, **kwargs).is_selected()
+        e = self.element(*args, **kwargs)
+        with self.selenium_access:
+            return e.is_selected()
 
     def send_keys(self, text, locator, *args, **kwargs):
         """Sends keys to the element. Detects the file inputs automatically.
@@ -520,7 +550,8 @@ class Browser(object):
             el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
             self.logger.debug('send_keys %r to %r', text, locator)
-            result = el.send_keys(text)
+            with self.selenium_access:
+                result = el.send_keys(text)
             if Keys.ENTER not in text:
                 try:
                     self.plugin.after_keyboard_input(el, text)
@@ -545,7 +576,8 @@ class Browser(object):
         """
         if not self.handles_alerts:
             return None
-        return self.selenium.switch_to_alert()
+        with self.selenium_access:
+            return self.selenium.switch_to_alert()
 
     @property
     def alert_present(self):
@@ -556,7 +588,9 @@ class Browser(object):
         if not self.handles_alerts:
             return False
         try:
-            self.get_alert().text
+            alert = self.get_alert()
+            with self.selenium_access:
+                alert.text
         except NoAlertPresentException:
             return False
         else:
@@ -571,7 +605,8 @@ class Browser(object):
             while self.alert_present:
                 alert = self.get_alert()
                 self.logger.info('dismissing alert: %r', alert.text)
-                alert.dismiss()
+                with self.selenium_access:
+                    alert.dismiss()
         except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
 
@@ -610,13 +645,16 @@ class Browser(object):
             self.logger.info('handling alert: %r', popup.text)
             if prompt is not None:
                 self.logger.info('  answering prompt: %r', prompt)
-                popup.send_keys(prompt)
+                with self.selenium_access:
+                    popup.send_keys(prompt)
             if cancel:
                 self.logger.info('  dismissing')
-                popup.dismiss()
+                with self.selenium_access:
+                    popup.dismiss()
             else:
                 self.logger.info('  accepting')
-                popup.accept()
+                with self.selenium_access:
+                    popup.accept()
             # Should any problematic "double" alerts appear here, we don't care, just blow'em away.
             self.dismiss_any_alerts()
             return True
