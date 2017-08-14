@@ -23,6 +23,7 @@ from .exceptions import (
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
 from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
+from .utils import crop_string_middle
 
 
 # TODO: Resolve this issue in smartloc
@@ -507,7 +508,7 @@ class Browser(object):
         """
         return self.element(*args, **kwargs).tag_name
 
-    def text(self, *args, **kwargs):
+    def text(self, locator, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
 
         The returned text is normalized with :py:func:`widgetastic.xpath.normalize_space` as defined
@@ -519,7 +520,7 @@ class Browser(object):
             :py:class:`str` with the text
         """
         try:
-            text = self.element(*args, **kwargs).text
+            text = self.element(locator, *args, **kwargs).text
         except MoveTargetOutOfBoundsException:
             text = ''
 
@@ -527,11 +528,14 @@ class Browser(object):
             # It is probably invisible
             text = self.execute_script(
                 'return arguments[0].textContent || arguments[0].innerText;',
-                self.element(*args, **kwargs))
+                self.element(locator, *args, **kwargs),
+                silent=True)
             if text is None:
                 text = ''
 
-        return normalize_space(text)
+        result = normalize_space(text)
+        self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
+        return result
 
     def get_attribute(self, attr, *args, **kwargs):
         return self.element(*args, **kwargs).get_attribute(attr)

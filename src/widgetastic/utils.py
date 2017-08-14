@@ -522,3 +522,19 @@ def deflatten_dict(d):
             local_dict = local_dict[attr_name]
         local_dict[attr_set] = deflatten_dict(value) if isinstance(value, dict) else value
     return current_dict
+
+
+def crop_string_middle(s, length=32):
+    """Crops string by adding ... in the middle.
+
+    Args:
+        s: String.
+        length: Length to crop to.
+
+    Returns:
+        Cropped string
+    """
+    if len(s) <= 32:
+        return s
+    half = (length - 3) / 2
+    return s[:half] + '...' + s[-half - 1:]
