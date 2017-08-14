@@ -559,7 +559,7 @@ class Browser(object):
         """Returns element's location as a tuple of x/y."""
         size = self.size_of(*args, **kwargs)
         location = self.location_of(*args, **kwargs)
-        return Location(location.x + size.x / 2, location.y + size.y / 2)
+        return Location(location.x + size.width / 2, location.y + size.height / 2)
 
     def clear(self, locator, *args, **kwargs):
         """Clears a text input with given locator."""
