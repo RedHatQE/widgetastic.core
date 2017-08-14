@@ -353,6 +353,11 @@ class ParametrizedString(ConstructorResolvable):
     Args:
         template: String template in ``.format()`` format, use pipe to add a filter.
     """
+
+    OPERATIONS = {
+        'quote': xpath.quote,
+    }
+
     def __init__(self, template):
         self.template = template
         formatter = string.Formatter()
@@ -386,10 +391,12 @@ class ParametrizedString(ConstructorResolvable):
                 raise AttributeError(
                     'Parameter {} is not present in the context'.format(context_name))
             for op in ops:
-                if op == 'quote':
-                    param_value = xpath.quote(param_value)
-                else:
+                try:
+                    op_callable = self.OPERATIONS[op]
+                except KeyError:
                     raise NameError('Unknown operation {} for {}'.format(op, format_key))
+                else:
+                    param_value = op_callable(param_value)
 
             format_dict[format_key] = param_value
 
