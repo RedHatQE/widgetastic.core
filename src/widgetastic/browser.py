@@ -23,6 +23,7 @@ from .exceptions import (
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
 from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
+from .utils import crop_string_middle
 
 
 # TODO: Resolve this issue in smartloc
@@ -34,6 +35,7 @@ def is_valid(cls, strategy):
 By.is_valid = classmethod(is_valid)
 
 Size = namedtuple('Size', ['width', 'height'])
+Location = namedtuple('Location', ['x', 'y'])
 
 
 class DefaultPlugin(object):
@@ -298,6 +300,10 @@ class Browser(object):
         """Clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).click().perform()
 
+    def perform_double_click(self):
+        """Double-clicks the left mouse button at the current mouse position."""
+        ActionChains(self.selenium).double_click().perform()
+
     def click(self, locator, *args, **kwargs):
         """Clicks at a specific element using two separate events (mouse move, mouse click).
 
@@ -309,6 +315,27 @@ class Browser(object):
         self.plugin.before_click(el)
         # and then click on current mouse position
         self.perform_click()
+        if not ignore_ajax:
+            try:
+                self.plugin.ensure_page_safe()
+            except UnexpectedAlertPresentException:
+                pass
+        try:
+            self.plugin.after_click(el)
+        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+            pass
+
+    def double_click(self, locator, *args, **kwargs):
+        """Double-clicks at a specific element using two separate events (mouse move, mouse click).
+
+        Args: See :py:meth:`elements`
+        """
+        self.logger.debug('double_click: %r', locator)
+        ignore_ajax = kwargs.pop('ignore_ajax', False)
+        el = self.move_to_element(locator, *args, **kwargs)
+        self.plugin.before_click(el)
+        # and then click on current mouse position
+        self.perform_double_click()
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
@@ -408,11 +435,45 @@ class Browser(object):
             target: Locator or the target element itself.
         """
         self.logger.debug('drag_and_drop %r to %r', source, target)
-        ActionChains(self.selenium).drag_and_drop(self.element(source), self.element(target))
+        ActionChains(self.selenium)\
+            .drag_and_drop(self.element(source), self.element(target))\
+            .perform()
+
+    def drag_and_drop_by_offset(self, source, by_x, by_y):
+        """Drags the source element and drops it into target.
+
+        Args:
+            source: Locator or the source element itself
+            target: Locator or the target element itself.
+        """
+        self.logger.debug('drag_and_drop_by_offset %r X:%r Y:%r', source, by_x, by_y)
+        ActionChains(self.selenium)\
+            .drag_and_drop_by_offset(self.element(source), by_x, by_y)\
+            .perform()
+
+    def drag_and_drop_to(self, source, to_x=None, to_y=None):
+        """Drags an element to a target location specified by ``to_x`` and ``to_y``
+
+        At least one of ``to_x`` or ``to_y`` must be specified.
+
+        Args:
+            source: Dragged element.
+            to_x: Absolute location on the X axis where to drag the element.
+            to_y: Absolute location on the Y axis where to drag the element.
+        """
+        self.logger.debug('drag_and_drop_to %r X:%r Y:%r', source, to_x, to_y)
+        if to_x is None and to_y is None:
+            raise TypeError('You need to pass either to_x or to_y or both')
+        middle = self.middle_of(source)
+        if to_x is None:
+            to_x = middle.x
+        if to_y is None:
+            to_y = middle.y
+        return self.drag_and_drop_by_offset(source, to_x - middle.x, to_y - middle.y)
 
     def move_by_offset(self, x, y):
         self.logger.debug('move_by_offset X:%r Y:%r', x, y)
-        ActionChains(self.selenium).move_by_offset(x, y)
+        ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
@@ -447,7 +508,7 @@ class Browser(object):
         """
         return self.element(*args, **kwargs).tag_name
 
-    def text(self, *args, **kwargs):
+    def text(self, locator, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
 
         The returned text is normalized with :py:func:`widgetastic.xpath.normalize_space` as defined
@@ -459,7 +520,7 @@ class Browser(object):
             :py:class:`str` with the text
         """
         try:
-            text = self.element(*args, **kwargs).text
+            text = self.element(locator, *args, **kwargs).text
         except MoveTargetOutOfBoundsException:
             text = ''
 
@@ -467,11 +528,14 @@ class Browser(object):
             # It is probably invisible
             text = self.execute_script(
                 'return arguments[0].textContent || arguments[0].innerText;',
-                self.element(*args, **kwargs))
+                self.element(locator, *args, **kwargs),
+                silent=True)
             if text is None:
                 text = ''
 
-        return normalize_space(text)
+        result = normalize_space(text)
+        self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
+        return result
 
     def get_attribute(self, attr, *args, **kwargs):
         return self.element(*args, **kwargs).get_attribute(attr)
@@ -485,6 +549,17 @@ class Browser(object):
         """Returns element's size as a tuple of width/height."""
         size = self.element(*args, **kwargs).size
         return Size(size['width'], size['height'])
+
+    def location_of(self, *args, **kwargs):
+        """Returns element's location as a tuple of x/y."""
+        location = self.element(*args, **kwargs).location
+        return Location(location['x'], location['y'])
+
+    def middle_of(self, *args, **kwargs):
+        """Returns element's location as a tuple of x/y."""
+        size = self.size_of(*args, **kwargs)
+        location = self.location_of(*args, **kwargs)
+        return Location(location.x + size.width / 2, location.y + size.height / 2)
 
     def clear(self, locator, *args, **kwargs):
         """Clears a text input with given locator."""
