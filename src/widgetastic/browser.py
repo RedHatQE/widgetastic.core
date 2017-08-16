@@ -24,7 +24,6 @@ from .exceptions import (
 from .log import create_widget_logger, logged, null_logger
 from .utils import repeat_once_on_exceptions
 from .xpath import normalize_space
-from .utils import crop_string_middle
 
 
 # TODO: Resolve this issue in smartloc
