@@ -335,7 +335,6 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('double_click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
@@ -452,7 +451,6 @@ class Browser(object):
             source: Locator or the source element itself
             target: Locator or the target element itself.
         """
-        self.logger.debug('drag_and_drop %r to %r', source, target)
         ActionChains(self.selenium)\
             .drag_and_drop(self.element(source), self.element(target))\
             .perform()
@@ -465,7 +463,6 @@ class Browser(object):
             source: Locator or the source element itself
             target: Locator or the target element itself.
         """
-        self.logger.debug('drag_and_drop_by_offset %r X:%r Y:%r', source, by_x, by_y)
         ActionChains(self.selenium)\
             .drag_and_drop_by_offset(self.element(source), by_x, by_y)\
             .perform()
@@ -481,7 +478,6 @@ class Browser(object):
             to_x: Absolute location on the X axis where to drag the element.
             to_y: Absolute location on the Y axis where to drag the element.
         """
-        self.logger.debug('drag_and_drop_to %r X:%r Y:%r', source, to_x, to_y)
         if to_x is None and to_y is None:
             raise TypeError('You need to pass either to_x or to_y or both')
         middle = self.middle_of(source)
@@ -561,9 +557,7 @@ class Browser(object):
             if text is None:
                 text = ''
 
-        result = normalize_space(text)
-        self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
-        return result
+        return normalize_space(text)
 
     @logged(
         log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)

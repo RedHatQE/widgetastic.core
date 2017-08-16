@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import logging
 import time
-from six import wraps, get_method_function, get_method_self
+from six import wraps, get_method_function, get_method_self, string_types
 
 from .exceptions import DoNotReadThisWidget
+from .utils import crop_string_middle
 
 
 null_logger = logging.getLogger('widgetastic_null')
@@ -94,7 +95,7 @@ def create_item_logger(parent_logger, item):
 
 def logged(
         log_args=False, log_result=False, only_after=False, debug_only=False,
-        log_full_exception=True):
+        log_full_exception=True, string_crop=64):
     """Decorator that logs entry and exit to a method and also times the execution.
 
     It assumes that the object where you decorate the methods on has a ``.logger`` attribute.
@@ -110,6 +111,7 @@ def logged(
         only_after: Whether to log only after the method finished.
         debug_only: Use only debug log level at max.
         log_full_exception: Whether to log the full exceptions.
+        string_crop: Length to which to crop the strings if they are return values
     """
     def g(f):
         @wraps(f)
@@ -144,7 +146,12 @@ def logged(
             else:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 if log_result:
-                    info_logger('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
+                    result_to_log = result
+                    if isinstance(result_to_log, string_types):
+                        result_to_log = crop_string_middle(result_to_log, length=string_crop)
+                    info_logger(
+                        '%s -> %r (elapsed %.0f ms)',
+                        signature, result_to_log, elapsed_time)
                 else:
                     info_logger('%s (elapsed %.0f ms)', signature, elapsed_time)
                 return result
