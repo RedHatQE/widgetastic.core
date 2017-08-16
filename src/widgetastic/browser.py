@@ -300,13 +300,23 @@ class Browser(object):
         except IndexError:
             raise NoSuchElementException('Could not find an element {!r}'.format(locator))
 
-    def perform_click(self):
+    def perform_click(self, ignore_ajax=False):
         """Clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).click().perform()
+        if not ignore_ajax:
+            try:
+                self.plugin.ensure_page_safe()
+            except UnexpectedAlertPresentException:
+                pass
 
-    def perform_double_click(self):
+    def perform_double_click(self, ignore_ajax=False):
         """Double-clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).double_click().perform()
+        if not ignore_ajax:
+            try:
+                self.plugin.ensure_page_safe()
+            except UnexpectedAlertPresentException:
+                pass
 
     @logged(log_args=True, only_after=True, debug_only=True, log_full_exception=False)
     def click(self, locator, *args, **kwargs):
@@ -318,12 +328,7 @@ class Browser(object):
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         # and then click on current mouse position
-        self.perform_click()
-        if not ignore_ajax:
-            try:
-                self.plugin.ensure_page_safe()
-            except UnexpectedAlertPresentException:
-                pass
+        self.perform_click(ignore_ajax)
         try:
             self.plugin.after_click(el)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
@@ -339,12 +344,7 @@ class Browser(object):
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         # and then click on current mouse position
-        self.perform_double_click()
-        if not ignore_ajax:
-            try:
-                self.plugin.ensure_page_safe()
-            except UnexpectedAlertPresentException:
-                pass
+        self.perform_double_click(ignore_ajax)
         try:
             self.plugin.after_click(el)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
@@ -381,11 +381,20 @@ class Browser(object):
         kwargs['check_visibility'] = False
         retry = True
         tries = 10
+        checked_page_safe = False
         while retry:
             retry = False
             try:
                 return self.move_to_element(locator, *args, **kwargs).is_displayed()
-            except (NoSuchElementException, MoveTargetOutOfBoundsException):
+            except NoSuchElementException:
+                self.logger.debug(
+                    'is_displayed(%r): Element could not be found on the page',
+                    locator)
+                return False
+            except MoveTargetOutOfBoundsException:
+                self.logger.debug(
+                    'is_displayed(%r): Could not scroll to the element',
+                    locator)
                 return False
             except StaleElementReferenceException:
                 if isinstance(locator, WebElement) or tries <= 0:
@@ -393,8 +402,17 @@ class Browser(object):
                     raise
                 retry = True
                 tries -= 1
-                time.sleep(0.1)
 
+            # Before looping again ...
+            time.sleep(0.1)
+            if not checked_page_safe:
+                # Check if hte page is safe ONCE
+                self.plugin.ensure_page_safe()
+                checked_page_safe = True
+
+        self.logger.warning(
+            'is_displayed(%r): Most likely continuous stale element reference.',
+            locator)
         # Just in case
         return False
 
@@ -454,6 +472,7 @@ class Browser(object):
         ActionChains(self.selenium)\
             .drag_and_drop(self.element(source), self.element(target))\
             .perform()
+        self.plugin.ensure_page_safe()
 
     @logged(log_args=True, only_after=True, log_full_exception=False)
     def drag_and_drop_by_offset(self, source, by_x, by_y):
@@ -466,6 +485,7 @@ class Browser(object):
         ActionChains(self.selenium)\
             .drag_and_drop_by_offset(self.element(source), by_x, by_y)\
             .perform()
+        self.plugin.ensure_page_safe()
 
     @logged(log_args=True, only_after=True, log_full_exception=False)
     def drag_and_drop_to(self, source, to_x=None, to_y=None):
@@ -495,15 +515,18 @@ class Browser(object):
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
+        silent = kwargs.pop('silent', False)
         result = self.selenium.execute_script(dedent(script), *args, **kwargs)
-        if not kwargs.pop('silent', False):
+        if not silent:
             self.logger.debug('execute_script(%r) => %r', script, result)
         return result
 
     @logged(only_after=True, log_full_exception=False)
     def refresh(self):
         """Triggers a page refresh."""
-        return self.selenium.refresh()
+        result = self.selenium.refresh()
+        self.plugin.ensure_page_safe()
+        return result
 
     @logged(
         log_args=True, log_result=True, only_after=True, debug_only=True, log_full_exception=False)
