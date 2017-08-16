@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import logging
 import time
-from six import wraps, get_method_function, get_method_self
+from six import wraps, get_method_function, get_method_self, string_types
 
 from .exceptions import DoNotReadThisWidget
+from .utils import crop_string_middle
 
 
 null_logger = logging.getLogger('widgetastic_null')
@@ -92,7 +93,9 @@ def create_item_logger(parent_logger, item):
     return _create_logger_appender(parent_logger, '[{!r}]'.format(item))
 
 
-def logged(log_args=False, log_result=False):
+def logged(
+        log_args=False, log_result=False, only_after=False, debug_only=False,
+        log_full_exception=True, string_crop=64):
     """Decorator that logs entry and exit to a method and also times the execution.
 
     It assumes that the object where you decorate the methods on has a ``.logger`` attribute.
@@ -105,34 +108,52 @@ def logged(log_args=False, log_result=False):
     Args:
         log_args: Whether to log args passed to the method
         log_result: Whether to log the result value returned from the method.
+        only_after: Whether to log only after the method finished.
+        debug_only: Use only debug log level at max.
+        log_full_exception: Whether to log the full exceptions.
+        string_crop: Length to which to crop the strings if they are return values
     """
     def g(f):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
+            if debug_only:
+                info_logger = self.logger.debug
+            else:
+                info_logger = self.logger.info
             start_time = time.time()
             signature = f.__name__ + (call_sig(args, kwargs) if log_args else '')
-            self.logger.debug('%s started', signature)
+            if not only_after:
+                self.logger.debug('%s started', signature)
             try:
                 result = f(self, *args, **kwargs)
             except DoNotReadThisWidget:
                 elapsed_time = (time.time() - start_time) * 1000.0
-                self.logger.info(
+                info_logger(
                     '%s not read on widget\'s request (elapsed %.0f ms)',
                     signature, elapsed_time)
                 raise
             except Exception as e:
                 elapsed_time = (time.time() - start_time) * 1000.0
-                self.logger.error(
-                    'An exception happened during %s call (elapsed %.0f ms)',
-                    signature, elapsed_time)
-                self.logger.exception(e)
+                if log_full_exception:
+                    self.logger.exception(
+                        'An exception happened during %s call (elapsed %.0f ms)',
+                        signature, elapsed_time)
+                else:
+                    self.logger.error(
+                        'An exception %s happened during %s call (elapsed %.0f ms)',
+                        str(e), signature, elapsed_time)
                 raise
             else:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 if log_result:
-                    self.logger.info('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
+                    result_to_log = result
+                    if isinstance(result_to_log, string_types):
+                        result_to_log = crop_string_middle(result_to_log, length=string_crop)
+                    info_logger(
+                        '%s -> %r (elapsed %.0f ms)',
+                        signature, result_to_log, elapsed_time)
                 else:
-                    self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
+                    info_logger('%s (elapsed %.0f ms)', signature, elapsed_time)
                 return result
 
         wrapped.original_function = f
