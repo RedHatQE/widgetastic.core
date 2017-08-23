@@ -503,7 +503,7 @@ def deflatten_dict(d):
 
         {'a': {'b': 1}}
 
-    The conversion recursively follows dictionaries as values.
+    The conversion does not recusively follow dictionaries as values.
 
     Args:
         d: Dictionary
@@ -527,7 +527,7 @@ def deflatten_dict(d):
             if attr_name not in local_dict:
                 local_dict[attr_name] = {}
             local_dict = local_dict[attr_name]
-        local_dict[attr_set] = deflatten_dict(value) if isinstance(value, dict) else value
+        local_dict[attr_set] = value
     return current_dict
 
 
