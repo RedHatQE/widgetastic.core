@@ -545,3 +545,31 @@ def crop_string_middle(s, length=32, cropper='...'):
         return s
     half = (length - len(cropper)) / 2
     return s[:half] + cropper + s[-half - 1:]
+
+
+class partial_match(object):  # noqa
+    """Use this to wrap values to be selected using partial matching in various objects.
+
+    It proxies all ``get`` operations to the underlying ``item``.
+
+    It also proxies ``dir`` so you get the exactly same result of :py:func:`dir` as if you did it
+    on the wrapped object.
+
+    """
+    def __init__(self, item):
+        self.item = item
+
+    def __dir__(self):
+        return dir(self.item)
+
+    def __getattr__(self, attr):
+        return getattr(self.item, attr)
+
+    def __setattr__(self, attr, value):
+        if attr == 'item':
+            super(partial_match, self).__setattr__(attr, value)
+        else:
+            setattr(self.item, attr, value)
+
+    def __repr__(self):
+        return 'partial_match({!r})'.format(self.item)
