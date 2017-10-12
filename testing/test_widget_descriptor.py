@@ -48,3 +48,4 @@ def test_descriptor_on_class():
     assert hc.desc is obj
     assert obj.parent is hc
     assert hc.widget_accessed is hc.desc
+    assert hc.desc.parent_descriptor is HostClass.desc
