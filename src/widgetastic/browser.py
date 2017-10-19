@@ -477,9 +477,16 @@ class Browser(object):
 
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
+        from .widget import Widget
         if not kwargs.pop('silent', False):
             self.logger.debug('execute_script: %r', script)
-        return self.selenium.execute_script(dedent(script), *args, **kwargs)
+        processed_args = []
+        for arg in args:
+            if isinstance(arg, Widget):
+                processed_args.append(arg.__element__())
+            else:
+                processed_args.append(arg)
+        return self.selenium.execute_script(dedent(script), *processed_args, **kwargs)
 
     def refresh(self):
         """Triggers a page refresh."""

@@ -4,7 +4,8 @@ import pytest
 import re
 
 from widgetastic.exceptions import DoNotReadThisWidget
-from widgetastic.widget import View, Table, Text, TextInput, FileInput, Checkbox, Select
+from widgetastic.widget import (
+    View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput)
 from widgetastic.utils import Fillable, ParametrizedString
 
 
@@ -13,6 +14,7 @@ def test_basic_widgets(browser):
         h3 = Text('.//h3')
         input1 = TextInput(name='input1')
         input2 = Checkbox(id='input2')
+        input3 = ColourInput(id='colourinput')
         fileinput = FileInput(id='fileinput')
 
     class AFillable(Fillable):
@@ -45,6 +47,13 @@ def test_basic_widgets(browser):
     assert form.input1.fill(AFillable('a_test'))
     assert not form.input1.fill(AFillable('a_test'))
     assert form.input1.read() == 'a_test'
+
+    assert form.fill({'input3': '#00cafe'})
+    assert form.input3.read() == '#00cafe'
+    assert not form.fill({'input3': '#00cafe'})
+
+    assert form.fill({'input3': '#beefed'})
+    assert not form.fill({'input3': '#beefed'})
 
     assert form.fileinput.fill('foo')
     with pytest.raises(DoNotReadThisWidget):

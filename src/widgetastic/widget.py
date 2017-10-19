@@ -1002,6 +1002,38 @@ class FileInput(BaseInput):
         return True
 
 
+class ColourInput(BaseInput):
+    """Represents the input for inputting colour values.
+
+    Args:
+        name: If you want to look the input up by name, use this parameter, pass the name.
+        id: If you want to look the input up by id, use this parameter, pass the id.
+        locator: If you have specific locator, use it here.
+    """
+
+    @property
+    def colour(self):
+        return self.browser.execute_script('return arguments[0].value;', self)
+
+    @colour.setter
+    def colour(self, value):
+        self.browser.execute_script(jsmin('''
+            arguments[0].value = arguments[1];
+            if(arguments[0].onchange !== null) {
+                arguments[0].onchange();
+            }
+        '''), self, value)
+
+    def read(self):
+        return self.colour
+
+    def fill(self, value):
+        if self.colour == value:
+            return False
+        self.colour = value
+        return True
+
+
 class Checkbox(BaseInput, ClickableMixin):
     """This widget represents the bogo-standard form checkbox.
 
