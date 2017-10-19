@@ -573,3 +573,40 @@ class partial_match(object):  # noqa
 
     def __repr__(self):
         return 'partial_match({!r})'.format(self.item)
+
+
+class Ignore(object):
+    """Descriptor which allows you to place Widget classes on another classes without touching.
+
+    Usable eg. when you want to place a class as an attribute on another widgetastic class.
+    Under normal circumstances, it would get instantiated. This decorator ensures the behaviour is
+    ignored
+
+    .. code-block:: python
+
+        class SomeView(View):
+            XYZ_VIEW_TYPE = Ignore(SomeOtherView)
+            some_view = SomeOtherView
+
+    This will ensure, that in this case ``XYZ_VIEW_TYPE`` won't be touched by Widgetastic, so it
+    will be `SomeOtherView`` exactly. Whereas ``some_view`` will be recognized by the widget's
+    metaclass and wrapped as :py:class:`widgetastic.widget.WidgetDescriptor` so it instantiates
+    the view upon accessing.
+
+    This descriptor also makes the value read-only. That should fit most of the use cases.
+
+    Todo:
+        Enable overriding the value somehow.
+
+    Args:
+        wt_class: The class to be placed on another class
+    """
+
+    def __init__(self, wt_class):
+        self.wt_class = wt_class
+
+    def __get__(self, o, t):
+        return self.wt_class
+
+    def __repr__(self):
+        return 'Ignore({!r})'.format(self.wt_class)
