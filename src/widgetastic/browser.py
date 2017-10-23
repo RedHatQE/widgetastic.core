@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from smartloc import Locator
 from textwrap import dedent
-from wait_for import wait_for
+from wait_for import wait_for, TimedOutError
 
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
@@ -268,6 +268,42 @@ class Browser(object):
             result = [e for e in result if self.is_displayed(e)]
 
         return result
+
+    def wait_for_element(
+            self, locator, parent=None, visible=False, timeout=5, delay=0.2, exception=True,
+            ensure_page_safe=False):
+        """Wait for presence or visibility of elements specified by a locator.
+
+        Args:
+            locator, parent: Arguments for :py:meth:`elements`
+            visible: If False, then it only checks presence not considering visibility. If True, it
+                     also checks visibility.
+            timeout: How long to wait for.
+            delay: How often to check.
+            exception: If True (default), in case of element not being found an exception will be
+                       raised. If False, it returns False.
+            ensure_page_safe: Whether to call the ``ensure_page_safe`` hook on repeat.
+
+        Returns:
+            :py:class:`selenium.webdriver.remote.webelement.WebElement` if element found according
+            to params. ``None`` if not found and ``exception=False``.
+
+        Raises:
+            :py:class:`selenium.common.exceptions.NoSuchElementException` if element not found and
+            ``exception=True``.
+        """
+        try:
+            result = wait_for(
+                lambda: self.elements(locator, parent=parent, check_visibility=visible),
+                num_sec=timeout, delay=delay, fail_condition=lambda elements: not bool(elements),
+                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None)
+        except TimedOutError:
+            if exception:
+                raise NoSuchElementException('Could not wait for element {!r}'.format(locator))
+            else:
+                return None
+        else:
+            return result.out[0]
 
     def element(self, locator, *args, **kwargs):
         """Returns one :py:class:`selenium.webdriver.remote.webelement.WebElement`
