@@ -6,7 +6,7 @@ from widgetastic.exceptions import NoSuchElementException
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor)
+    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput)
 
 
 def test_can_create_view(browser):
@@ -69,6 +69,17 @@ def test_view_with_subviews(browser):
     assert isinstance(view.AnotherView.another_widget, Widget)
     assert isinstance(view.Foo.bar, Widget)
     assert {type(v).__name__ for v in view.sub_widgets} == {'AnotherView', 'Foo', 'Widget'}
+
+
+def test_view_fill(browser):
+    class TestForm(View):
+        h3 = Text('.//h3', log_on_fill_unspecified=False)
+        input1 = TextInput(name='input1')
+        input2 = Checkbox(id='input2')
+        fileinput = FileInput(id='fileinput')
+
+    view = TestForm(browser)
+    assert view.fill({'input1': 'hello world man'})
 
 
 def test_view_is_displayed_without_root_locator(browser):

@@ -73,6 +73,7 @@ class WidgetDescriptor(Widgetable):
     def __init__(self, klass, *args, **kwargs):
         self.klass = klass
         self.args = args
+        self.log_on_fill_unspecified = kwargs.pop('log_on_fill_unspecified', True)
         self.kwargs = kwargs
 
     def __get__(self, obj, type=None):
@@ -92,7 +93,9 @@ class WidgetDescriptor(Widgetable):
                 # Shortcut, don't cache as the ParametrizedViewRequest is not the widget yet
                 return ParametrizedViewRequest(obj, self.klass, *args, **kwargs)
             else:
-                obj._widget_cache[self] = self.klass(obj, *args, **kwargs)
+                o = self.klass(obj, *args, **kwargs)
+                o.parent_descriptor = self
+                obj._widget_cache[self] = o
         widget = obj._widget_cache[self]
         obj.child_widget_accessed(widget)
         return widget
@@ -694,16 +697,17 @@ class View(Widget):
                 'Extra values that have no corresponding fill fields passed: %s',
                 ', '.join(extra_keys))
         for name in self.widget_names:
+            widget = getattr(self, name)
             if name not in values or values[name] is None:
                 if name not in values:
-                    self.logger.debug(
-                        'Skipping fill of %r because value was not specified', name)
+                    if widget.parent_descriptor.log_on_fill_unspecified:
+                        self.logger.debug(
+                            'Skipping fill of %r because value was not specified', name)
                 else:
                     self.logger.debug(
                         'Skipping fill of %r because value was None', name)
                 continue
 
-            widget = getattr(self, name)
             try:
                 value = values[name]
                 if widget.fill(value):
