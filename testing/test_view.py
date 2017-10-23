@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 
 import pytest
 from widgetastic.exceptions import NoSuchElementException
-from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter
+from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView)
+    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor)
 
 
 def test_can_create_view(browser):
@@ -570,3 +570,25 @@ def test_switchable_view_string_lambda_bad_argument_widget(browser):
     view = MyView(browser)
     with pytest.raises(TypeError):
         view.the_switchable_view
+
+
+def test_ignore_decorator(browser):
+    class MyViewToNotNest(View):
+        foo = Widget()
+
+    class MyView(View):
+        bar = Widget()
+        baz = Ignore(MyViewToNotNest)
+        inga = MyViewToNotNest
+        bat = Widget()
+
+    assert MyView.baz is MyViewToNotNest
+    assert MyView.inga is not MyViewToNotNest
+    assert isinstance(MyView.inga, WidgetDescriptor)
+    assert MyView.inga.klass is MyViewToNotNest
+    view = MyView(browser)
+    assert view.baz is MyViewToNotNest
+    assert MyView.inga is not MyViewToNotNest
+    assert 'baz' not in view.widget_names
+    assert 'inga' in view.widget_names
+    assert isinstance(view.inga, MyViewToNotNest)
