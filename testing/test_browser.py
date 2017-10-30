@@ -45,11 +45,11 @@ def test_elements_webelement(browser):
 
 
 def test_elements_locatable_locator(browser):
-    class O(object):
+    class Object(object):
         def __locator__(self):
             return '#hello'
 
-    assert len(browser.elements(O())) == 1
+    assert len(browser.elements(Object())) == 1
 
 
 def test_elements_with_parent(browser):
@@ -60,6 +60,26 @@ def test_elements_with_parent(browser):
 def test_elements_check_visibility(browser):
     assert len(browser.elements('//div[@id="random_visibility"]/p', check_visibility=True)) == 3
     assert len(browser.elements('//div[@id="random_visibility"]/p', check_visibility=False)) == 5
+
+
+def test_wait_for_element_visible(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    assert browser.wait_for_element('#invisible_appear_p', visible=True) is not None
+
+
+def test_wait_for_element_visible_fail_except(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    with pytest.raises(NoSuchElementException):
+        browser.wait_for_element('#invisible_appear_p', visible=True, timeout=1.5)
+
+
+def test_wait_for_element_visible_fail_none(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    assert browser.wait_for_element(
+        '#invisible_appear_p', visible=True, timeout=1.5, exception=False) is None
 
 
 def test_element_only_invisible(browser):

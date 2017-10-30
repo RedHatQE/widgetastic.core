@@ -17,6 +17,10 @@
     <p style="display: none;" class="invisible">Invisible</p>
     <p class="visible">Visible</p>
 </div>
+<div id="invisible_appear">
+    <p style="display: none;" id="invisible_appear_p">baf</p>
+    <button onclick="setTimeout(function(){ var p = document.getElementById('invisible_appear_p'); p.style.display='inline'; }, 3000);" id="invisible_appear_button">Do not click</button>
+</div>
 <button id="a_button" onclick="this.className += ' clicked'">Button</button>
 <select id="myselect">
     <option value="test" id="myoption">myoption</option>
