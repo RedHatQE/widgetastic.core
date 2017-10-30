@@ -62,6 +62,26 @@ def test_elements_check_visibility(browser):
     assert len(browser.elements('//div[@id="random_visibility"]/p', check_visibility=False)) == 5
 
 
+def test_wait_for_element_visible(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    assert browser.wait_for_element('#invisible_appear_p', visible=True) is not None
+
+
+def test_wait_for_element_visible_fail_except(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    with pytest.raises(NoSuchElementException):
+        browser.wait_for_element('#invisible_appear_p', visible=True, timeout=1.5)
+
+
+def test_wait_for_element_visible_fail_none(browser):
+    # Click on the button
+    browser.click('#invisible_appear_button')
+    assert browser.wait_for_element(
+        '#invisible_appear_p', visible=True, timeout=1.5, exception=False) is None
+
+
 def test_element_only_invisible(browser):
     browser.element('#hello', check_visibility=False)
 
