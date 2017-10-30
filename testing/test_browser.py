@@ -45,11 +45,11 @@ def test_elements_webelement(browser):
 
 
 def test_elements_locatable_locator(browser):
-    class O(object):
+    class Object(object):
         def __locator__(self):
             return '#hello'
 
-    assert len(browser.elements(O())) == 1
+    assert len(browser.elements(Object())) == 1
 
 
 def test_elements_with_parent(browser):
