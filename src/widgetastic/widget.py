@@ -18,7 +18,7 @@ from wait_for import wait_for
 from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
-    RowNotFound)
+    RowNotFound, WidgetNotFound)
 from .log import (
     PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
     create_item_logger)
@@ -282,16 +282,24 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self._initialized_included_widgets = {}
 
     def __element__(self):
+        """Looks up the element in parent browser based on what ``__locator__`` returns.
+
+        Raises:
+            :py:class:`widgetastic.exceptions.WidgetNotFound`
+        """
         try:
             locator = self.__locator__()
         except AttributeError:
             raise AttributeError(
                 '__locator__() is not defined on {} class'.format(type(self).__name__))
-        else:
-            if isinstance(locator, WebElement):
-                return locator
-            else:
-                return self.parent_browser.element(locator)
+
+        if isinstance(locator, WebElement):
+            return locator
+
+        try:
+            return self.parent_browser.element(locator)
+        except NoSuchElementException as e:
+            raise WidgetNotFound(self, e, self.widget_names_path)
 
     def _get_included_widget(self, includer_id, widget_name, use_parent):
         if includer_id not in self._initialized_included_widgets:
@@ -570,6 +578,22 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         for widget_attr in self.widget_names:
             yield getattr(self, widget_attr)
 
+    @property
+    def widget_name(self):
+        """Returns this widget's name as defined on parent widget."""
+        try:
+            return self.parent._desc_name_mapping[self.parent_descriptor]
+        except AttributeError:
+            return type(self).__name__
+
+    @property
+    def widget_names_path(self):
+        """Returns a list of the widget hierarchy, referenced by names."""
+        if not isinstance(self.parent, Widget):
+            return [self.widget_name]
+        else:
+            return self.parent.widget_names_path + [self.widget_name]
+
 
 def _gen_locator_meth(loc):
     def __locator__(self):  # noqa
@@ -730,7 +754,7 @@ class View(Widget):
             widget = getattr(self, widget_name)
             try:
                 value = widget.read()
-            except (NotImplementedError, NoSuchElementException, DoNotReadThisWidget):
+            except (NotImplementedError, WidgetNotFound, DoNotReadThisWidget):
                 continue
 
             result[widget_name] = value
@@ -2169,7 +2193,7 @@ class ConditionalSwitchableView(Widgetable):
                             raise TypeError(
                                 'Wrong widget name specified as reference=: {}'.format(
                                     self.reference))
-                        except NoSuchElementException:
+                        except WidgetNotFound:
                             if self.ignore_bad_reference:
                                 # reference is not displayed? We are probably aware of this so skip.
                                 continue

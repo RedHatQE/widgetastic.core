@@ -20,7 +20,7 @@ from wait_for import wait_for, TimedOutError
 
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
-    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
+    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented, WidgetNotFound)
 from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
 from .utils import crop_string_middle
@@ -417,7 +417,7 @@ class Browser(object):
             retry = False
             try:
                 return self.move_to_element(locator, *args, **kwargs).is_displayed()
-            except (NoSuchElementException, MoveTargetOutOfBoundsException):
+            except (NoSuchElementException, MoveTargetOutOfBoundsException, WidgetNotFound):
                 return False
             except StaleElementReferenceException:
                 if isinstance(locator, WebElement) or tries <= 0:
