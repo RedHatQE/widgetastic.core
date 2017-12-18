@@ -306,8 +306,8 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         return getattr(self._initialized_included_widgets[includer_id], widget_name)
 
     def flush_widget_cache(self):
-        """FLush the widget cache recursively for the whole View tree structure"""
-        for widget in self.cached_sub_widgets:
+        """Flush the widget cache recursively for the whole :py:class:`Widget` tree structure"""
+        for widget in self._widget_cache.values():
             try:
                 widget.flush_widget_cache()
             except AttributeError:
