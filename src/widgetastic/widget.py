@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import inspect
 import re
 import six
+import types
 from six.moves import html_parser
 from cached_property import cached_property
 from collections import defaultdict, namedtuple
@@ -23,8 +24,8 @@ from .log import (
     PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
     create_item_logger)
 from .utils import (
-    Widgetable, Fillable, ParametrizedLocator, ConstructorResolvable, attributize_string,
-    normalize_space, nested_getattr, deflatten_dict)
+    Widgetable, Fillable, ParametrizedLocator, ParametrizedString, ConstructorResolvable,
+    attributize_string, normalize_space, nested_getattr, deflatten_dict)
 from .xpath import quote
 
 
@@ -39,6 +40,36 @@ def wrap_fill_method(method):
     def wrapped(self, value, *args, **kwargs):
         return method(self, Fillable.coerce(value), *args, **kwargs)
 
+    return wrapped
+
+
+def resolve_verpicks_in_method(method):
+    """Generates a method that automatically resolves VersionPick attributes"""
+    @six.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        def resolve_arg(parent, arg):
+            if (isinstance(arg, ConstructorResolvable) and not (
+                    method.__name__ == '__new__' or
+                    isinstance(arg, ParametrizedString) or
+                    hasattr(method, 'skip_resolve'))):
+                return arg.resolve(parent)
+            else:
+                return arg
+
+        if method.__name__ == '__init__':
+            if args and isinstance(args[0], (Widget, Browser)):
+                parent = args[0]
+            elif 'parent' in kwargs and isinstance(kwargs['parent'], (Widget, Browser)):
+                parent = kwargs['parent']
+            else:
+                raise ValueError("parent isn't passed to init")
+        else:
+            parent = self
+
+        new_args = [resolve_arg(parent, arg) for arg in args]
+        new_kwargs = {key: resolve_arg(parent, value) for key, value in kwargs.items()}
+
+        return method(self, *new_args, **new_kwargs)
     return wrapped
 
 
@@ -205,6 +236,9 @@ class WidgetMetaclass(type):
             elif key == 'read':
                 # handle read() specifics
                 new_attrs[key] = logged(log_result=True)(value)
+            elif isinstance(value, types.FunctionType):
+                # VersionPick resolution wrapper
+                new_attrs[key] = resolve_verpicks_in_method(value)
             else:
                 # Do nothing
                 new_attrs[key] = value
