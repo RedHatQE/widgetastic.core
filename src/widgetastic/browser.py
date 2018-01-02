@@ -655,6 +655,14 @@ class Browser(object):
             if file_intercept:
                 self.selenium.file_detector = UselessFileDetector()
 
+    def send_keys_to_focused_element(self, *keys):
+        """Sends keys to current focused element.
+
+        Args:
+            keys: The keys to send.
+        """
+        ActionChains(self.selenium).send_keys(*keys).perform()
+
     def get_alert(self):
         """Returns the current alert object.
 
