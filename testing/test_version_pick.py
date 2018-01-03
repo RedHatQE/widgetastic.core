@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from widgetastic.widget import Checkbox, View, TextInput
+from widgetastic.widget import Checkbox, View, TextInput, Select, Table
 from widgetastic.utils import Version, VersionPick
 
 
@@ -90,3 +90,18 @@ def test_verpick_in_constructor(browser):
     view = MyView(browser)
     assert 'widget' in view.widget_names
     assert view.widget.id == 'input1'
+
+
+def test_versionpick_in_methods(browser):
+    class MyView(View):
+        select = Select(name='testselect2')
+        table = Table(locator='//table[@id="with-thead"]')
+
+    view = MyView(browser)
+
+    assert view.select.get_value_by_text(VersionPick({Version.lowest(): 'Foo',
+                                                      '1.0.0': 'Baz'})) == 'baz'
+
+    assert len(list(view.table.rows(column_1__contains='_'))) == 2
+    assert len(list(view.table.rows(column_1__contains=VersionPick({Version.lowest(): 'blabla',
+                                                                    '1.0.0': '_'})))) == 2
