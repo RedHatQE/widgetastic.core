@@ -52,11 +52,17 @@ def resolve_verpicks_in_method(method):
                     method.__name__ == '__new__' or
                     isinstance(arg, ParametrizedString) or
                     hasattr(method, 'skip_resolve'))):
+                # 1. ParametrizedString is also ConstructorResolvable but
+                # it should be resolved later in other place
+                # 2. if method has skip_resolve attr, its arguments won't be automatically resolved
+                # 3. __new__ doesn't require resolve
                 return arg.resolve(parent)
             else:
                 return arg
 
         if method.__name__ == '__init__':
+            # __init__ doesn't have initialized self.parent.
+            # So, we need to look for parent/browser in arguments
             if args and isinstance(args[0], (Widget, Browser)):
                 parent = args[0]
             elif 'parent' in kwargs and isinstance(kwargs['parent'], (Widget, Browser)):
@@ -237,7 +243,7 @@ class WidgetMetaclass(type):
                 # handle read() specifics
                 new_attrs[key] = logged(log_result=True)(value)
             elif isinstance(value, types.FunctionType):
-                # VersionPick resolution wrapper
+                # VP resolution wrapper, allows to resolve VersionPicks in all widget methods
                 new_attrs[key] = resolve_verpicks_in_method(value)
             else:
                 # Do nothing
