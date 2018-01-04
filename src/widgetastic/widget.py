@@ -395,6 +395,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         return self.cls_widget_names()
 
     @property
+    def has_parent_descriptor(self):
+        """Returns True if this widget was instantiated off a descriptor."""
+        return hasattr(self, 'parent_descriptor')
+
+    @property
     def hierarchy(self):
         """Returns a list of widgets from the top level to this one."""
         if not isinstance(self.parent, Widget):
@@ -740,7 +745,8 @@ class View(Widget):
             widget = getattr(self, name)
             if name not in values or values[name] is None:
                 if name not in values:
-                    if widget.parent_descriptor.log_on_fill_unspecified:
+                    if widget.has_parent_descriptor and\
+                            widget.parent_descriptor.log_on_fill_unspecified:
                         self.logger.debug(
                             'Skipping fill of %r because value was not specified', name)
                 else:
