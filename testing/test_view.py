@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-from widgetastic.exceptions import NoSuchElementException
+from widgetastic.exceptions import WidgetNotFound
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
@@ -411,7 +411,7 @@ def test_switchable_view_with_bad_reference_negative(browser):
 
     view = MyView(browser)
 
-    with pytest.raises(NoSuchElementException):
+    with pytest.raises(WidgetNotFound):
         view.the_switchable_view.widget.read()
 
 

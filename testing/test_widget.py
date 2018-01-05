@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 import pytest
 
-from widgetastic.widget import View, Widget, WidgetDescriptor
+from widgetastic.exceptions import WidgetNotFound, NoSuchElementException
+from widgetastic.widget import View, Widget, WidgetDescriptor, Text
 
 
 def test_widget_correctly_collapses_to_descriptor(browser):
@@ -93,3 +94,38 @@ def test_included_widgets(browser):
     assert testw.beef.id == 'beef'
     assert isinstance(testw.bob, MyWidget)
     assert testw.bob.id == 'bob'
+
+
+def test_widget_name(browser):
+    widget_without_parent = Widget(browser)
+
+    assert widget_without_parent.widget_name == 'Widget'
+    assert widget_without_parent.widget_names_path == ['Widget']
+
+    class AHostView1(View):
+        named_widget = Widget()
+
+    view = AHostView1(browser)
+    assert view.named_widget.widget_name == 'named_widget'
+    assert view.named_widget.widget_names_path == ['AHostView1', 'named_widget']
+
+    class ANestedView1(View):
+        class something_else(View):  # NOQA
+            another_widget = Text('#doesnotexist')
+
+    view = ANestedView1(browser)
+    assert view.something_else.widget_name == 'something_else'
+    assert view.something_else.widget_names_path == ['ANestedView1', 'something_else']
+    assert view.something_else.another_widget.widget_name == 'another_widget'
+    assert view.something_else.another_widget.widget_names_path == [
+        'ANestedView1', 'something_else', 'another_widget']
+
+    try:
+        view.something_else.another_widget.read()
+    except WidgetNotFound as e:
+        assert e.widget is view.something_else.another_widget
+        assert e.widget_path == ['ANestedView1', 'something_else', 'another_widget']
+        assert isinstance(e.original_exception, NoSuchElementException)
+        assert e.get_message() == 'Widget ANestedView1/something_else/another_widget not found'
+    else:
+        pytest.fail('Exception WidgetNotFound was not raised')
