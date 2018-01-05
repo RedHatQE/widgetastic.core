@@ -32,7 +32,7 @@ this:
 
     cd widgetastic.core/    # Your git repository's root folder
     tox -e docs
-    google-chrome gbuild/htmldocs/index.html   # Or a browser of your choice
+    google-chrome build/htmldocs/index.html   # Or a browser of your choice
 
 Introduction
 ------------
@@ -65,7 +65,7 @@ Features
 - Supports `Version picking`_.
 - Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
 - Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
-- Supports many Pythons! 2.7, 3.3, 3.4, 3.5, 3.6 and PyPy are all supported.
+- Supports many Pythons! 2.7, 3.5, 3.6 and PyPy are officially supported and unit-tested in CI.
 
 Projects using widgetastic
 --------------------------
