@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from six import string_types
 
 import pytest
 
@@ -73,10 +74,17 @@ def test_versionpick_on_view(browser):
             Version.lowest(): Checkbox(id='nonexisting'),
             '1.0.0': TextInput(name='input1')
         })
+        view_attr = VersionPick({
+            Version.lowest(): 'lowest_attr',
+            '1.0.0': 'version_1_attr'
+        })
 
     view = MyView(browser)
     assert 'widget' in view.widget_names
+    assert 'view_attr' not in view.widget_names
     assert isinstance(view.widget, TextInput)
+    assert isinstance(view.view_attr, string_types)
+    assert view.view_attr == 'version_1_attr'
     assert view.widget.fill('test text')
     assert view.widget.read() == 'test text'
 

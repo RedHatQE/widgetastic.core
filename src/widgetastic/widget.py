@@ -373,7 +373,9 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         for key in dir(cls):
             value = getattr(cls, key)
             if isinstance(value, Widgetable):
-                result.append((key, value))
+                # check the values of a VersionPick object are widgetable themselves
+                if all([isinstance(item, Widgetable) for item in value.child_items]):
+                    result.append((key, value))
         for includer in cls._included_widgets:
             result.append((None, includer))
         presorted_widgets = sorted(result, key=lambda pair: pair[1]._seq_id)
