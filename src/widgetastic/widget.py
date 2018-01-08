@@ -111,6 +111,8 @@ class WidgetDescriptor(Widgetable):
         self.klass = klass
         self.args = args
         self.kwargs = kwargs
+        # TODO: WE can bring it back, popping out just for compatibility sake
+        self.kwargs.pop('log_on_fill_unspecified', None)
 
     def __get__(self, obj, type=None):
         if obj is None:  # class access
@@ -271,6 +273,17 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
           instance in a class, it then creates a :py:class:`WidgetDescriptor` which is then invoked
           on the instance and instantiates the widget with underlying browser.
         * Implements some basic interface for all widgets.
+
+    If you are inheriting from this class, you **MUST ALWAYS** ensure that the inherited class
+    has an init that always takes the ``parent`` as the first argument. You can do that on your
+    own, setting the parent as ``self.parent`` or you can do something like this:
+
+    .. code-block:: python
+
+        def __init__(self, parent, arg1, arg2, logger=None):
+            super(MyClass, self).__init__(parent, logger=logger)
+            # or if you have somehow complex inheritance ...
+            Widget.__init__(self, parent, logger=logger)
     """
 
     #: Default value for parent_descriptor
@@ -299,17 +312,6 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             return WidgetDescriptor(cls, *args, **kwargs)
 
     def __init__(self, parent, logger=None):
-        """If you are inheriting from this class, you **MUST ALWAYS** ensure that the inherited class
-        has an init that always takes the ``parent`` as the first argument. You can do that on your
-        own, setting the parent as ``self.parent`` or you can do something like this:
-
-        .. code-block:: python
-
-            def __init__(self, parent, arg1, arg2, logger=None):
-                super(MyClass, self).__init__(parent, logger=logger)
-                # or if you have somehow complex inheritance ...
-                Widget.__init__(self, parent, logger=logger)
-        """
         self.parent = parent
         if logger is None:
             self.logger = create_child_logger(parent.logger, type(self).__name__)
@@ -331,6 +333,8 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
                 '__locator__() is not defined on {} class'.format(type(self).__name__))
         else:
             if isinstance(locator, WebElement):
+                self.logger.warning(
+                    '__locator__ of %s class returns a WebElement!', type(self).__name__)
                 return locator
             else:
                 return self.parent_browser.element(locator)
@@ -654,6 +658,7 @@ class View(Widget):
             you shall use the ``additional_context`` to pass in required variables that will allow
             you to detect this.
     """
+    #: Skip this view in the element lookup hierarchy
     INDIRECT = False
 
     def __init__(self, parent, logger=None, **kwargs):
@@ -816,6 +821,9 @@ class ParametrizedView(View):
 
 
 class ParametrizedViewRequest(object):
+    """An intermediate object handling the argument retrieval and subsequent correct view
+    instantiation.
+    """
     def __init__(self, parent_object, view_class, *args, **kwargs):
         self.parent_object = parent_object
         self.view_class = view_class
