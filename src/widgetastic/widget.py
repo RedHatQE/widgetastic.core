@@ -110,7 +110,6 @@ class WidgetDescriptor(Widgetable):
     def __init__(self, klass, *args, **kwargs):
         self.klass = klass
         self.args = args
-        self.log_on_fill_unspecified = kwargs.pop('log_on_fill_unspecified', True)
         self.kwargs = kwargs
 
     def __get__(self, obj, type=None):
@@ -269,10 +268,13 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     Does couple of things:
 
         * Ensures it gets instantiated with a browser or another widget as parent. If you create an
-          instance in a class, it then creates a WidgetDescriptor which is then invoked on the
-          instance and instantiates the widget with underlying browser.
+          instance in a class, it then creates a :py:class:`WidgetDescriptor` which is then invoked
+          on the instance and instantiates the widget with underlying browser.
         * Implements some basic interface for all widgets.
     """
+
+    #: Default value for parent_descriptor
+    parent_descriptor = None
 
     # Helper methods
     @staticmethod
@@ -395,11 +397,6 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             A :py:class:`list` of :py:class:`Widget` instances.
         """
         return self.cls_widget_names()
-
-    @property
-    def has_parent_descriptor(self):
-        """Returns True if this widget was instantiated off a descriptor."""
-        return hasattr(self, 'parent_descriptor')
 
     @property
     def hierarchy(self):
@@ -747,10 +744,8 @@ class View(Widget):
             widget = getattr(self, name)
             if name not in values or values[name] is None:
                 if name not in values:
-                    if widget.has_parent_descriptor and\
-                            widget.parent_descriptor.log_on_fill_unspecified:
-                        self.logger.debug(
-                            'Skipping fill of %r because value was not specified', name)
+                    self.logger.debug(
+                        'Skipping fill of %r because value was not specified', name)
                 else:
                     self.logger.debug(
                         'Skipping fill of %r because value was None', name)
