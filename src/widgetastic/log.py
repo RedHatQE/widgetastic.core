@@ -32,7 +32,8 @@ def call_sig(args, kwargs):
 class PrependParentsAdapter(logging.LoggerAdapter):
     """This class ensures the path to the widget is represented in the log records."""
     def process(self, msg, kwargs):
-        return '[{}]: {}'.format(self.extra['widget_path'], msg), kwargs
+        # Sanitizing %->%% for formatter working properly
+        return '[{}]: {}'.format(self.extra['widget_path'].replace('%', '%%'), msg), kwargs
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.logger, self.extra['widget_path'])
