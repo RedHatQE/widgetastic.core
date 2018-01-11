@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from selenium.common.exceptions import (  # NOQA
     NoSuchElementException, MoveTargetOutOfBoundsException, StaleElementReferenceException,  # NOQA
-    NoAlertPresentException, UnexpectedAlertPresentException)  # NOQA
+    NoAlertPresentException, UnexpectedAlertPresentException, WebDriverException)  # NOQA
 
 
 class LocatorNotImplemented(NotImplementedError):
