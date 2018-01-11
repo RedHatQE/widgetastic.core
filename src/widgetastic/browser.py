@@ -7,6 +7,7 @@ import time
 
 from cached_property import cached_property
 from collections import namedtuple
+from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -20,7 +21,8 @@ from wait_for import wait_for, TimedOutError
 
 from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
-    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented)
+    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented,
+    WebDriverException)
 from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
 from .utils import crop_string_middle
@@ -171,6 +173,10 @@ class Browser(object):
         """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
         handling functions do nothing."""
         return self.selenium.capabilities.get('handlesAlerts', True)
+
+    @property
+    def browser_type(self):
+        return self.selenium.capabilities.get('browserName')
 
     @property
     def browser(self):
@@ -461,6 +467,15 @@ class Browser(object):
                 raise MoveTargetOutOfBoundsException(
                     "Despite all the workarounds, scrolling to `{}` was unsuccessful.".format(
                         locator))
+        except WebDriverException as e:
+            # Handling Edge weirdness
+            if self.browser_type == 'MicrosoftEdge' and 'Invalid argument' in e.msg:
+                # Moving to invisible element triggers a WebDriverException instead of the former
+                # MoveTargetOutOfBoundsException with NORMAL, SANE BROWSERS.
+                pass
+            else:
+                # Something else, never let it sink
+                raise
         return el
 
     def drag_and_drop(self, source, target):
@@ -536,8 +551,23 @@ class Browser(object):
         Returns:
             A :py:class:`set` of strings with classes.
         """
+        if self.browser_type in {'MicrosoftEdge', 'internet explorer'}:
+            # Kudos to psav who put together this little script
+            command = jsmin('''\
+                return (
+                    function(arguments){
+                        var arr=[];
+                        var le=arguments[0].classList.length;
+                        for (i=0; i < le; i++){
+                            arr.push(arguments[0].classList[i]);
+                        };
+                        return arr;
+                    })(arguments)''')
+        else:
+            command = 'return arguments[0].classList;'
         result = set(self.execute_script(
-            "return arguments[0].classList;", self.element(locator, *args, **kwargs), silent=True))
+            command, self.element(locator, *args, **kwargs),
+            silent=True))
         self.logger.debug('css classes for %r => %r', locator, result)
         return result
 
