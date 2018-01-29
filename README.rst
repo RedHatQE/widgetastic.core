@@ -67,6 +67,26 @@ Features
 - Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
 - Supports many Pythons! 2.7, 3.5, 3.6 and PyPy are officially supported and unit-tested in CI.
 
+What this project does NOT do
+-----------------------------
+
+- A complete testing solution. In spirit of modularity, we have intentionally designed our testing
+  system modular, so if a different team likes one library, but wants to do other things different
+  way, the system does not stand in its way.
+- UI navigation. As per previous bullet, it is up to you what you use. In CFME QE, we use a library
+  called `navmazing <https://pypi.python.org/pypi/navmazing>`_, which is an evolution of the system
+  we used before. You can devise your own system, use ours, or adapt something else.
+- UI models representation. Doing nontrivial testing usually requires some sort of representation
+  of the stuff in the product in the testing system. Usually, people use classes and instances of
+  these with their methods corresponding to the real actions you can do with the entities in the UI.
+  Widgetastic offers integration for such functionality (`Fillable objects`_), but does not provide
+  any framework to use.
+- Test execution. We use pytest to drive our testing system. If you put the two previous bullets
+  together and have a system of representing, navigating and interacting, then writing a simple
+  boilerplate code to make the system's usage from pytest straightforward is the last and possibly
+  simplest thing to do.
+
+
 Projects using widgetastic
 --------------------------
 - ManageIQ integration_tests: https://github.com/ManageIQ/integration_tests
@@ -91,6 +111,8 @@ Contributing
 
 Basic usage
 -----------
+
+This sample only represents simple UI interaction.
 
 .. code-block:: python
 
@@ -134,6 +156,14 @@ Basic usage
     a_view.an_input.is_displayed
 
 
+Typically, you want to incorporate a system that would do the navigation (like
+`navmazing <https://pypi.python.org/pypi/navmazing>`_ for example), as Widgetastic only facilitates
+UI interactions.
+
+An example of such integration is currently **TODO**, but it will eventually appear here once a PoC
+for a different project will happen.
+
+
 ``__locator__()`` and ``__element__()`` protocol
 ------------------------------------------------
 
@@ -142,7 +172,8 @@ To ensure good structure, a protocol of two methods was introduced. Let's talk a
 ``__locator__()`` method is not implemented by default on ``Widget`` class. Its sole purpose is to
 serve a locator of the object itself, so when the object is thrown in element lookup, it returns the
 result for the locator returned by this method. This method must return a locator, be it a valid
-locator string, tuple or another locatable object.
+locator string, tuple or another locatable object. If a webelement is returned by ``__locator__()``,
+a warning will be produced into the log.
 
 ``__locator__()`` is auto-generated when ``ROOT`` attribute is present on the class with a valid
 locator.
