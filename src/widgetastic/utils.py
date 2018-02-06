@@ -547,15 +547,23 @@ def crop_string_middle(s, length=32, cropper='...'):
     return s[:half] + cropper + s[-half - 1:]
 
 
-class partial_match(object):  # noqa
-    """Use this to wrap values to be selected using partial matching in various objects.
+class FillValueWrapper(object):
+    """Base class for fill value wrapping. Subclass to create your own for special treatment.
 
     It proxies all ``get`` operations to the underlying ``item``.
 
     It also proxies ``dir`` so you get the exactly same result of :py:func:`dir` as if you did it
     on the wrapped object.
 
+    If ``None`` is passed as the item, it is passed through so
+    :py:meth:`widgetastic.widget.View.fill` can skip the field
+
     """
+    def __new__(cls, item):
+        if item is None:
+            return None
+        return super(FillValueWrapper, cls).__new__(cls)
+
     def __init__(self, item):
         self.item = item
 
@@ -567,12 +575,30 @@ class partial_match(object):  # noqa
 
     def __setattr__(self, attr, value):
         if attr == 'item':
-            super(partial_match, self).__setattr__(attr, value)
+            super(FillValueWrapper, self).__setattr__(attr, value)
         else:
             setattr(self.item, attr, value)
 
     def __repr__(self):
-        return 'partial_match({!r})'.format(self.item)
+        return '{}({!r})'.format(type(self).__name__, self.item)
+
+
+class PartialMatch(FillValueWrapper):
+    """Use this to wrap values to be selected using partial matching in various objects.
+
+    Example may be a ``<select>``. This will select the first item in the select containing "bat":
+
+    .. code-block:: python
+
+        some_view.fill({
+            'foo': 'bar',
+            'baz': PartialMatch('bat')
+        })
+    """
+
+
+# Backwards compatibility
+partial_match = PartialMatch
 
 
 class Ignore(object):

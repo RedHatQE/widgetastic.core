@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from widgetastic.utils import nested_getattr, partial_match
+from widgetastic.utils import PartialMatch, nested_getattr, partial_match
 
 
 def test_nested_getattr_wrong_type():
@@ -34,10 +34,18 @@ def test_nested_getattr_multi_level():
 
 def test_partial_match_wrapping():
     value = ' foobar '
-    wrapped = partial_match(value)
+    wrapped = PartialMatch(value)
 
     assert dir(wrapped) == dir(value)
 
     assert wrapped.item is value
 
     assert wrapped.strip() == value.strip()
+
+
+def test_partial_match_none():
+    assert PartialMatch(None) is None
+
+
+def test_partial_match_is_partialmatch():
+    assert partial_match is PartialMatch
