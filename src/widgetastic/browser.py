@@ -179,6 +179,10 @@ class Browser(object):
         return self.selenium.capabilities.get('browserName')
 
     @property
+    def browser_version(self):
+        return self.selenium.desired_capabilities.get('version')
+
+    @property
     def browser(self):
         """Implemented so :py:class:`widgetastic.widget.View` does not have to check the
         instance of its parent. This property exists there so here it just stops the chain"""
@@ -564,12 +568,16 @@ class Browser(object):
                         return arr;
                     })(arguments)''')
         else:
-            command = 'return arguments[0].classList;'
-        result = set(self.execute_script(
-            command, self.element(locator, *args, **kwargs),
-            silent=True))
-        self.logger.debug('css classes for %r => %r', locator, result)
-        return result
+            if self.browser_version < '46':
+                command = 'return arguments[0].classList;'
+            else:
+                command = 'return arguments[0].classList.value;'
+            script_run = self.execute_script(
+                command, self.element(locator, *args, **kwargs),
+                silent=True)
+            result = set(script_run.split(' ')) if isinstance(script_run, str) else set(script_run)
+            self.logger.debug('css classes for %r => %r', locator, result)
+            return result
 
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.
