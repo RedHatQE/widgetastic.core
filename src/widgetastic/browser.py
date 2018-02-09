@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import six
+import re
 import time
 
 from cached_property import cached_property
@@ -180,7 +181,10 @@ class Browser(object):
 
     @property
     def browser_version(self):
-        return self.selenium.desired_capabilities.get('version')
+        version = self.selenium.desired_capabilities.get('browserVersion')
+        if not version:
+            version = self.selenium.desired_capabilities.get('version')
+        return int(version.split('.')[0])
 
     @property
     def browser(self):
@@ -568,14 +572,16 @@ class Browser(object):
                         return arr;
                     })(arguments)''')
         else:
-            if self.browser_version < '46':
+            # js classList call was changed for ff starting 46 version
+            if self.browser_version <= 45 and self.browser_type == 'firefox':
                 command = 'return arguments[0].classList;'
             else:
                 command = 'return arguments[0].classList.value;'
             script_run = self.execute_script(
                 command, self.element(locator, *args, **kwargs),
                 silent=True)
-            result = set(script_run.split(' ')) if isinstance(script_run, str) else set(script_run)
+            result = (set(re.split("\s+", script_run)) if isinstance(script_run, basestring)
+                      else set(script_run))
             self.logger.debug('css classes for %r => %r', locator, result)
             return result
 
