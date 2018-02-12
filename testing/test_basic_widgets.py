@@ -6,7 +6,7 @@ import re
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.widget import (
     View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput)
-from widgetastic.utils import Fillable, ParametrizedString
+from widgetastic.utils import Fillable, ParametrizedString, VersionPick, Version
 
 
 def test_basic_widgets(browser):
@@ -214,7 +214,9 @@ def test_table_with_widgets(browser):
     class TestForm(View):
         table = Table('#withwidgets', column_widgets={
             'Column 2': TextInput(locator='./input'),
-            'Column 3': TextInput(locator='./input')})
+            'Column 3': VersionPick({
+                Version.lowest(): TextInput(locator='./input'),
+                '2.0': None})})
 
     view = TestForm(browser)
 

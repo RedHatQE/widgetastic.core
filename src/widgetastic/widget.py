@@ -123,6 +123,8 @@ class WidgetDescriptor(Widgetable):
             kwargs = copy(self.kwargs)
             try:
                 kwargs['logger'] = create_child_logger(obj.logger, obj._desc_name_mapping[self])
+            except KeyError:
+                kwargs['logger'] = obj.logger
             except AttributeError:
                 pass
 
@@ -1151,6 +1153,10 @@ class TableColumn(Widget, ClickableMixin):
             if self.column_name not in self.table.column_widgets:
                 return None
             wcls = self.table.column_widgets[self.column_name]
+
+        # Verpick, ...
+        if isinstance(wcls, ConstructorResolvable):
+            return wcls.resolve(self)
 
         # We cannot use WidgetDescriptor's facility for instantiation as it does caching and all
         # that stuff
