@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import six
+import re
 import time
 
 from cached_property import cached_property
@@ -177,6 +178,13 @@ class Browser(object):
     @property
     def browser_type(self):
         return self.selenium.capabilities.get('browserName')
+
+    @property
+    def browser_version(self):
+        version = self.selenium.desired_capabilities.get('browserVersion')
+        if not version:
+            version = self.selenium.desired_capabilities.get('version')
+        return int(version.split('.')[0])
 
     @property
     def browser(self):
@@ -564,12 +572,18 @@ class Browser(object):
                         return arr;
                     })(arguments)''')
         else:
-            command = 'return arguments[0].classList;'
-        result = set(self.execute_script(
-            command, self.element(locator, *args, **kwargs),
-            silent=True))
-        self.logger.debug('css classes for %r => %r', locator, result)
-        return result
+            # js classList call was changed for ff starting 46 version
+            if self.browser_version <= 45 and self.browser_type == 'firefox':
+                command = 'return arguments[0].classList;'
+            else:
+                command = 'return arguments[0].classList.value;'
+            script_run = self.execute_script(
+                command, self.element(locator, *args, **kwargs),
+                silent=True)
+            result = (set(re.split("\s+", script_run)) if isinstance(script_run, six.string_types)
+                      else set(script_run))
+            self.logger.debug('css classes for %r => %r', locator, result)
+            return result
 
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.
