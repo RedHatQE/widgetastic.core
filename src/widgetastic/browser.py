@@ -580,7 +580,7 @@ class Browser(object):
             script_run = self.execute_script(
                 command, self.element(locator, *args, **kwargs),
                 silent=True)
-            result = (set(re.split("\s+", script_run)) if isinstance(script_run, basestring)
+            result = (set(re.split("\s+", script_run)) if isinstance(script_run, six.string_types)
                       else set(script_run))
             self.logger.debug('css classes for %r => %r', locator, result)
             return result
