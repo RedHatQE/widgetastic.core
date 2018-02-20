@@ -25,7 +25,7 @@ Licensed under Apache license, Version 2.0
 
 *WARNING:* Until this library reaches v1.0, the interfaces may change!
 
-Currently the documentation build on RTD is partially broken. You can generate and browse it like
+Currently the documentation build on RTD is broken. You can generate and browse it like
 this:
 
 .. code-block:: bash
@@ -33,6 +33,9 @@ this:
     cd widgetastic.core/    # Your git repository's root folder
     tox -e docs
     google-chrome build/htmldocs/index.html   # Or a browser of your choice
+
+I have set up `my Jenkins <https://up.falesnik.net/wt-doc/>`_ to build docs on new releases while
+RTD can't build the documentation.
 
 Introduction
 ------------
@@ -66,6 +69,7 @@ Features
 - Supports automatic `Constructor object collapsing`_ for objects passed into the widget constructors.
 - Supports `Fillable objects`_ that can coerce themselves into an appropriate filling value.
 - Supports many Pythons! 2.7, 3.5, 3.6 and PyPy are officially supported and unit-tested in CI.
+- `Automatic simple CSS locator detection`_
 
 What this project does NOT do
 -----------------------------
@@ -127,7 +131,7 @@ This sample only represents simple UI interaction.
 
     # Create a view that represents a page
     class MyView(View):
-        a_text = Text('.//h3[@id="title"]')
+        a_text = Text(locator='.//h3[@id="title"]')
         an_input = TextInput(name='my_input')
 
         # Or a portion of it
@@ -136,7 +140,7 @@ This sample only represents simple UI interaction.
             # You can specify a root locator, then this view responds to is_displayed and can be
             # used as a parent for widget lookup
             ROOT = 'div#somediv'
-            another_text = Text('#h2')  # Whatever takes a locator can automatically detect simple CSS locators
+            another_text = Text(locator='#h2')  # See "Automatic simple CSS locator detection"
 
     selenium = webdriver.Firefox()  # For example
     browser = CustomBrowser(selenium)
@@ -162,6 +166,27 @@ UI interactions.
 
 An example of such integration is currently **TODO**, but it will eventually appear here once a PoC
 for a different project will happen.
+
+.. `Automatic simple CSS locator detection`:
+
+Automatic simple CSS locator detection
+--------------------------------------
+
+By default, all string locators are considered XPath, but in each place where a locator gets passed
+into Widgetastic you can leverage automatic simple CSS locator detection. If a string corresponds to
+the pattern of `tagname#id.class1.class2` where the tag is optional and at least one `id` or `class`
+is present, it considers it a CSS locator.
+
+Other locators than XPath
+-------------------------
+
+`Automatic simple CSS locator detection`_ section mentions automatic detection of a subset of CSS
+locators. If you want to use a complex CSS locator or a different lookup type, you can use
+`selenium-smart-locator <https://pypi.python.org/pypi/selenium-smart-locator>`_ library that is used
+underneath to process all the locators. You can consult the documentation and pass instances of
+``Locator`` instead of a string.
+
+This library is already in the requirements, so it is not necessary to install it.
 
 
 ``__locator__()`` and ``__element__()`` protocol
