@@ -6,7 +6,7 @@ from widgetastic.exceptions import NoSuchElementException
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput)
+    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin)
 
 
 def test_can_create_view(browser):
@@ -113,6 +113,21 @@ def test_inherited_view(browser):
 
     view = AView2(browser)
     assert view.widget1.parent_view is view
+
+
+def test_mixin_view(browser):
+    class SomeMixin(WTMixin):
+        a_mixin_widget = Widget()
+
+    class AView1(View):
+        widget1 = Widget()
+
+    class AView2(AView1, SomeMixin):
+        widget2 = Widget()
+
+    view = AView2(browser)
+    assert view.widget_names == ('a_mixin_widget', 'widget1', 'widget2')
+    view.a_mixin_widget
 
 
 def test_do_not_read_widget(browser):

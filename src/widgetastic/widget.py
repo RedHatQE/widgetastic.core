@@ -2268,3 +2268,12 @@ class ConditionalSwitchableView(Widgetable):
             return view_object.__get__(o, t)
         else:
             return view_object(o, additional_context=o.context)
+
+
+class WTMixin(six.with_metaclass(WidgetMetaclass, object)):
+    """Base class for mixins for views.
+
+    Lightweight class that only has the bare minimum of what is required for widgetastic operation.
+
+    Use this if you want to create mixins for views.
+    """
