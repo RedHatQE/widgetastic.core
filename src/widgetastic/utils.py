@@ -356,6 +356,9 @@ class ParametrizedString(ConstructorResolvable):
 
     OPERATIONS = {
         'quote': xpath.quote,
+        'lower': lambda s: s.lower(),
+        'upper': lambda s: s.upper(),
+        'title': lambda s: s.title(),
     }
 
     def __init__(self, template):
@@ -376,20 +379,23 @@ class ParametrizedString(ConstructorResolvable):
     def resolve(self, view):
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
-            try:
-                if context_name.startswith('@'):
-                    param_value = getattr(view, context_name[1:])
-                else:
-                    param_value = view.context[context_name]
-            except AttributeError:
-                if context_name.startswith('@'):
+            if context_name.startswith('"') and context_name.endswith('"'):
+                param_value = ParametrizedString(context_name[1:-1]).resolve(view)
+            else:
+                try:
+                    if context_name.startswith('@'):
+                        param_value = getattr(view, context_name[1:])
+                    else:
+                        param_value = view.context[context_name]
+                except AttributeError:
+                    if context_name.startswith('@'):
+                        raise AttributeError(
+                            'Parameter {} is not present in the object'.format(context_name))
+                    else:
+                        raise TypeError('Parameter class must be defined on a view!')
+                except KeyError:
                     raise AttributeError(
-                        'Parameter {} is not present in the object'.format(context_name))
-                else:
-                    raise TypeError('Parameter class must be defined on a view!')
-            except KeyError:
-                raise AttributeError(
-                    'Parameter {} is not present in the context'.format(context_name))
+                        'Parameter {} is not present in the context'.format(context_name))
             for op in ops:
                 try:
                     op_callable = self.OPERATIONS[op]

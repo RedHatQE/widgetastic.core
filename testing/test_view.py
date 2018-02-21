@@ -161,8 +161,10 @@ def test_view_parameter(browser):
 def test_view_parametrized_string(browser):
     class MyView(View):
         my_param = ParametrizedString('{foo} {foo|quote}')
+        nested_thing = ParametrizedString('foo {"id-{foo}"|quote}')
 
     assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar "bar"'
+    assert MyView(browser, additional_context={'foo': 'bar'}).nested_thing == 'foo "id-bar"'
 
 
 def test_parametrized_view(browser):
