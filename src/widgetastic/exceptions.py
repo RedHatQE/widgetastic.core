@@ -6,17 +6,21 @@ from selenium.common.exceptions import (  # NOQA
     NoAlertPresentException, UnexpectedAlertPresentException, WebDriverException)  # NOQA
 
 
-class LocatorNotImplemented(NotImplementedError):
+class WidgetasticException(Exception):
     pass
 
 
-class WidgetOperationFailed(Exception):
+class LocatorNotImplemented(NotImplementedError, WidgetasticException):
     pass
 
 
-class DoNotReadThisWidget(Exception):
+class WidgetOperationFailed(WidgetasticException):
     pass
 
 
-class RowNotFound(IndexError):
+class DoNotReadThisWidget(WidgetasticException):
+    pass
+
+
+class RowNotFound(IndexError, WidgetasticException):
     pass
