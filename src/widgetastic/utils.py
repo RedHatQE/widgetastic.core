@@ -402,7 +402,11 @@ class ParametrizedString(ConstructorResolvable):
             else:
                 try:
                     if context_name.startswith('@'):
-                        param_value = getattr(view, context_name[1:])
+                        attr_name = context_name[1:]
+                        param_value = getattr(view, attr_name)
+                        if isinstance(param_value, Locator):
+                            # Check if it is a locator. We want to pull the string out of it
+                            param_value = param_value.locator
                     else:
                         param_value = view.context[context_name]
                 except AttributeError:
