@@ -348,10 +348,27 @@ class ParametrizedString(ConstructorResolvable):
 
     Useful for parametrized views.
 
-    Supported filters: ``quote`` (XPath)
+    They are a descriptor, so the :py:class:`ParametrizedString` instance materializes as a string
+    upon accessing on an instance.
+
+    Supported filters:
+
+        See :py:attribute:`OPERATIONS`
+
+    Sample strings:
+
+    .. code-block:: python
+
+        "foo"           # No resolution, returns a string
+        "foo-{xyz}"     # if xyz=bar in the view context data, then the result is foo-bar
+        "foo-{@xyz}"    # Same as the preceeding string, just the xyz is looked up as view attribute
+        "//a[@id={@boo|quote}]"  # Same as preceeding, but quote the value per XPath specifications
+        '//a[@id={"vm-{@boo}"|quote}]'  # Same as preceding, use double quotes to use maximum of
+                                        # single level nesting if you need to use the value in
+                                        # conjuntion with a constant or another value
 
     Args:
-        template: String template in ``.format()`` format, use pipe to add a filter.
+        template: String template in ``.format()`` format,
     """
 
     OPERATIONS = {
@@ -377,6 +394,7 @@ class ParametrizedString(ConstructorResolvable):
                 self.format_params[param_name] = (context_var_name, tuple(ops))
 
     def resolve(self, view):
+        """Resolve the parametrized string like on a view."""
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
             if context_name.startswith('"') and context_name.endswith('"'):
@@ -416,6 +434,8 @@ class ParametrizedString(ConstructorResolvable):
 
 
 class ParametrizedLocator(ParametrizedString):
+    """:py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
+    """
     def __get__(self, o, t=None):
         result = super(ParametrizedLocator, self).__get__(o, t)
         if isinstance(result, ParametrizedString):
@@ -426,6 +446,17 @@ class ParametrizedLocator(ParametrizedString):
 
 class Parameter(ParametrizedString):
     """Class used to expose a context parameter as an object attribute.
+
+    Usage:
+
+    .. code-block:: python
+
+        class Foo(SomeView):
+            my_arg = Parameter('my_arg')
+
+
+        view = Foo(browser, additional_context={'my_arg': 1})
+        assert view.my_arg == 1
 
     Args:
         param: Name of the param.
