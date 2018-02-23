@@ -82,6 +82,30 @@ def test_view_fill(browser):
     assert view.fill({'input1': 'hello world man'})
 
 
+def test_view_fill_before_fill(browser):
+    class TestForm(View):
+        input1 = TextInput(name='input1')
+
+        def before_fill(self, values):
+            return True
+
+    view = TestForm(browser)
+    assert view.fill({'input1': 'hello world man'})
+    assert view.fill({'input1': 'hello world man'})
+
+
+def test_view_fill_after_fill(browser):
+    class TestForm(View):
+        input1 = TextInput(name='input1')
+
+        def after_fill(self, was_change):
+            return was_change or True
+
+    view = TestForm(browser)
+    assert view.fill({'input1': 'hello world man'})
+    assert view.fill({'input1': 'hello world man'})
+
+
 def test_view_is_displayed_without_root_locator(browser):
     class MyView(View):
         pass

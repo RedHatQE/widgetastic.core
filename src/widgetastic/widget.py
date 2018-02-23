@@ -756,7 +756,10 @@ class View(Widget):
         """
         values = deflatten_dict(values)
         was_change = False
-        self.before_fill(values)
+        b_fill = self.before_fill(values)
+        if b_fill is True:
+            # Only on True, nothing else
+            was_change = True
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
@@ -780,8 +783,11 @@ class View(Widget):
             except NotImplementedError:
                 continue
 
-        self.after_fill(was_change)
-        return was_change
+        a_fill = self.after_fill(was_change)
+        if isinstance(a_fill, bool):
+            return a_fill
+        else:
+            return was_change
 
     def read(self):
         """Reads the contents of the view and presents them as a dictionary.
@@ -805,6 +811,9 @@ class View(Widget):
     def before_fill(self, values):
         """A hook invoked before the loop of filling is invoked.
 
+        If it returns None, the ``was_changed`` in :py:meth:`fill` does not change. If it returns a
+        boolean, then on ``True`` it modifies the ``was_changed`` to True as well.
+
         Args:
             values: The same values that are passed to :py:meth:`fill`
         """
@@ -812,6 +821,9 @@ class View(Widget):
 
     def after_fill(self, was_change):
         """A hook invoked after all the widgets were filled.
+
+        If it returns None, the ``was_changed`` in :py:meth:`fill` does not change. If it returns a
+        boolean, that boolean will be returned as ``was_changed``.
 
         Args:
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
