@@ -681,6 +681,7 @@ class View(Widget):
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
+        self.last_fill_data = None
 
     @staticmethod
     def nested(view_class):
@@ -748,6 +749,9 @@ class View(Widget):
         It will log any skipped fill items.
         It will log a warning if you pass any extra values for filling.
 
+        It will store the fill value in :py:attr:`last_fill_data`. The data will be "deflattened" to
+        ensure uniformity.
+
         Args:
             values: A dictionary of ``widget_name: value_to_fill``.
 
@@ -755,6 +759,7 @@ class View(Widget):
             :py:class:`bool` if the fill changed any value.
         """
         values = deflatten_dict(values)
+        self.last_fill_data = values
         was_change = False
         b_fill = self.before_fill(values)
         if b_fill is True:
