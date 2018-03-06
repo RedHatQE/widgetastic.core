@@ -367,6 +367,11 @@ class ParametrizedString(ConstructorResolvable):
                                         # single level nesting if you need to use the value in
                                         # conjuntion with a constant or another value
 
+    The last example demonstrated is a sort of workaround for the fact there is no suitable XPath
+    processing and manipulating library in Python. It is not recommended to exploit that use case
+    further. If you need more than what the last use case provides, you will be better off creating
+    a property to generate the required string.
+
     Args:
         template: String template in ``.format()`` format,
     """
