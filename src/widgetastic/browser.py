@@ -3,14 +3,12 @@ from __future__ import unicode_literals
 
 import inspect
 import six
-import re
 import time
 
 from cached_property import cached_property
 from collections import namedtuple
 from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.file_detector import LocalFileDetector, UselessFileDetector
 from selenium.webdriver.remote.webelement import WebElement
@@ -28,14 +26,6 @@ from .log import create_widget_logger, null_logger
 from .xpath import normalize_space
 from .utils import crop_string_middle
 
-
-# TODO: Resolve this issue in smartloc
-# Monkey patch By
-def is_valid(cls, strategy):
-    return strategy in {'xpath', 'css'}
-
-
-By.is_valid = classmethod(is_valid)
 
 Size = namedtuple('Size', ['width', 'height'])
 Location = namedtuple('Location', ['x', 'y'])
@@ -559,31 +549,26 @@ class Browser(object):
         Returns:
             A :py:class:`set` of strings with classes.
         """
-        if self.browser_type in {'MicrosoftEdge', 'internet explorer'}:
-            # Kudos to psav who put together this little script
-            command = jsmin('''\
-                return (
-                    function(arguments){
+        command = jsmin('''
+            return (
+                function(arguments){
+                    var cl = arguments[0].classList;
+                    if(typeof cl.value === "undefined") {
+                        return cl;
+                    } else {
                         var arr=[];
-                        var le=arguments[0].classList.length;
-                        for (i=0; i < le; i++){
-                            arr.push(arguments[0].classList[i]);
+                        for (i=0; i < cl.length; i++){
+                            arr.push(cl[i]);
                         };
                         return arr;
-                    })(arguments)''')
-        else:
-            # js classList call was changed for ff starting 46 version
-            if self.browser_version <= 45 and self.browser_type == 'firefox':
-                command = 'return arguments[0].classList;'
-            else:
-                command = 'return arguments[0].classList.value;'
-            script_run = self.execute_script(
-                command, self.element(locator, *args, **kwargs),
-                silent=True)
-            result = (set(re.split("\s+", script_run)) if isinstance(script_run, six.string_types)
-                      else set(script_run))
-            self.logger.debug('css classes for %r => %r', locator, result)
-            return result
+                    }
+            })(arguments);
+        ''')
+        result = set(self.execute_script(
+            command, self.element(locator, *args, **kwargs),
+            silent=True))
+        self.logger.debug('css classes for %r => %r', locator, result)
+        return result
 
     def tag(self, *args, **kwargs):
         """Returns the tag name of the element represented by the locator passed.

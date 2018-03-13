@@ -348,14 +348,44 @@ class ParametrizedString(ConstructorResolvable):
 
     Useful for parametrized views.
 
-    Supported filters: ``quote`` (XPath)
+    They are a descriptor, so the :py:class:`ParametrizedString` instance materializes as a string
+    upon accessing on an instance.
+
+    Supported filters:
+
+        See :py:attribute:`OPERATIONS`
+
+    Sample strings:
+
+    .. code-block:: python
+
+        "foo"           # No resolution, returns a string
+        "foo-{xyz}"     # if xyz=bar in the view context data, then the result is foo-bar
+        "foo-{@xyz}"    # Same as the preceeding string, just the xyz is looked up as view attribute
+        "//a[@id={@boo|quote}]"  # Same as preceeding, but quote the value per XPath specifications
+        '//a[@id={"vm-{@boo}"|quote}]'  # Same as preceding, use double quotes to use maximum of
+                                        # single level nesting if you need to use the value in
+                                        # conjuntion with a constant or another value
+
+    The last example demonstrated is a sort of workaround for the fact there is no suitable XPath
+    processing and manipulating library in Python. It is not recommended to exploit that use case
+    further. If you need more than what the last use case provides, you will be better off creating
+    a property to generate the required string.
+
+    You can use the functionality of :py:func:`nested_getattr` - the reference of parameters on the
+    object (``@param_name``) also supports nesting, so you can access a child or parent value, like
+    ``{@parent/something}``. The dots are replaced with forward slashes because python ``.format``
+    does not support dots.
 
     Args:
-        template: String template in ``.format()`` format, use pipe to add a filter.
+        template: String template in ``.format()`` format,
     """
 
     OPERATIONS = {
         'quote': xpath.quote,
+        'lower': lambda s: s.lower(),
+        'upper': lambda s: s.upper(),
+        'title': lambda s: s.title(),
     }
 
     def __init__(self, template):
@@ -374,22 +404,30 @@ class ParametrizedString(ConstructorResolvable):
                 self.format_params[param_name] = (context_var_name, tuple(ops))
 
     def resolve(self, view):
+        """Resolve the parametrized string like on a view."""
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
-            try:
-                if context_name.startswith('@'):
-                    param_value = getattr(view, context_name[1:])
-                else:
-                    param_value = view.context[context_name]
-            except AttributeError:
-                if context_name.startswith('@'):
+            if context_name.startswith('"') and context_name.endswith('"'):
+                param_value = ParametrizedString(context_name[1:-1]).resolve(view)
+            else:
+                try:
+                    if context_name.startswith('@'):
+                        attr_name = context_name[1:]
+                        param_value = nested_getattr(view, attr_name.split('/'))
+                        if isinstance(param_value, Locator):
+                            # Check if it is a locator. We want to pull the string out of it
+                            param_value = param_value.locator
+                    else:
+                        param_value = view.context[context_name]
+                except AttributeError:
+                    if context_name.startswith('@'):
+                        raise AttributeError(
+                            'Parameter {} is not present in the object'.format(context_name))
+                    else:
+                        raise TypeError('Parameter class must be defined on a view!')
+                except KeyError:
                     raise AttributeError(
-                        'Parameter {} is not present in the object'.format(context_name))
-                else:
-                    raise TypeError('Parameter class must be defined on a view!')
-            except KeyError:
-                raise AttributeError(
-                    'Parameter {} is not present in the context'.format(context_name))
+                        'Parameter {} is not present in the context'.format(context_name))
             for op in ops:
                 try:
                     op_callable = self.OPERATIONS[op]
@@ -410,6 +448,8 @@ class ParametrizedString(ConstructorResolvable):
 
 
 class ParametrizedLocator(ParametrizedString):
+    """:py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
+    """
     def __get__(self, o, t=None):
         result = super(ParametrizedLocator, self).__get__(o, t)
         if isinstance(result, ParametrizedString):
@@ -420,6 +460,17 @@ class ParametrizedLocator(ParametrizedString):
 
 class Parameter(ParametrizedString):
     """Class used to expose a context parameter as an object attribute.
+
+    Usage:
+
+    .. code-block:: python
+
+        class Foo(SomeView):
+            my_arg = Parameter('my_arg')
+
+
+        view = Foo(browser, additional_context={'my_arg': 1})
+        assert view.my_arg == 1
 
     Args:
         param: Name of the param.

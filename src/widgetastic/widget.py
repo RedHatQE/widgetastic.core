@@ -328,6 +328,17 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self._initialized_included_widgets = {}
 
     def __element__(self):
+        """Implement the logic of querying
+        :py:class:`selenium.webdriver.remote.webelement.WebElement` from Selenium.
+
+        It uses :py:meth:`__locator__` to retrieve the locator and then it looks up the WebElement
+        on the parent's browser.
+
+        If hte ``__locator__`` isbadly implemented and returns a ``WebElement`` instance, it returns
+        it directly.
+
+        You usually want this method to be intact.
+        """
         try:
             locator = self.__locator__()
         except AttributeError:
@@ -354,7 +365,11 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         return getattr(self._initialized_included_widgets[includer_id], widget_name)
 
     def flush_widget_cache(self):
-        """Flush the widget cache recursively for the whole :py:class:`Widget` tree structure"""
+        """Flush the widget cache recursively for the whole :py:class:`Widget` tree structure.
+
+        Do not use this unless you see glitches and ``StaleElementReferenceException``. Well written
+        widgets should not need flushing.
+        """
         for widget in self._widget_cache.values():
             try:
                 widget.flush_widget_cache()
@@ -666,6 +681,7 @@ class View(Widget):
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
+        self.last_fill_data = None
 
     @staticmethod
     def nested(view_class):
@@ -733,6 +749,9 @@ class View(Widget):
         It will log any skipped fill items.
         It will log a warning if you pass any extra values for filling.
 
+        It will store the fill value in :py:attr:`last_fill_data`. The data will be "deflattened" to
+        ensure uniformity.
+
         Args:
             values: A dictionary of ``widget_name: value_to_fill``.
 
@@ -740,8 +759,12 @@ class View(Widget):
             :py:class:`bool` if the fill changed any value.
         """
         values = deflatten_dict(values)
+        self.last_fill_data = values
         was_change = False
-        self.before_fill(values)
+        b_fill = self.before_fill(values)
+        if b_fill is True:
+            # Only on True, nothing else
+            was_change = True
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
@@ -765,8 +788,11 @@ class View(Widget):
             except NotImplementedError:
                 continue
 
-        self.after_fill(was_change)
-        return was_change
+        a_fill = self.after_fill(was_change)
+        if isinstance(a_fill, bool):
+            return a_fill
+        else:
+            return was_change
 
     def read(self):
         """Reads the contents of the view and presents them as a dictionary.
@@ -790,6 +816,9 @@ class View(Widget):
     def before_fill(self, values):
         """A hook invoked before the loop of filling is invoked.
 
+        If it returns None, the ``was_changed`` in :py:meth:`fill` does not change. If it returns a
+        boolean, then on ``True`` it modifies the ``was_changed`` to True as well.
+
         Args:
             values: The same values that are passed to :py:meth:`fill`
         """
@@ -798,6 +827,9 @@ class View(Widget):
     def after_fill(self, was_change):
         """A hook invoked after all the widgets were filled.
 
+        If it returns None, the ``was_changed`` in :py:meth:`fill` does not change. If it returns a
+        boolean, that boolean will be returned as ``was_changed``.
+
         Args:
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
         """
@@ -805,12 +837,72 @@ class View(Widget):
 
 
 class ParametrizedView(View):
-    """View that needs parameters to be run."""
+    """View that needs parameters to be run.
+
+    In order to use this class, you need to specify parameters in the :py:attribute:`PARAMETERS`
+    attribute.
+
+    Then a parametrized view could be defined like this:
+
+    .. code-block:: python
+
+        class AView(View):
+            # some widgets, .... etc
+
+            class thing(ParametrizedView):
+                PARAMETERS = ('thing_name', )
+                ROOT = ParametrizedLocator('.//div[./h2[normalize-space(.)={thing_name|quote}]]')
+
+                a_widget = SomeWidget()
+
+        view = AView(browser)
+
+    This will not work:
+
+    .. code-block:: python
+
+        view.thing.a_widget  # Throws an error
+
+    You now need to pass the required parameter as an argument to the view. Just like a method:
+
+    .. code-block:: python
+
+        view.a_thing(thing_name='snafu').a_widget
+        # Or alternatively positionally
+        view.a_thing('snafu').a_widget
+
+    This is enough to support the ``fill` interface. If you want to ``read`` the parametrized view
+    as well, you need to implement some logic which tells it what aprameters are available. That
+    is achieved by implementing an ``all`` classmethod on the parametrized view:
+
+    .. code-block:: python
+
+        # inside class thing(ParametrizedView):
+        @classmethod
+        def all(cls, browser):
+            elements = browser.elements('some locator')
+            # You then need to scavenge the values for PARAMETERS
+            # ParametrizedView expects such format of parameters:
+            return [  # List of all occurences of the parametrized group
+                ('foo', )  # Tuple of all parameters that are necessary to look up the given group
+                ('snafu', )
+            ]
+
+    There can be any number of parameters, but bear mind that all of them are required and ``all``
+    must always return the same number of parameters for each group.
+
+    When filling, remember the keys of the fill dictionary are the parameters. If there is only one
+    parameter, it can just be the parameter itself. If there are multiple parameters for the groups,
+    then a tuple is expected as a key, containing all the parameter values. The values of the
+    dictionary are then passed into each parametrized group to be filled as an ordinary view.
+    """
+
+    #: Tuple of parameter names that this view takes.
     PARAMETERS = ()
 
     @classmethod
     def all(cls, browser):
-        """Method that returns tuples of parameters that correspond to PARAMETRS attribute.
+        """Method that returns tuples of parameters that correspond to PARAMETERS attribute.
 
         It is required for proper functionality of :py:meth:`read` so it knows the exact instances
         of the view.
@@ -825,6 +917,8 @@ class ParametrizedView(View):
 class ParametrizedViewRequest(object):
     """An intermediate object handling the argument retrieval and subsequent correct view
     instantiation.
+
+    See :py:class:`ParametrizedView` for more info.
     """
     def __init__(self, parent_object, view_class, *args, **kwargs):
         self.parent_object = parent_object
@@ -925,9 +1019,15 @@ class ClickableMixin(object):
 
     @logged()
     def click(self, handle_alert=None):
+        """Click this widget
+
+        Args:
+            handle_alert: Special alert handling. None - no handling, True - accept, False - dismiss
+        """
         self.browser.click(self, ignore_ajax=(handle_alert is not None))
         if handle_alert is not None:
             self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
+            # ignore_ajax will not execute the ensure_page_safe plugin with True
             self.browser.plugin.ensure_page_safe()
 
 
@@ -2268,3 +2368,12 @@ class ConditionalSwitchableView(Widgetable):
             return view_object.__get__(o, t)
         else:
             return view_object(o, additional_context=o.context)
+
+
+class WTMixin(six.with_metaclass(WidgetMetaclass, object)):
+    """Base class for mixins for views.
+
+    Lightweight class that only has the bare minimum of what is required for widgetastic operation.
+
+    Use this if you want to create mixins for views.
+    """
