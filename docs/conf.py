@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import pkg_resources
-import six
-import sys
 
 from datetime import datetime
 
@@ -17,7 +15,6 @@ extensions = [
 
 intersphinx_mapping = {
     'python': ('http://docs.python.org/2.7', None),
-    'pytest': ('http://pytest.org/latest/', None),
     'selenium': ('http://selenium-python.readthedocs.org/', None),
 }
 
@@ -42,7 +39,7 @@ pygments_style = 'sphinx'
 todo_include_todos = False
 
 
-html_theme = 'haiku'
+html_theme = 'classic'
 html_static_path = ['_static']
 
 htmlhelp_basename = 'deprecatedoc'
