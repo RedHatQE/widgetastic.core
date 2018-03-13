@@ -54,3 +54,15 @@ def test_parametrized_string_param_locator(browser):
     assert view.ROOT.by == 'xpath'
     assert view.ROOT.locator == './foo/bar'
     assert view.test_str == './foo/bar/baz'
+
+
+def test_parametrized_string_nested(browser):
+    class MyView(View):
+        class child_item(object):  # noqa
+            foo = 'bar'
+
+        class owner(View):  # noqa
+            p_str1 = ParametrizedString('{@parent/child_item/foo}')
+
+    view = MyView(browser)
+    assert view.owner.p_str1 == 'bar'

@@ -372,6 +372,11 @@ class ParametrizedString(ConstructorResolvable):
     further. If you need more than what the last use case provides, you will be better off creating
     a property to generate the required string.
 
+    You can use the functionality of :py:func:`nested_getattr` - the reference of parameters on the
+    object (``@param_name``) also supports nesting, so you can access a child or parent value, like
+    ``{@parent/something}``. The dots are replaced with forward slashes because python ``.format``
+    does not support dots.
+
     Args:
         template: String template in ``.format()`` format,
     """
@@ -408,7 +413,7 @@ class ParametrizedString(ConstructorResolvable):
                 try:
                     if context_name.startswith('@'):
                         attr_name = context_name[1:]
-                        param_value = getattr(view, attr_name)
+                        param_value = nested_getattr(view, attr_name.split('/'))
                         if isinstance(param_value, Locator):
                             # Check if it is a locator. We want to pull the string out of it
                             param_value = param_value.locator
