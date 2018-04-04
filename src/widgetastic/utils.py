@@ -594,7 +594,7 @@ def crop_string_middle(s, length=32, cropper='...'):
     """
     if len(s) <= length:
         return s
-    half = (length - len(cropper)) / 2
+    half = (length - len(cropper)) // 2
     return s[:half] + cropper + s[-half - 1:]
 
 
