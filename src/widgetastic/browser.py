@@ -471,6 +471,11 @@ class Browser(object):
                 # Moving to invisible element triggers a WebDriverException instead of the former
                 # MoveTargetOutOfBoundsException with NORMAL, SANE BROWSERS.
                 pass
+            # It seems Firefox 60 or geckodriver have an issue related to moving to hidden elements
+            # https://github.com/mozilla/geckodriver/issues/1269
+            if (self.browser_type == 'firefox' and self.browser_version >= 60 and
+                    'rect is undefined' in e.msg):
+                pass
             else:
                 # Something else, never let it sink
                 raise
