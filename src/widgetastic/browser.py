@@ -85,6 +85,18 @@ class DefaultPlugin(object):
         """
         pass
 
+    def before_execute_script(self):
+        """Invoked before executing execute_script.
+
+        """
+        pass
+
+    def after_execute_script(self):
+        """Invoked after executing execute_script.
+
+        """
+        pass
+
 
 class Browser(object):
     """Wrapper of the selenium "browser"
@@ -535,7 +547,15 @@ class Browser(object):
                 processed_args.append(arg.__element__())
             else:
                 processed_args.append(arg)
-        return self.selenium.execute_script(dedent(script), *processed_args, **kwargs)
+
+        self.plugin.before_execute_script()
+        try:
+            output = self.selenium.execute_script(dedent(script), *processed_args, **kwargs)
+        except UnexpectedAlertPresentException:
+            output = None
+            pass
+        self.plugin.after_execute_script()
+        return output
 
     def refresh(self):
         """Triggers a page refresh."""
