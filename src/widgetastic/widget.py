@@ -14,12 +14,12 @@ from jsmin import jsmin
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
-from wait_for import wait_for
+from wait_for import wait_for, TimedOutError
 
 from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
-    RowNotFound)
+    RowNotFound, StaleElementReferenceException)
 from .log import (
     PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
     create_item_logger)
@@ -1018,7 +1018,7 @@ class ParametrizedViewRequest(object):
 class ClickableMixin(object):
 
     @logged()
-    def click(self, handle_alert=None):
+    def click(self, handle_alert=None, expect_page_change=False):
         """Click this widget
 
         Args:
@@ -1028,6 +1028,25 @@ class ClickableMixin(object):
         if handle_alert is not None:
             self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
             # ignore_ajax will not execute the ensure_page_safe plugin with True
+            self.browser.plugin.ensure_page_safe()
+
+        # This hack is required for this bug
+        # https://bugzilla.mozilla.org/show_bug.cgi?format=default&id=1411264
+        # We need wait for body to disappear and then reappear.
+        if (
+                expect_page_change
+                and self.browser.browser_type.lower() == "firefox"
+                and self.browser.browser_version > 46
+        ):
+            element = self.browser.selenium.find_element_by_xpath('//body')
+            try:
+                wait_for(lambda: element.is_displayed(), num_sec=2, fail_condition=True)
+            except (StaleElementReferenceException, TimedOutError):
+                wait_for(
+                    lambda: self.browser.selenium.find_element_by_xpath('//body').is_displayed(),
+                    num_sec=20,
+                    handle_exception=True
+                )
             self.browser.plugin.ensure_page_safe()
 
 
