@@ -7,7 +7,8 @@ from widgetastic.exceptions import NoSuchElementException
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin)
+    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin,
+    IFrameView)
 
 
 def test_can_create_view(browser):
@@ -672,3 +673,53 @@ def test_ignore_decorator(browser):
     assert 'baz' not in view.widget_names
     assert 'inga' in view.widget_names
     assert isinstance(view.inga, MyViewToNotNest)
+
+
+def test_iframe_view(browser):
+    class MyIFrameView(IFrameView):
+        FRAME = '//iframe[@name="some_iframe"]'
+        h3 = Text('.//h3')
+        select1 = Select(id='iframe_select1')
+        select2 = Select(name='iframe_select2')
+
+        class nested_iframe_view(IFrameView):
+            FRAME = './/iframe[@name="another_iframe"]'
+            h3 = Text('.//h3')
+            select3 = Select(id='iframe_select3')
+
+            class nested(View):
+                ROOT = '#nested_view'
+                nested_checkbox = Checkbox(id='input222')
+
+    class ParentView(View):
+        h3 = Text('//h3[@id="switchabletesting-1"]')
+        checkbox1 = Checkbox(id='switchabletesting-3')
+        checkbox2 = Checkbox(id='switchabletesting-4')
+
+    iframe_view = MyIFrameView(browser)
+    parent_view = ParentView(browser)
+
+    assert iframe_view.is_displayed
+    assert parent_view.is_displayed
+
+    assert all([getattr(iframe_view, name).is_displayed for name in iframe_view.widget_names])
+    assert all([getattr(parent_view, name).is_displayed for name in parent_view.widget_names])
+
+    assert iframe_view.h3.text == "IFrame Tests"
+    assert parent_view.h3.text == "footest"
+
+    assert iframe_view.select1.read() == 'Foo'
+    assert iframe_view.select1.fill('Bar') and iframe_view.select1.read() == 'Bar'
+
+    assert not parent_view.checkbox1.read()
+    assert parent_view.checkbox1.fill(True) and parent_view.checkbox1.read()
+
+    assert iframe_view.nested_iframe_view.is_displayed
+    assert iframe_view.nested_iframe_view.h3.text == 'IFrame Tests 2'
+    assert (iframe_view.nested_iframe_view.select3.fill('Bar') and
+            iframe_view.nested_iframe_view.select3.read() == 'Bar')
+
+    assert iframe_view.nested_iframe_view.nested.is_displayed
+    assert (not iframe_view.nested_iframe_view.nested.nested_checkbox.read() and
+            iframe_view.nested_iframe_view.nested.nested_checkbox.fill(True) and
+            iframe_view.nested_iframe_view.nested.nested_checkbox.read())

@@ -874,6 +874,7 @@ class View(Widget):
     """
     #: Skip this view in the element lookup hierarchy
     INDIRECT = False
+    FRAME = None
     fill_strategy = None
 
     def __init__(self, parent, logger=None, **kwargs):
@@ -1015,6 +1016,25 @@ class View(Widget):
         """
         pass
 
+    def child_widget_accessed(self, widget):
+        """Called when a child widget of this widget gets accessed.
+
+        Useful when eg. the containing widget needs to open for the child widget to become visible.
+
+        Args:
+            widget: The widget being accessed.
+        """
+        parents = self.hierarchy
+        parents.insert(0, self.root_browser)
+        for parent in parents:
+            frame = getattr(parent, 'FRAME', None)
+            if frame is None:
+                self.browser.switch_to_main_frame()
+            else:
+                self.browser.switch_to_frame(frame)
+
+        # replace this with starting from default frame + all possible other frames
+        
 
 class ParametrizedView(View):
     """View that needs parameters to be run.

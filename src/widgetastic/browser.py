@@ -804,6 +804,16 @@ class Browser(object):
             else:
                 raise
 
+    def switch_to_frame(self, *args, **kwargs):
+        self.selenium.switch_to.frame(self.element(*args, **kwargs))
+
+    def switch_to_main_frame(self):
+        self.selenium.switch_to.default_content()
+
+    def get_current_location(self):
+        # useful if it is necessary to recognize current frame
+        return self.execute_script('return self.location.toString()')
+
 
 class BrowserParentWrapper(object):
     """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
