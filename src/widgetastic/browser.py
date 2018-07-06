@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import inspect
 import six
 import time
-
 from cached_property import cached_property
 from collections import namedtuple
 from jsmin import jsmin
@@ -23,9 +22,8 @@ from .exceptions import (
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented,
     WebDriverException)
 from .log import create_widget_logger, null_logger
-from .xpath import normalize_space
 from .utils import crop_string_middle
-
+from .xpath import normalize_space
 
 Size = namedtuple('Size', ['width', 'height'])
 Location = namedtuple('Location', ['x', 'y'])
@@ -351,10 +349,22 @@ class Browser(object):
         """
         self.logger.debug('click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
+        nav_click = kwargs.pop('nav_click', False)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         # and then click on current mouse position
-        self.perform_click()
+        if nav_click and self.browser_type.lower() == 'firefox' and self.browser_version > 52:
+            el.click()
+            element = self.browser.element('//body')
+            try:
+                wait_for(lambda: element.is_displayed(), num_sec=2, fail_condition=True, delay=0.5)
+            except (StaleElementReferenceException, TimedOutError):
+                wait_for(
+                    lambda: self.browser.element('//body').is_displayed(),
+                    num_sec=10, handle_exception=True
+                )
+        else:
+            self.perform_click()
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
