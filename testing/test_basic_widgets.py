@@ -133,7 +133,6 @@ def test_nested_views_read_fill_flat(browser):
 def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
-        other_table = Table('#untypical_header')
 
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
@@ -150,7 +149,7 @@ def test_table(browser):
     assert len(list(view.table.rows(_row__attr_endswith=('data-test', '345')))) == 2
     assert len(list(view.table.rows(_row__attr_contains=('data-test', '3')))) == 3
     assert len(list(view.table.rows(
-        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
+       _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
 
     assert len(list(view.table.rows(_row__attr=('data-test', 'abc-345'), column_1='qwer'))) == 0
 
@@ -183,17 +182,24 @@ def test_table(browser):
         column_3__endswith='_x')
     assert row[0].text == 'foo_x'
 
+    #  attributized columns for a table with thead
     row = view.table.row(column_1='bar_x')
     assert row[0].text == 'foo_x'
     assert row['Column 1'].text == 'bar_x'
     assert row.column_1.text == 'bar_x'
 
-    assert [(header, column.text) for header, column in row] == [
-        (None, 'foo_x'),
-        ('Column 1', 'bar_x'),
-        ('Column 2', 'baz_x'),
-        ('Column 3', 'bat_x'),
-        ('Column 4', '')]
+    assert row.read() == {0: 'foo_x',
+                          'Column 1': 'bar_x',
+                          'Column 2': 'baz_x',
+                          'Column 3': 'bat_x',
+                          'Column 4': ''}
+
+    unpacking_fake_read = [(header, column.text) for header, column in row]
+    assert unpacking_fake_read == [(None, 'foo_x'),
+                                   ('Column 1', 'bar_x'),
+                                   ('Column 2', 'baz_x'),
+                                   ('Column 3', 'bat_x'),
+                                   ('Column 4', '')]
 
     assert view.table[0].column_2.text == 'yxcv'
 
@@ -203,11 +209,58 @@ def test_table(browser):
     with pytest.raises(TypeError):
         view.table['boom!']
 
-    # headers are read correctly when those aren't in thead
-    assert len(view.other_table.headers) == 2
+    row = next(view.table.rows())
+    assert row.column_1.text == 'qwer'
 
-    row = next(view.other_table.rows())
+
+def test_table_no_header(browser):
+    class TestForm(View):
+        nohead_table = Table('#without_thead')
+
+    view = TestForm(browser)
+    # attributized columns for a table withOUT thead
+    row = view.nohead_table.row(event='Some Event')
+    assert row[0].text == '27.02.2017, 12:19:30'
+    assert row['Event'].text == 'Some Event'
     assert row.event.text == 'Some Event'
+
+    assert row.read() == {'Date': '27.02.2017, 12:19:30',
+                          'Event': 'Some Event'}
+    # headers are read correctly when those aren't in thead
+    assert len(view.nohead_table.headers) == 2
+
+    row = next(view.nohead_table.rows())
+    assert row.event.text == 'Some Event'
+
+
+def test_table_negative_row_index(browser):
+    class TestForm(View):
+        table = Table('#with-thead')
+
+    view = TestForm(browser)
+    assert view.table[-1].read() == {0: 'foo_y',
+                                     'Column 1': 'bar_y',
+                                     'Column 2': 'baz_y',
+                                     'Column 3': 'bat_y',
+                                     'Column 4': ''}
+    assert view.table[-2].read() == {0: 'foo_x',
+                                     'Column 1': 'bar_x',
+                                     'Column 2': 'baz_x',
+                                     'Column 3': 'bat_x',
+                                     'Column 4': ''}
+    assert view.table[-3].read() == {0: 'asdf',
+                                     'Column 1': 'qwer',
+                                     'Column 2': 'yxcv',
+                                     'Column 3': 'uiop',
+                                     'Column 4': ''}
+    assert view.table[0].read() == {0: 'asdf',
+                                    'Column 1': 'qwer',
+                                    'Column 2': 'yxcv',
+                                    'Column 3': 'uiop',
+                                    'Column 4': ''}
+
+    with pytest.raises(ValueError):
+        view.table[-4].read()
 
 
 def test_table_with_widgets(browser):
@@ -372,7 +425,7 @@ def test_table_dynamic_add_assoc(browser):
     class MyTable(Table):
         def row_add(self):
             self.browser.click('//button[@id="dynamicadd"]')
-            return -1
+            return -1  # testing negative index when we expect row to be added to end of table
 
     class MyView(View):
         table = MyTable(
