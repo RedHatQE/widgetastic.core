@@ -209,6 +209,9 @@ def test_table(browser):
     with pytest.raises(TypeError):
         view.table['boom!']
 
+    with pytest.raises(IndexError):
+        view.table[1000]
+
     row = next(view.table.rows())
     assert row.column_1.text == 'qwer'
 
@@ -259,7 +262,7 @@ def test_table_negative_row_index(browser):
                                     'Column 3': 'uiop',
                                     'Column 4': ''}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         view.table[-4].read()
 
 
