@@ -349,11 +349,12 @@ class Browser(object):
         """
         self.logger.debug('click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
-        nav_click = kwargs.pop('nav_click', False)
+        nav_click = kwargs.pop('nav_click', True)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el)
         # and then click on current mouse position
         if nav_click and self.browser_type.lower() == 'firefox' and self.browser_version > 52:
+            self.logger.warning('Using the workaround')
             el.click()
             element = self.browser.element('//body')
             try:
