@@ -20,7 +20,7 @@ from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
     RowNotFound)
-from logging_prefixes import logged, call_sig, coerce_from_parent_to_prepend_logger
+from logging_prefixes import logged, call_sig, context_to_path_logger
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ParametrizedString, ConstructorResolvable,
     attributize_string, normalize_space, nested_getattr, deflatten_dict)
@@ -313,7 +313,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
     def __init__(self, parent, logger=None):
         self.parent = parent
-        self.logger = coerce_from_parent_to_prepend_logger(parent, type(self).__name__, logger)
+        self.logger = context_to_path_logger(parent, type(self).__name__, logger)
         self.extra = ExtraData(self)
         self._widget_cache = {}
         self._initialized_included_widgets = {}
