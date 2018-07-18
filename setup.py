@@ -20,6 +20,8 @@ setup(
         'selenium-smart-locator',
         'six',
         'wait_for',
+        'logging_prefixes>=0.1.1',
+        'attrs',
     ],
     setup_requires=[
         'setuptools_scm',

@@ -20,9 +20,7 @@ from .browser import Browser, BrowserParentWrapper
 from .exceptions import (
     NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
     RowNotFound)
-from .log import (
-    PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
-    create_item_logger)
+from logging_prefixes import logged, call_sig, coerce_from_parent_to_prepend_logger
 from .utils import (
     Widgetable, Fillable, ParametrizedLocator, ParametrizedString, ConstructorResolvable,
     attributize_string, normalize_space, nested_getattr, deflatten_dict)
@@ -122,7 +120,7 @@ class WidgetDescriptor(Widgetable):
         if self not in obj._widget_cache:
             kwargs = copy(self.kwargs)
             try:
-                kwargs['logger'] = create_child_logger(obj.logger, obj._desc_name_mapping[self])
+                kwargs['logger'] = obj.logger.child_logger(obj._desc_name_mapping[self])
             except KeyError:
                 kwargs['logger'] = obj.logger
             except AttributeError:
@@ -315,14 +313,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
 
     def __init__(self, parent, logger=None):
         self.parent = parent
-        if logger is None:
-            self.logger = create_child_logger(parent.logger, type(self).__name__)
-        elif isinstance(logger, PrependParentsAdapter):
-            # The logger is already prepared
-            self.logger = logger
-        else:
-            # We need a PrependParentsAdapter here.
-            self.logger = create_widget_logger(type(self).__name__, logger)
+        self.logger = coerce_from_parent_to_prepend_logger(parent, type(self).__name__, logger)
         self.extra = ExtraData(self)
         self._widget_cache = {}
         self._initialized_included_widgets = {}
@@ -953,7 +944,7 @@ class ParametrizedViewRequest(object):
         current_name = self.view_class.__name__
         # Now add the params to the name so it is class_name(args)
         current_name += call_sig((), param_dict)  # no args because we process everything into dict
-        new_kwargs['logger'] = create_child_logger(parent_logger, current_name)
+        new_kwargs['logger'] = parent_logger.child_logger(current_name)
         result = self.view_class(self.parent_object, *self.args, **new_kwargs)
         self.parent_object.child_widget_accessed(result)
         return result
@@ -1266,7 +1257,7 @@ class TableColumn(Widget, ClickableMixin):
             wcls = wcls.klass
         kwargs = copy(kwargs)
         if 'logger' not in kwargs:
-            kwargs['logger'] = create_child_logger(self.logger, wcls.__name__)
+            kwargs['logger'] = self.logger.child_logger(wcls.__name__)
         return wcls(self, *args, **kwargs)
 
     @property
@@ -1341,10 +1332,10 @@ class TableRow(Widget, ClickableMixin):
 
     def __getitem__(self, item):
         if isinstance(item, int):
-            return self.Column(self, item, logger=create_item_logger(self.logger, item))
+            return self.Column(self, item, logger=self.logger.item_logger(item))
         elif isinstance(item, six.string_types):
             index = self.table.header_index_mapping[self.table.ensure_normal(item)]
-            return self.Column(self, index, logger=create_item_logger(self.logger, item))
+            return self.Column(self, index, logger=self.logger.item_logger(item))
         else:
             raise TypeError('row[] accepts only integers and strings')
 
@@ -1618,7 +1609,7 @@ class Table(Widget):
         if at_index < 0:
             # To mimic the list handling
             at_index = self._process_negative_index(at_index)
-        return self.Row(self, at_index, logger=create_item_logger(self.logger, item))
+        return self.Row(self, at_index, logger=self.logger.item_logger(item))
 
     def row(self, *extra_filters, **filters):
         try:
