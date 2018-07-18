@@ -1322,7 +1322,7 @@ class TableRow(Widget, ClickableMixin):
 
     def __init__(self, parent, index, logger=None):
         Widget.__init__(self, parent, logger=logger)
-        self.index = index
+        self.index = index + 1 if parent._is_header_in_body else index or 1
 
     @property
     def table(self):
@@ -1332,7 +1332,7 @@ class TableRow(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
-        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
+        loc = self.parent.ROW_AT_INDEX.format(self.index)
         return self.browser.element(loc, parent=self.parent)
 
     def position_to_column_name(self, position):
@@ -1514,12 +1514,19 @@ class Table(Widget):
                 self.rows_ignore_top, self.rows_ignore_bottom)
 
     def _process_negative_index(self, nindex):
-        """The semantics is pretty much the same like for ordinary list."""
-        rc = self.row_count
-        if (- nindex) > rc:
-            raise ValueError(
-                'Negative index {} wanted but we only have {} rows'.format(nindex, rc))
-        return rc + nindex
+        """The semantics is pretty much the same like for ordinary list.
+
+        There's some funky off-by-1 math here because the index is 1-based and we're replicating
+        list negative index access
+
+        Args:
+            nindex: negative index
+        """
+        max_index = self.row_count
+        if (- nindex) > max_index:
+            raise IndexError('Negative index {} wanted but we only have {} rows'
+                             .format(nindex, max_index))
+        return max_index + nindex + 1
 
     def clear_cache(self):
         """Clear all cached properties."""
@@ -1603,6 +1610,9 @@ class Table(Widget):
             at_index = row.index
         elif isinstance(item, int):
             at_index = item
+            if at_index > self.row_count:
+                raise IndexError('Integer row index {} is greater than row count {}'
+                                 .format(at_index, self.row_count))
         else:
             raise TypeError('Table [] accepts only strings or integers.')
         if at_index < 0:
@@ -1630,7 +1640,7 @@ class Table(Widget):
         How simple.
         """
         return self.browser.execute_script(
-            jsmin("""\
+            jsmin("""
             var p = []; var e = arguments[0];
             while (e.previousElementSibling)
                 p.push(e = e.previousElementSibling);
@@ -1653,7 +1663,8 @@ class Table(Widget):
     @cached_property
     def _is_header_in_body(self):
         """Checks whether the header is erroneously specified in the body of table."""
-        return len(self.browser.elements(self.HEADER_IN_ROWS, parent=self)) > 0
+        header_rows = len(self.browser.elements(self.HEADER_IN_ROWS, parent=self))
+        return header_rows > 0
 
     def rows(self, *extra_filters, **filters):
         if not (filters or extra_filters):
@@ -1662,8 +1673,9 @@ class Table(Widget):
             return self._filtered_rows(*extra_filters, **filters)
 
     def _all_rows(self):
-        for row_pos in range(len(self.browser.elements(self.ROWS, parent=self))):
-            row_pos = row_pos if not self._is_header_in_body else row_pos + 1
+        # passing index to TableRow, should not be <1
+        # +1 offset on end because xpath index vs 0-based range()
+        for row_pos in range(1, self.row_count + 1):
             yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
 
     def _filtered_rows(self, *extra_filters, **filters):
@@ -1774,8 +1786,14 @@ class Table(Widget):
         rows = []
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
-            row_pos = row_pos if not self._is_header_in_body else row_pos + 1
-            rows.append(self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos)))
+            # get_number_preceeding_rows is javascript driven, and does not account for thead
+            # When it counts rows, if the header is in the body of the table, then our index
+            #     for this element is correct
+            # If the header is not in the body of the table, number of preceeding rows is 0-based
+            #    and we add 1 to the index to get correct XPATH index offset
+            row_pos = row_pos if self._is_header_in_body else row_pos + 1
+            rows.append(self.Row(self, row_pos,
+                                 logger=create_item_logger(self.logger, row_pos)))
 
         for row in rows:
             if regexp_filters:
@@ -1787,12 +1805,12 @@ class Table(Widget):
             else:
                 yield row
 
-    def row_by_cell_or_widget_value(self, column, key):
+    def row_by_cell_or_widget_value(self, column, value):
         """Row queries do not work with embedded widgets. Therefore you can use this method.
 
         Args:
             column: Position or name fo the column where you are looking the value for.
-            key: The value looked for
+            value: The value looked for
 
         Returns:
             :py:class:`TableRow` instance
@@ -1801,17 +1819,22 @@ class Table(Widget):
             :py:class:`RowNotFound`
         """
         try:
-            return self.row((column, key))
+            return self.row((column, value))
         except RowNotFound:
             for row in self.rows():
                 if row[column].widget is None:
                     continue
+                # Column has a widget
                 if not row[column].widget.is_displayed:
                     continue
-                if row[column].widget.read() == key:
-                    return row
+                # Column widget is displayed...
+                if row[column].widget.read() == value:
+                    return row  # found matching widget value
+                # But the value didn't match, keep looping
+                else:
+                    continue
             else:
-                raise RowNotFound('Row not found by {!r}/{!r}'.format(column, key))
+                raise RowNotFound('Row not found by {!r}/{!r}'.format(column, value))
 
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
