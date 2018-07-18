@@ -120,7 +120,7 @@ class WidgetDescriptor(Widgetable):
         if self not in obj._widget_cache:
             kwargs = copy(self.kwargs)
             try:
-                kwargs['logger'] = obj.logger.child_logger(obj._desc_name_mapping[self])
+                kwargs['logger'] = obj.logger.for_child(obj._desc_name_mapping[self])
             except KeyError:
                 kwargs['logger'] = obj.logger
             except AttributeError:
@@ -944,7 +944,7 @@ class ParametrizedViewRequest(object):
         current_name = self.view_class.__name__
         # Now add the params to the name so it is class_name(args)
         current_name += call_sig((), param_dict)  # no args because we process everything into dict
-        new_kwargs['logger'] = parent_logger.child_logger(current_name)
+        new_kwargs['logger'] = parent_logger.for_child(current_name)
         result = self.view_class(self.parent_object, *self.args, **new_kwargs)
         self.parent_object.child_widget_accessed(result)
         return result
@@ -1257,7 +1257,7 @@ class TableColumn(Widget, ClickableMixin):
             wcls = wcls.klass
         kwargs = copy(kwargs)
         if 'logger' not in kwargs:
-            kwargs['logger'] = self.logger.child_logger(wcls.__name__)
+            kwargs['logger'] = self.logger.for_child(wcls.__name__)
         return wcls(self, *args, **kwargs)
 
     @property
@@ -1332,10 +1332,10 @@ class TableRow(Widget, ClickableMixin):
 
     def __getitem__(self, item):
         if isinstance(item, int):
-            return self.Column(self, item, logger=self.logger.item_logger(item))
+            return self.Column(self, item, logger=self.logger.for_item(item))
         elif isinstance(item, six.string_types):
             index = self.table.header_index_mapping[self.table.ensure_normal(item)]
-            return self.Column(self, index, logger=self.logger.item_logger(item))
+            return self.Column(self, index, logger=self.logger.for_item(item))
         else:
             raise TypeError('row[] accepts only integers and strings')
 
@@ -1609,7 +1609,7 @@ class Table(Widget):
         if at_index < 0:
             # To mimic the list handling
             at_index = self._process_negative_index(at_index)
-        return self.Row(self, at_index, logger=self.logger.item_logger(item))
+        return self.Row(self, at_index, logger=self.logger.for_item(item))
 
     def row(self, *extra_filters, **filters):
         try:
@@ -1667,7 +1667,7 @@ class Table(Widget):
         # passing index to TableRow, should not be <1
         # +1 offset on end because xpath index vs 0-based range()
         for row_pos in range(1, self.row_count + 1):
-            yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
+            yield self.Row(self, row_pos, logger=self.logger.for_item(row_pos))
 
     def _filtered_rows(self, *extra_filters, **filters):
         # Pre-process the filters
@@ -1784,7 +1784,7 @@ class Table(Widget):
             #    and we add 1 to the index to get correct XPATH index offset
             row_pos = row_pos if self._is_header_in_body else row_pos + 1
             rows.append(self.Row(self, row_pos,
-                                 logger=create_item_logger(self.logger, row_pos)))
+                                 logger=self.logger.for_item(row_pos)))
 
         for row in rows:
             if regexp_filters:

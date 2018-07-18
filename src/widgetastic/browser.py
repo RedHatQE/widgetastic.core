@@ -21,7 +21,7 @@ from .exceptions import (
     NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented,
     WebDriverException)
-from .log import create_widget_logger, null_logger
+from logging_prefixes.coerce import FALLBACK_LOGGER, context_to_path_logger
 from .utils import crop_string_middle
 from .xpath import normalize_space
 
@@ -44,7 +44,7 @@ class DefaultPlugin(object):
     @cached_property
     def logger(self):
         """Logger with prepended plugin name."""
-        return create_widget_logger(type(self).__name__, self.browser.logger)
+        return context_to_path_logger(self.browser.logger, type(self).__name__)
 
     def ensure_page_safe(self, timeout='10s'):
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
@@ -141,7 +141,7 @@ class Browser(object):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
-        self.logger = logger or null_logger
+        self.logger = logger or FALLBACK_LOGGER
         self.extra_objects = extra_objects or {}
 
     @property
