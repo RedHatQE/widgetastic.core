@@ -59,11 +59,11 @@ class DefaultPlugin(object):
 
         wait_for(_check, timeout=timeout, delay=0.2, very_quiet=True)
 
-    def after_click(self, element):
+    def after_click(self, element, locator):
         """Invoked after clicking on an element."""
         pass
 
-    def before_click(self, element):
+    def before_click(self, element, locator):
         """Invoked before clicking on an element."""
         pass
 
@@ -349,30 +349,17 @@ class Browser(object):
         """
         self.logger.debug('click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
-        nav_click = kwargs.pop('nav_click', True)
         el = self.move_to_element(locator, *args, **kwargs)
-        self.plugin.before_click(el)
+        self.plugin.before_click(el, locator)
         # and then click on current mouse position
-        if nav_click and self.browser_type.lower() == 'firefox' and self.browser_version > 52:
-            self.logger.warning('Using the workaround')
-            el.click()
-            element = self.browser.element('//body')
-            try:
-                wait_for(lambda: element.is_displayed(), num_sec=2, fail_condition=True, delay=0.5)
-            except (StaleElementReferenceException, TimedOutError):
-                wait_for(
-                    lambda: self.browser.element('//body').is_displayed(),
-                    num_sec=10, handle_exception=True
-                )
-        else:
-            self.perform_click()
+        self.perform_click()
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
             except UnexpectedAlertPresentException:
                 pass
         try:
-            self.plugin.after_click(el)
+            self.plugin.after_click(el, locator)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
@@ -384,7 +371,7 @@ class Browser(object):
         self.logger.debug('double_click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.move_to_element(locator, *args, **kwargs)
-        self.plugin.before_click(el)
+        self.plugin.before_click(el, locator)
         # and then click on current mouse position
         self.perform_double_click()
         if not ignore_ajax:
@@ -393,7 +380,7 @@ class Browser(object):
             except UnexpectedAlertPresentException:
                 pass
         try:
-            self.plugin.after_click(el)
+            self.plugin.after_click(el, locator)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
@@ -405,7 +392,7 @@ class Browser(object):
         self.logger.debug('raw_click: %r', locator)
         ignore_ajax = kwargs.pop('ignore_ajax', False)
         el = self.element(locator, *args, **kwargs)
-        self.plugin.before_click(el)
+        self.plugin.before_click(el, locator)
         el.click()
         if not ignore_ajax:
             try:
@@ -413,7 +400,7 @@ class Browser(object):
             except UnexpectedAlertPresentException:
                 pass
         try:
-            self.plugin.after_click(el)
+            self.plugin.after_click(el, locator)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
