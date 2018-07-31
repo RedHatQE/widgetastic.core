@@ -59,7 +59,7 @@ class DefaultPlugin(object):
 
         wait_for(_check, timeout=timeout, delay=0.2, very_quiet=True)
 
-    def after_click(self, element, locator):
+    def after_click(self, element, locator, ignore_ajax=None):
         """Invoked after clicking on an element."""
         pass
 
@@ -359,7 +359,7 @@ class Browser(object):
             except UnexpectedAlertPresentException:
                 pass
         try:
-            self.plugin.after_click(el, locator)
+            self.plugin.after_click(el, locator, ignore_ajax=ignore_ajax)
         except (StaleElementReferenceException, UnexpectedAlertPresentException):
             pass
 
