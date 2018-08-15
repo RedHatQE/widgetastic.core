@@ -11,6 +11,7 @@ from cached_property import cached_property
 from collections import defaultdict, namedtuple
 from copy import copy
 from jsmin import jsmin
+from time import sleep
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
@@ -326,6 +327,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         self.extra = ExtraData(self)
         self._widget_cache = {}
         self._initialized_included_widgets = {}
+        self._cache_highlight = None
 
     def __element__(self):
         """Implement the logic of querying
@@ -629,6 +631,26 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
     @property
     def height(self):
         return self.browser.size_of(self, parent=self.parent)[1]
+
+    def _do_highlight(self, border):
+        self.browser.execute_script(
+            "arguments[0].style.border='{}'".format(border), self.__element__()
+        )
+
+    def highlight(self, timeout=5, colour='red'):
+        cache_border = self.browser.execute_script("arguments[0].style.border", self.__element__())
+        self._do_highlight('3px solid {}'.format(colour))
+        sleep(timeout)
+        self._do_highlight(cache_border)
+
+    def highlight_on(self, colour='red'):
+        self._cache_highlight = self.browser.execute_script(
+            "arguments[0].style.border", self.__element__()
+        )
+        self._do_highlight('3px solid {}'.format(colour))
+
+    def highlight_off(self):
+        self._do_highlight(self._cache_highlight)
 
     def __iter__(self):
         """Allows iterating over the widgets on the view."""
