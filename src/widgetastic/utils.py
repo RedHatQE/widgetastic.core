@@ -5,9 +5,12 @@ from __future__ import unicode_literals
 import re
 import six
 import string
+import time
 from cached_property import cached_property
+from functools import wraps
 from smartloc import Locator
 from threading import Lock
+from selenium.common.exceptions import StaleElementReferenceException
 
 from . import xpath
 
@@ -661,3 +664,25 @@ class Ignore(object):
 
     def __repr__(self):
         return 'Ignore({!r})'.format(self.wt_class)
+
+
+def retry_stale_element(method):
+    """ Aim of this decorator is to invoke some method one more time
+       if it raised StaleElementReferenceException.
+
+       This is necessary because there are cases when some element get updated by JS during attempt
+       to work with it. There is no 100% robust solution to check that all JS are over on some page.
+    """
+
+    @wraps(method)
+    def wrap(*args, **kwargs):
+        attempts = 10
+        for _ in range(attempts):
+            try:
+                return method(*args, **kwargs)
+            except StaleElementReferenceException:
+                time.sleep(0.1)
+        else:
+            raise StaleElementReferenceException("Couldn't handle it")
+
+    return wrap
