@@ -15,6 +15,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires=[
+        'anytree',
         'cached_property',
         'jsmin',
         'selenium-smart-locator',

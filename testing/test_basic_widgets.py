@@ -458,6 +458,25 @@ def test_table_dynamic_add_assoc(browser):
     assert not view.fill(view.read())
 
 
+def test_table_rowcol_span(browser):
+    class MyView(View):
+        table = Table('#rowcolspan_table',
+                      column_widgets={'First Name': (Text(locator='//*[BlaBla]'),
+                                                     Text(locator='//*[BlaBla]'))})
+    view = MyView(browser)
+
+    # check parsing colspan
+    assert view.table.read()
+    assert view.table.rows
+
+    # check parsing rowspan
+
+    # check parsing both rowspan and colspan together
+
+    # check widgets support in such row/colspan cells
+    pass
+
+
 def test_simple_select(browser):
     class TestForm(View):
         select = Select(name='testselect1')
