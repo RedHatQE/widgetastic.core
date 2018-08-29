@@ -7,7 +7,7 @@ import six
 import string
 import time
 from cached_property import cached_property
-from functools import wraps
+from six import wraps
 from smartloc import Locator
 from threading import Lock
 from selenium.common.exceptions import StaleElementReferenceException
@@ -681,7 +681,7 @@ def retry_stale_element(method):
             try:
                 return method(*args, **kwargs)
             except StaleElementReferenceException:
-                time.sleep(0.1)
+                time.sleep(0.5)
         else:
             raise StaleElementReferenceException("Couldn't handle it")
 

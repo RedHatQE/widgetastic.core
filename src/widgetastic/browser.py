@@ -158,8 +158,6 @@ class Browser(object):
 
     @property
     def handles_alerts(self):
-        """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
-        handling functions do nothing."""
         return self.selenium.capabilities.get('handlesAlerts', True)
 
     @property
@@ -218,7 +216,8 @@ class Browser(object):
 
     @retry_stale_element
     def elements(
-            self, locator, parent=None, check_visibility=False, check_safe=True):
+            self, locator, parent=None, check_visibility=False, check_safe=True,
+            force_check_safe=False):
         """Method that resolves locators into selenium webelements.
 
         Args:
@@ -238,6 +237,12 @@ class Browser(object):
         Returns:
             A :py:class:`list` of :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
+        if force_check_safe:
+            import warnings
+            warnings.warn("force_check_safe has been removed and left in definition "
+                          "only for backward compatibility. "
+                          "It will also be removed from definition soon.",
+                          category=DeprecationWarning)
         if check_safe:
             self.plugin.ensure_page_safe()
         from .widget import Widget
@@ -295,8 +300,7 @@ class Browser(object):
                 lambda: self.elements(locator, parent=parent, check_visibility=visible,
                                       check_safe=ensure_page_safe),
                 num_sec=timeout, delay=delay, fail_condition=lambda elements: not bool(elements),
-                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None,
-                precise_wait=True)
+                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None)
         except TimedOutError:
             if exception:
                 raise NoSuchElementException('Could not wait for element {!r}'.format(locator))
@@ -359,7 +363,7 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
     @retry_stale_element
@@ -381,7 +385,7 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
     @retry_stale_element
@@ -402,9 +406,10 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
+    @retry_stale_element
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
 
@@ -810,12 +815,14 @@ class BrowserParentWrapper(object):
         return self._o == other._o and self._browser == other._browser
 
     def elements(
-            self, locator, parent=None, check_visibility=False, check_safe=True):
+            self, locator, parent=None, check_visibility=False, check_safe=True,
+            force_check_safe=False):
         return self._browser.elements(
             locator,
             parent=parent or self._o,
             check_visibility=check_visibility,
-            check_safe=check_safe)
+            check_safe=check_safe,
+            force_check_safe=force_check_safe)
 
     def __getattr__(self, attr):
         """Route all other attribute requests into the parent object's browser. Black magic included
