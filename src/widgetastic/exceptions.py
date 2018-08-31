@@ -24,3 +24,8 @@ class DoNotReadThisWidget(WidgetasticException):
 
 class RowNotFound(IndexError, WidgetasticException):
     pass
+
+
+class DynamicTableAddError(Exception):
+    """Raised when an attempt to add or save a row to a `widgetastic_manageiq.DynamicTable` fails"""
+    pass
