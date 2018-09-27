@@ -461,19 +461,21 @@ def test_table_dynamic_add_assoc(browser):
 def test_table_rowcol_span(browser):
     class MyView(View):
         table = Table('#rowcolspan_table',
-                      column_widgets={'First Name': (Text(locator='//*[BlaBla]'),
-                                                     Text(locator='//*[BlaBla]'))})
+                      column_widgets={'First Name': Text(locator='//*[BlaBla]')})
+
     view = MyView(browser)
 
     # check parsing colspan
     assert view.table.read()
-    assert view.table.rows
+    assert view.table
 
     # check parsing rowspan
 
     # check parsing both rowspan and colspan together
 
     # check widgets support in such row/colspan cells
+
+    # todo: add test when there are two widgets in one column
     pass
 
 

@@ -1,32 +1,20 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-"""This module contains the base classes that are used to implement the more specific behaviour."""
-
 import inspect
-import re
 import six
 import types
-from six.moves import html_parser
-from cached_property import cached_property
-from collections import defaultdict, namedtuple
 from copy import copy
-from jsmin import jsmin
-from selenium.webdriver.remote.file_detector import LocalFileDetector
+
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
 from wait_for import wait_for
 
-from .browser import Browser, BrowserParentWrapper
-from .exceptions import (
-    NoSuchElementException, LocatorNotImplemented, WidgetOperationFailed, DoNotReadThisWidget,
-    RowNotFound)
-from .log import (
-    PrependParentsAdapter, create_widget_logger, logged, call_sig, create_child_logger,
-    create_item_logger)
-from .utils import (
-    Widgetable, Fillable, ParametrizedLocator, ParametrizedString, ConstructorResolvable,
-    attributize_string, normalize_space, nested_getattr, deflatten_dict)
-from .xpath import quote
+from widgetastic.browser import Browser, BrowserParentWrapper
+from widgetastic.exceptions import DoNotReadThisWidget, LocatorNotImplemented
+from widgetastic.log import (create_child_logger, call_sig, logged, PrependParentsAdapter,
+                             create_widget_logger)
+from widgetastic.utils import (Fillable, ConstructorResolvable, ParametrizedString, Widgetable,
+                               ParametrizedLocator, nested_getattr, deflatten_dict)
 
 
 def do_not_read_this_widget():
@@ -648,6 +636,212 @@ def _gen_locator_root():
     return __locator__
 
 
+class ClickableMixin(object):
+
+    @logged()
+    def click(self, handle_alert=None):
+        """Click this widget
+
+        Args:
+            handle_alert: Special alert handling. None - no handling, True - accept, False - dismiss
+        """
+        self.browser.click(self, ignore_ajax=(handle_alert is not None))
+        if handle_alert is not None:
+            self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
+            # ignore_ajax will not execute the ensure_page_safe plugin with True
+            self.browser.plugin.ensure_page_safe()
+
+
+class GenericLocatorWidget(Widget, ClickableMixin):
+    """A base class for any widgets with a locator.
+
+    Clickable.
+
+    Args:
+        locator: Locator of the object ob the page.
+    """
+    ROOT = ParametrizedLocator('{@locator}')
+
+    def __init__(self, parent, locator, logger=None):
+        Widget.__init__(self, parent, logger=logger)
+        self.locator = locator
+
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.locator)
+
+
+class WTMixin(six.with_metaclass(WidgetMetaclass, object)):
+    """Base class for mixins for views.
+
+    Lightweight class that only has the bare minimum of what is required for widgetastic operation.
+
+    Use this if you want to create mixins for views.
+    """
+
+
+class ConditionalSwitchableView(Widgetable):
+    """Conditional switchable view implementation.
+
+    This widget proxy is useful when you have a form whose parts displayed depend on certain
+    conditions. Eg. when you select certain value from a dropdown, one form is displayed next,
+    when other value is selected, a different form is displayed next. This widget proxy is designed
+    to register those multiple views and then upon accessing decide which view to use based on the
+    registration conditions.
+
+    The resulting widget proxy acts similarly like a nested view (if you use view of course).
+
+    Example:
+
+        .. code-block:: python
+
+            class SomeForm(View):
+                foo = Input('...')
+                action_type = Select(name='action_type')
+
+                action_form = ConditionalSwitchableView(reference='action_type')
+
+                # Simple value matching. If Action type 1 is selected in the select, use this view.
+                # And if the action_type value does not get matched, use this view as default
+                @action_form.register('Action type 1', default=True)
+                class ActionType1Form(View):
+                    widget = Widget()
+
+                # You can use a callable to declare the widget values to compare
+                @action_form.register(lambda action_type: action_type == 'Action type 2')
+                class ActionType2Form(View):
+                    widget = Widget()
+
+                # With callable, you can use values from multiple widgets
+                @action_form.register(
+                    lambda action_type, foo: action_type == 'Action type 2' and foo == 2)
+                class ActionType2Form(View):
+                    widget = Widget()
+
+        You can see it gives you the flexibility of decision based on the values in the view.
+
+    Args:
+        reference: For using non-callable conditions, this must be specified. Specifies the name of
+            the widget whose value will be used for comparing non-callable conditions. Supports
+            going across objects using ``.``.
+        ignore_bad_reference: If this is enabled, then when the widget representing the reference
+            is not displayed or otherwise broken, it will then use the default view.
+    """
+    def __init__(self, reference=None, ignore_bad_reference=False):
+        self.reference = reference
+        self.registered_views = []
+        self.default_view = None
+        self.ignore_bad_reference = ignore_bad_reference
+
+    @property
+    def child_items(self):
+        return [
+            descriptor
+            for _, descriptor
+            in self.registered_views
+            if isinstance(descriptor, WidgetDescriptor)]
+
+    def register(self, condition, default=False, widget=None):
+        """Register a view class against given condition.
+
+        Args:
+            condition: Condition check for switching to appropriate view. Can be callable or
+                non-callable. If callable, then callable parameters are resolved as values from
+                widgets resolved by the argument name, then the callable is invoked with the params.
+                If the invocation result is truthy, that view class is used. If it is a non-callable
+                then it is compared with the value read from the widget specified as ``reference``.
+            default: If no other condition matches any registered view, use this one. Can only be
+                specified for one registration.
+            widget: In case you do not want to use this as a decorator, you can pass the widget
+                class or instantiated widget as this parameter.
+        """
+        def view_process(cls_or_descriptor):
+            if not (
+                    isinstance(cls_or_descriptor, WidgetDescriptor) or
+                    (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
+                raise TypeError(
+                    'Unsupported object registered into the selector (!r})'.format(
+                        cls_or_descriptor))
+            self.registered_views.append((condition, cls_or_descriptor))
+            if default:
+                if self.default_view is not None:
+                    raise TypeError('Multiple default views specified')
+                self.default_view = cls_or_descriptor
+            # We explicitly return None
+            return None
+        if widget is None:
+            return view_process
+        else:
+            return view_process(widget)
+
+    def __get__(self, o, t):
+        if o is None:
+            return self
+
+        condition_arg_cache = {}
+        for condition, cls_or_descriptor in self.registered_views:
+            if not callable(condition):
+                # Compare it to a known value (if present)
+                if self.reference is None:
+                    # No reference to check against
+                    raise TypeError(
+                        'reference= not set so you cannot use non-callables as conditions')
+                else:
+                    if self.reference not in condition_arg_cache:
+                        try:
+                            ref_o = nested_getattr(o, self.reference)
+                            if isinstance(ref_o, Widget):
+                                ref_value = ref_o.read()
+                            else:
+                                ref_value = ref_o
+                            condition_arg_cache[self.reference] = ref_value
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as reference=: {}'.format(
+                                    self.reference))
+                        except NoSuchElementException:
+                            if self.ignore_bad_reference:
+                                # reference is not displayed? We are probably aware of this so skip.
+                                continue
+                            else:
+                                raise
+                    if condition == condition_arg_cache[self.reference]:
+                        view_object = cls_or_descriptor
+                        break
+            else:
+                # Parse the callable's args and inject the correct args
+                c_args, c_varargs, c_keywords, c_defaults = inspect.getargspec(condition)
+                if c_varargs or c_keywords or c_defaults:
+                    raise TypeError('You can only use simple arguments in lambda conditions')
+                arg_values = []
+                for arg in c_args:
+                    if arg not in condition_arg_cache:
+                        try:
+                            condition_arg_cache[arg] = getattr(o, arg).read()
+                        except AttributeError:
+                            raise TypeError(
+                                'Wrong widget name specified as parameter {}'.format(arg))
+                    arg_values.append(condition_arg_cache[arg])
+
+                if condition(*arg_values):
+                    view_object = cls_or_descriptor
+                    break
+        else:
+            if self.default_view is not None:
+                view_object = self.default_view
+            else:
+                raise ValueError('Could not find a corresponding registered view.')
+        if inspect.isclass(view_object):
+            view_class = view_object
+        else:
+            view_class = type(view_object)
+        o.logger.info('Picked %s', view_class.__name__)
+        if isinstance(view_object, Widgetable):
+            # We init the widget descriptor here
+            return view_object.__get__(o, t)
+        else:
+            return view_object(o, additional_context=o.context)
+
+
 class View(Widget):
     """View is a kind of abstract widget that can hold another widgets. Remembers the order,
     so therefore it can function like a form with defined filling order.
@@ -1013,671 +1207,3 @@ class ParametrizedViewRequest(object):
             if self(*param_tuple).fill(fill_value):
                 was_change = True
         return was_change
-
-
-class ClickableMixin(object):
-
-    @logged()
-    def click(self, handle_alert=None):
-        """Click this widget
-
-        Args:
-            handle_alert: Special alert handling. None - no handling, True - accept, False - dismiss
-        """
-        self.browser.click(self, ignore_ajax=(handle_alert is not None))
-        if handle_alert is not None:
-            self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
-            # ignore_ajax will not execute the ensure_page_safe plugin with True
-            self.browser.plugin.ensure_page_safe()
-
-
-class GenericLocatorWidget(Widget, ClickableMixin):
-    """A base class for any widgets with a locator.
-
-    Clickable.
-
-    Args:
-        locator: Locator of the object ob the page.
-    """
-    ROOT = ParametrizedLocator('{@locator}')
-
-    def __init__(self, parent, locator, logger=None):
-        Widget.__init__(self, parent, logger=logger)
-        self.locator = locator
-
-    def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.locator)
-
-
-class Text(GenericLocatorWidget):
-    """A widget that can represent anything that can be read from the webpage as a text content of
-    a tag.
-
-    Args:
-        locator: Locator of the object on the page.
-    """
-    @property
-    def text(self):
-        return self.browser.text(self, parent=self.parent)
-
-    def read(self):
-        return self.text
-
-
-class Image(GenericLocatorWidget):
-    """A widget that represents an image.
-
-    Args:
-        locator: Locator of the object on the page.
-    """
-    @property
-    def src(self):
-        return self.browser.get_attribute('src', self, parent=self.parent)
-
-    @property
-    def alt(self):
-        return self.browser.get_attribute('alt', self, parent=self.parent)
-
-    @property
-    def title(self):
-        return self.browser.get_attribute('title', self, parent=self.parent)
-
-
-class BaseInput(Widget):
-    """This represents the bare minimum to interact with bogo-standard form inputs.
-
-    Args:
-        name: If you want to look the input up by name, use this parameter, pass the name.
-        id: If you want to look the input up by id, use this parameter, pass the id.
-        locator: If you have specific locator, use it here.
-    """
-    def __init__(self, parent, name=None, id=None, locator=None, logger=None):
-        if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
-            raise TypeError('You can only pass one of name, id or locator!')
-        Widget.__init__(self, parent, logger=logger)
-        self.name = None
-        self.id = None
-        if name or id:
-            if name is not None:
-                id_attr = '@name={}'.format(quote(name))
-                self.name = name
-            elif id is not None:
-                id_attr = '@id={}'.format(quote(id))
-                self.id = id
-            self.locator = './/*[(self::input or self::textarea) and {}]'.format(id_attr)
-        else:
-            self.locator = locator
-
-    def __repr__(self):
-        return '{}(locator={!r})'.format(type(self).__name__, self.locator)
-
-    def __locator__(self):
-        return self.locator
-
-
-class TextInput(BaseInput):
-    """This represents the bare minimum to interact with bogo-standard text form inputs.
-
-    Args:
-        name: If you want to look the input up by name, use this parameter, pass the name.
-        id: If you want to look the input up by id, use this parameter, pass the id.
-        locator: If you have specific locator, use it here.
-    """
-    @property
-    def value(self):
-        return self.browser.get_attribute('value', self)
-
-    def read(self):
-        return self.value
-
-    def fill(self, value):
-        current_value = self.value
-        if value == current_value:
-            return False
-        # Clear and type everything
-        self.browser.click(self)
-        self.browser.clear(self)
-        self.browser.send_keys(value, self)
-        return True
-
-
-class FileInput(BaseInput):
-    """This represents the file input.
-
-    Args:
-        name: If you want to look the input up by name, use this parameter, pass the name.
-        id: If you want to look the input up by id, use this parameter, pass the id.
-        locator: If you have specific locator, use it here.
-    """
-
-    def read(self):
-        raise DoNotReadThisWidget()
-
-    def fill(self, value):
-        with self.browser.selenium.file_detector_context(LocalFileDetector):
-            self.browser.send_keys(value, self)
-        return True
-
-
-class ColourInput(BaseInput):
-    """Represents the input for inputting colour values.
-
-    Args:
-        name: If you want to look the input up by name, use this parameter, pass the name.
-        id: If you want to look the input up by id, use this parameter, pass the id.
-        locator: If you have specific locator, use it here.
-    """
-
-    @property
-    def colour(self):
-        return self.browser.execute_script('return arguments[0].value;', self)
-
-    @colour.setter
-    def colour(self, value):
-        self.browser.execute_script(jsmin('''
-            arguments[0].value = arguments[1];
-            if(arguments[0].onchange !== null) {
-                arguments[0].onchange();
-            }
-        '''), self, value)
-
-    def read(self):
-        return self.colour
-
-    def fill(self, value):
-        if self.colour == value:
-            return False
-        self.colour = value
-        return True
-
-
-class Checkbox(BaseInput, ClickableMixin):
-    """This widget represents the bogo-standard form checkbox.
-
-    Args:
-        name: If you want to look the input up by name, use this parameter, pass the name.
-        id: If you want to look the input up by id, use this parameter, pass the id.
-        locator: If you have specific locator, use it here.
-    """
-
-    @property
-    def selected(self):
-        return self.browser.is_selected(self)
-
-    def read(self):
-        return self.selected
-
-    def fill(self, value):
-        value = bool(value)
-        current_value = self.selected
-        if value == current_value:
-            return False
-        else:
-            self.click()
-            if self.selected != value:
-                # TODO: More verbose here
-                raise WidgetOperationFailed('Failed to set the checkbox to requested value.')
-            return True
-
-
-class Select(Widget):
-    """Representation of the bogo-standard ``<select>`` tag.
-
-    Check documentation for each method. The API is based on the selenium select, but modified so
-    we don't bother with WebElements.
-
-    Fill and read work as follows:
-
-    .. code-block:: python
-
-        view.select.fill('foo')
-        view.select.fill(['foo'])
-        # Are equivalent
-
-
-    This implies that you can fill either single value or multiple values. If you need to fill
-    the select using the value and not the text, you can pass a tuple instead of the string like
-    this:
-
-    .. code-block:: python
-
-        view.select.fill(('by_value', 'some_value'))
-        # Or if you have multiple items
-        view.select.fill([('by_value', 'some_value'), 'something by text', ...])
-
-    The :py:meth:`read` returns a :py:class:`list` in case the select is multiselect, otherwise it
-    returns the value directly.
-
-    Arguments are exclusive, so only one at time can be used.
-
-    Args:
-        locator: If you have a full locator to locate this select.
-        id: If you want to locate the select by the ID
-        name: If you want to locate the select by name.
-
-    Raises:
-        :py:class:`TypeError` - if you pass more than one of the abovementioned args.
-    """
-    Option = namedtuple("Option", ["text", "value"])
-
-    ALL_OPTIONS = jsmin('''\
-            var result_arr = [];
-            var opt_elements = arguments[0].options;
-            for(var i = 0; i < opt_elements.length; i++){
-                var option = opt_elements[i];
-                result_arr.push([option.innerHTML, option.getAttribute("value")]);
-            }
-            return result_arr;
-        ''')
-
-    SELECTED_OPTIONS = jsmin('return arguments[0].selectedOptions;')
-    SELECTED_OPTIONS_TEXT = jsmin('''\
-            var result_arr = [];
-            var opt_elements = arguments[0].selectedOptions;
-            for(var i = 0; i < opt_elements.length; i++){
-                result_arr.push(opt_elements[i].innerHTML);
-            }
-            return result_arr;
-        ''')
-
-    SELECTED_OPTIONS_VALUE = jsmin('''\
-            var result_arr = [];
-            var opt_elements = arguments[0].selectedOptions;
-            for(var i = 0; i < opt_elements.length; i++){
-                result_arr.push(opt_elements[i].getAttribute("value"));
-            }
-            return result_arr;
-        ''')
-
-    def __init__(self, parent, locator=None, id=None, name=None, logger=None):
-        Widget.__init__(self, parent, logger=logger)
-        if (locator and id) or (id and name) or (locator and name):
-            raise TypeError('You can only pass one of the params locator, id, name into Select')
-        if locator is not None:
-            self.locator = locator
-        elif id is not None:
-            self.locator = './/select[@id={}]'.format(quote(id))
-        else:  # name
-            self.locator = './/select[@name={}]'.format(quote(name))
-
-    def __locator__(self):
-        return self.locator
-
-    def __repr__(self):
-        return '{}(locator={!r})'.format(type(self).__name__, self.locator)
-
-    @cached_property
-    def is_multiple(self):
-        """Detects and returns whether this ``<select>`` is multiple"""
-        return self.browser.get_attribute('multiple', self) is not None
-
-    @property
-    def classes(self):
-        """Returns the classes associated with the select."""
-        return self.browser.classes(self)
-
-    @property
-    def all_options(self):
-        """Returns a list of tuples of all the options in the Select.
-
-        Text first, value follows.
-
-
-        Returns:
-            A :py:class:`list` of :py:class:`Option`
-        """
-        # More reliable using javascript
-        options = self.browser.execute_script(self.ALL_OPTIONS, self.browser.element(self))
-        parser = html_parser.HTMLParser()
-        return [
-            self.Option(normalize_space(parser.unescape(option[0])), option[1])
-            for option in options]
-
-    @property
-    def all_selected_options(self):
-        """Returns a list of all selected options as their displayed texts."""
-        parser = html_parser.HTMLParser()
-        return [
-            normalize_space(parser.unescape(option))
-            for option
-            in self.browser.execute_script(self.SELECTED_OPTIONS_TEXT, self.browser.element(self))]
-
-    @property
-    def all_selected_values(self):
-        """Returns a list of all selected options as their values.
-
-        If the value is not present, it is ignored.
-        """
-        values = self.browser.execute_script(
-            self.SELECTED_OPTIONS_VALUE,
-            self.browser.element(self))
-        return [value for value in values if value is not None]
-
-    @property
-    def first_selected_option(self):
-        """Returns the first selected option (or the only selected option)
-
-        Raises:
-            :py:class:`ValueError` - in case there is not item selected.
-        """
-        try:
-            return self.all_selected_options[0]
-        except IndexError:
-            raise ValueError("No options are selected")
-
-    def deselect_all(self):
-        """Deselect all items. Only works for multiselect.
-
-        Raises:
-            :py:class:`NotImplementedError` - If you call this on non-multiselect.
-        """
-        if not self.is_multiple:
-            raise NotImplementedError("You may only deselect all options of a multi-select")
-
-        for opt in self.browser.execute_script(self.SELECTED_OPTIONS, self.browser.element(self)):
-            self.browser.raw_click(opt)
-
-    def get_value_by_text(self, text):
-        """Given the visible text, retrieve the underlying value."""
-        locator = ".//option[normalize-space(.)={}]".format(quote(normalize_space(text)))
-        return self.browser.get_attribute("value", locator=locator, parent=self)
-
-    def select_by_value(self, *items):
-        """Selects item(s) by their respective values in the select.
-
-        Args:
-            *items: Items' values to be selected.
-
-        Raises:
-            :py:class:`ValueError` - if you pass multiple values and the select is not multiple.
-            :py:class:`ValueError` - if the value was not found.
-        """
-        if len(items) > 1 and not self.is_multiple:
-            raise ValueError(
-                'The Select {!r} does not allow multiple selections'.format(self))
-
-        for value in items:
-            matched = False
-            for opt in self.browser.elements(
-                    './/option[@value={}]'.format(quote(value)),
-                    parent=self):
-                if not opt.is_selected():
-                    opt.click()
-
-                if not self.is_multiple:
-                    return
-                matched = True
-
-            if not matched:
-                raise ValueError("Cannot locate option with value: {!r}".format(value))
-
-    def select_by_visible_text(self, *items):
-        """Selects item(s) by their respective displayed text in the select.
-
-        Args:
-            *items: Items' visible texts to be selected.
-
-        Raises:
-            :py:class:`ValueError` - if you pass multiple values and the select is not multiple.
-            :py:class:`ValueError` - if the text was not found.
-        """
-        if len(items) > 1 and not self.is_multiple:
-            raise ValueError(
-                'The Select {!r} does not allow multiple selections'.format(self))
-
-        for text in items:
-            matched = False
-            for opt in self.browser.elements(
-                    './/option[normalize-space(.)={}]'.format(quote(normalize_space(text))),
-                    parent=self):
-                if not opt.is_selected():
-                    opt.click()
-
-                if not self.is_multiple:
-                    return
-                matched = True
-
-            if not matched:
-                available = ", ".join(repr(opt.text) for opt in self.all_options)
-                raise ValueError(
-                    "Cannot locate option with visible text: {!r}. Available options: {}".format(
-                        text, available))
-
-    def read(self):
-        items = self.all_selected_options
-        if self.is_multiple:
-            return items
-        else:
-            try:
-                return items[0]
-            except IndexError:
-                return None
-
-    def fill(self, item_or_items):
-        if item_or_items is None:
-            items = []
-        elif isinstance(item_or_items, list):
-            items = item_or_items
-        else:
-            items = [item_or_items]
-
-        selected_values = self.all_selected_values
-        selected_options = self.all_selected_options
-        options_to_select = []
-        values_to_select = []
-        deselect = True
-        for item in items:
-            if isinstance(item, tuple):
-                try:
-                    mod, value = item
-                    if not isinstance(mod, six.string_types):
-                        raise ValueError('The select modifier must be a string')
-                    mod = mod.lower()
-                except ValueError:
-                    raise ValueError('If passing tuples into the S.fill(), they must be 2-tuples')
-            else:
-                mod = 'by_text'
-                value = item
-
-            if mod == 'by_text':
-                value = normalize_space(value)
-                if value in selected_options:
-                    deselect = False
-                    continue
-                options_to_select.append(value)
-            elif mod == 'by_value':
-                if value in selected_values:
-                    deselect = False
-                    continue
-                values_to_select.append(value)
-            else:
-                raise ValueError('Unknown select modifier {}'.format(mod))
-
-        if deselect:
-            try:
-                self.deselect_all()
-                deselected = bool(selected_options or selected_values)
-            except NotImplementedError:
-                deselected = False
-        else:
-            deselected = False
-
-        if options_to_select:
-            self.select_by_visible_text(*options_to_select)
-
-        if values_to_select:
-            self.select_by_value(*values_to_select)
-
-        return bool(options_to_select or values_to_select or deselected)
-
-
-class ConditionalSwitchableView(Widgetable):
-    """Conditional switchable view implementation.
-
-    This widget proxy is useful when you have a form whose parts displayed depend on certain
-    conditions. Eg. when you select certain value from a dropdown, one form is displayed next,
-    when other value is selected, a different form is displayed next. This widget proxy is designed
-    to register those multiple views and then upon accessing decide which view to use based on the
-    registration conditions.
-
-    The resulting widget proxy acts similarly like a nested view (if you use view of course).
-
-    Example:
-
-        .. code-block:: python
-
-            class SomeForm(View):
-                foo = Input('...')
-                action_type = Select(name='action_type')
-
-                action_form = ConditionalSwitchableView(reference='action_type')
-
-                # Simple value matching. If Action type 1 is selected in the select, use this view.
-                # And if the action_type value does not get matched, use this view as default
-                @action_form.register('Action type 1', default=True)
-                class ActionType1Form(View):
-                    widget = Widget()
-
-                # You can use a callable to declare the widget values to compare
-                @action_form.register(lambda action_type: action_type == 'Action type 2')
-                class ActionType2Form(View):
-                    widget = Widget()
-
-                # With callable, you can use values from multiple widgets
-                @action_form.register(
-                    lambda action_type, foo: action_type == 'Action type 2' and foo == 2)
-                class ActionType2Form(View):
-                    widget = Widget()
-
-        You can see it gives you the flexibility of decision based on the values in the view.
-
-    Args:
-        reference: For using non-callable conditions, this must be specified. Specifies the name of
-            the widget whose value will be used for comparing non-callable conditions. Supports
-            going across objects using ``.``.
-        ignore_bad_reference: If this is enabled, then when the widget representing the reference
-            is not displayed or otherwise broken, it will then use the default view.
-    """
-    def __init__(self, reference=None, ignore_bad_reference=False):
-        self.reference = reference
-        self.registered_views = []
-        self.default_view = None
-        self.ignore_bad_reference = ignore_bad_reference
-
-    @property
-    def child_items(self):
-        return [
-            descriptor
-            for _, descriptor
-            in self.registered_views
-            if isinstance(descriptor, WidgetDescriptor)]
-
-    def register(self, condition, default=False, widget=None):
-        """Register a view class against given condition.
-
-        Args:
-            condition: Condition check for switching to appropriate view. Can be callable or
-                non-callable. If callable, then callable parameters are resolved as values from
-                widgets resolved by the argument name, then the callable is invoked with the params.
-                If the invocation result is truthy, that view class is used. If it is a non-callable
-                then it is compared with the value read from the widget specified as ``reference``.
-            default: If no other condition matches any registered view, use this one. Can only be
-                specified for one registration.
-            widget: In case you do not want to use this as a decorator, you can pass the widget
-                class or instantiated widget as this parameter.
-        """
-        def view_process(cls_or_descriptor):
-            if not (
-                    isinstance(cls_or_descriptor, WidgetDescriptor) or
-                    (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
-                raise TypeError(
-                    'Unsupported object registered into the selector (!r})'.format(
-                        cls_or_descriptor))
-            self.registered_views.append((condition, cls_or_descriptor))
-            if default:
-                if self.default_view is not None:
-                    raise TypeError('Multiple default views specified')
-                self.default_view = cls_or_descriptor
-            # We explicitly return None
-            return None
-        if widget is None:
-            return view_process
-        else:
-            return view_process(widget)
-
-    def __get__(self, o, t):
-        if o is None:
-            return self
-
-        condition_arg_cache = {}
-        for condition, cls_or_descriptor in self.registered_views:
-            if not callable(condition):
-                # Compare it to a known value (if present)
-                if self.reference is None:
-                    # No reference to check against
-                    raise TypeError(
-                        'reference= not set so you cannot use non-callables as conditions')
-                else:
-                    if self.reference not in condition_arg_cache:
-                        try:
-                            ref_o = nested_getattr(o, self.reference)
-                            if isinstance(ref_o, Widget):
-                                ref_value = ref_o.read()
-                            else:
-                                ref_value = ref_o
-                            condition_arg_cache[self.reference] = ref_value
-                        except AttributeError:
-                            raise TypeError(
-                                'Wrong widget name specified as reference=: {}'.format(
-                                    self.reference))
-                        except NoSuchElementException:
-                            if self.ignore_bad_reference:
-                                # reference is not displayed? We are probably aware of this so skip.
-                                continue
-                            else:
-                                raise
-                    if condition == condition_arg_cache[self.reference]:
-                        view_object = cls_or_descriptor
-                        break
-            else:
-                # Parse the callable's args and inject the correct args
-                c_args, c_varargs, c_keywords, c_defaults = inspect.getargspec(condition)
-                if c_varargs or c_keywords or c_defaults:
-                    raise TypeError('You can only use simple arguments in lambda conditions')
-                arg_values = []
-                for arg in c_args:
-                    if arg not in condition_arg_cache:
-                        try:
-                            condition_arg_cache[arg] = getattr(o, arg).read()
-                        except AttributeError:
-                            raise TypeError(
-                                'Wrong widget name specified as parameter {}'.format(arg))
-                    arg_values.append(condition_arg_cache[arg])
-
-                if condition(*arg_values):
-                    view_object = cls_or_descriptor
-                    break
-        else:
-            if self.default_view is not None:
-                view_object = self.default_view
-            else:
-                raise ValueError('Could not find a corresponding registered view.')
-        if inspect.isclass(view_object):
-            view_class = view_object
-        else:
-            view_class = type(view_object)
-        o.logger.info('Picked %s', view_class.__name__)
-        if isinstance(view_object, Widgetable):
-            # We init the widget descriptor here
-            return view_object.__get__(o, t)
-        else:
-            return view_object(o, additional_context=o.context)
-
-
-class WTMixin(six.with_metaclass(WidgetMetaclass, object)):
-    """Base class for mixins for views.
-
-    Lightweight class that only has the bare minimum of what is required for widgetastic operation.
-
-    Use this if you want to create mixins for views.
-    """

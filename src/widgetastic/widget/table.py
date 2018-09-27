@@ -11,11 +11,11 @@ from collections import defaultdict, deque
 from copy import copy
 from jsmin import jsmin
 
-from .exceptions import RowNotFound
-from .log import create_child_logger, create_item_logger
-from .utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
-from .xpath import quote
-from .widget import Widget, ClickableMixin, WidgetDescriptor, Widgetable
+from widgetastic.exceptions import RowNotFound
+from widgetastic.log import create_child_logger, create_item_logger
+from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
+from widgetastic.xpath import quote
+from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
 
 class TableResolver(Resolver):
@@ -884,7 +884,7 @@ class Table(Widget):
 
                     rowsteps = range(1, int(child.get_attribute('rowspan') or 0))
                     colsteps = range(1, int(child.get_attribute('colspan') or 0))
-                    coordinates = set(itertools.izip_longest(colsteps, rowsteps, fillvalue=0))
+                    coordinates = set(six.moves.zip_longest(colsteps, rowsteps, fillvalue=0))
 
                     # when there are both rowspan and colspan set, we need to generate additional
                     # cell references
