@@ -18,77 +18,6 @@ from widgetastic.xpath import quote
 from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
 
-class TableResolver(Resolver):
-    index_regexp = re.compile('(.*?)\[(\d+)\]$')
-
-    def get(self, node, path):
-        """ Temporarily overrides Resolver's method in order to add index parsing
-        """
-        # todo: get rid of direct calls of resolved private methods
-        node, parts = self._Resolver__start(node, path)
-        for part in parts:
-            if part == "..":
-                node = node.parent
-            elif part in ("", "."):
-                pass
-            elif self.index_regexp.match(part):
-                node = self._get_node_by_index(node, part)
-            else:
-                node = self._Resolver__get(node, part)
-        return node
-
-    def glob(self, node, path):
-        """Temporarily overrides Resolver's method in order to add index parsing
-
-        """
-        node, parts = self._Resolver__start(node, path)
-        return self.__glob(node, parts)
-
-    def __glob(self, node, parts):
-        nodes = []
-        if not parts:
-            return [node]
-        name = parts[0]
-        remainder = parts[1:]
-        # handle relative
-        if name == "..":
-            nodes += self.__glob(node.parent, remainder)
-        elif name in ("", "."):
-            nodes += self.__glob(node, remainder)
-        elif self.index_regexp.match(name):
-            nodes += self.__glob(self._get_node_by_index(node, name), remainder)
-        else:
-            matches = self.__find(node, name, remainder)
-            if not matches and not self.is_wildcard(name):
-                raise ChildResolverError(node, name, self.pathattr)
-            nodes += matches
-        return nodes
-
-    def _get_node_by_index(self, node, part):
-            part, position = self.index_regexp.match(part).groups()
-            if self.is_wildcard(part):
-                cur_node = self.__glob(node, part)[0]
-            else:
-                cur_node = self._Resolver__get(node, part)
-
-            return cur_node.parent.children[int(position)]
-
-    def __find(self, node, pat, remainder):
-        matches = []
-        for child in node.children:
-            name = getattr(child, self.pathattr, None)
-            try:
-                if self._Resolver__match(name, pat):
-                    if remainder:
-                        matches += self.__glob(child, remainder)
-                    else:
-                        matches.append(child)
-            except ResolverError as exc:
-                if not self.is_wildcard(pat):
-                    raise exc
-        return matches
-
-
 class TableColumn(Widget, ClickableMixin):
     """Represents a cell in the row."""
     def __init__(self, parent, position, logger=None):
@@ -179,7 +108,9 @@ class TableColumn(Widget, ClickableMixin):
 
 
 class TableReference(Widgetable):
-    """ Represents rowspan/colspan column. """
+    """Represents rowspan/colspan column.
+      It has a reference to real objects and re-directs all method calls to real object.
+    """
     def __init__(self, parent, reference):
         self.parent = parent
         self.refers_to = reference
@@ -250,10 +181,9 @@ class TableRow(Widget, ClickableMixin):
             raise AttributeError('Cannot find column {} in the table'.format(attr))
 
     def __dir__(self):
-        parent_dir = getattr(super(TableRow, self), '__dir__', None)
-        result = parent_dir if parent_dir else []
-        result.extend(self.table.attributized_headers.keys())
-        return sorted(result)
+        parent_dir = getattr(super(TableRow, self), '__dir__', [])
+        parent_dir.extend(self.table.attributized_headers.keys())
+        return sorted(parent_dir)
 
     def __iter__(self):
         for i, header in enumerate(self.table.headers):
@@ -263,9 +193,7 @@ class TableRow(Widget, ClickableMixin):
         """Read the row - the result is a dictionary"""
         result = {}
         for i, (header, cell) in enumerate(self):
-            if header is None:
-                header = i
-            result[header] = cell.read()
+            result[header or i] = cell.read()
         return result
 
     def fill(self, value):
@@ -462,10 +390,7 @@ class Table(Widget):
 
     def ensure_normal(self, name):
         """When you pass string in, it ensures it comes out as non-attributized string."""
-        if name in self.attributized_headers:
-            return self.attributized_headers[name]
-        else:
-            return name
+        return self.attributized_headers.get(name, name)
 
     @cached_property
     def attributized_headers(self):
@@ -595,8 +520,7 @@ class Table(Widget):
             for row_pos in range(1, self.row_count + 1):
                 yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
 
-    def _filtered_rows(self, *extra_filters, **filters):
-        # todo: add support of table tree (rowspan)
+    def _process_filters(self, *extra_filters, **filters):
         # Pre-process the filters
         processed_filters = defaultdict(list)
         regexp_filters = []
@@ -635,6 +559,9 @@ class Table(Widget):
 
             processed_filters[self.map_column(column)].append((method, value))
 
+        return processed_filters, regexp_filters, row_filters
+
+    def _build_query(self, processed_filters, row_filters):
         # Build the query
         query_parts = []
         for column_index, matchers in six.iteritems(processed_filters):
@@ -648,19 +575,21 @@ class Table(Widget):
                     q = 'contains(normalize-space(.), normalize-space({}))'.format(quote(value))
                 elif method == 'startswith':
                     # starts with
-                    q = 'starts-with(normalize-space(.), normalize-space({}))'.format(quote(value))
+                    q = ('starts-with(normalize-space(.), '
+                         'normalize-space({}))').format(quote(value))
                 elif method == 'endswith':
                     # ends with
                     # This needs to be faked since selenium does not support this feature.
-                    q = (
-                        'substring(normalize-space(.), '
-                        'string-length(normalize-space(.)) - string-length({0}) + 1)={0}').format(
-                            'normalize-space({})'.format(quote(value)))
+                    q = ('substring(normalize-space(.), '
+                         'string-length(normalize-space(.)) - '
+                         'string-length({0}) + 1)={0}').format(
+                        'normalize-space({})'.format(quote(value)))
                 else:
                     raise ValueError('Unknown method {}'.format(method))
                 col_query_parts.append(q)
-            query_parts.append(
-                './td[{}][{}]'.format(column_index + 1, ' and '.join(col_query_parts)))
+
+            query_parts.append('./td[{}][{}]'.format(column_index + 1,
+                                                     ' and '.join(col_query_parts)))
 
         # Row query
         row_parts = []
@@ -670,9 +599,8 @@ class Table(Widget):
                 try:
                     attr_name, attr_value = row_value
                 except ValueError:
-                    raise ValueError(
-                        'When passing _row__{}= into the row filter, you must pass it a 2-tuple'
-                        .format(row_action))
+                    msg = 'When passing _row__{}= into the row filter, you must pass it a 2-tuple'
+                    raise ValueError(msg.format(row_action))
                 if row_action == 'attr_startswith':
                     row_parts.append('starts-with(@{}, {})'.format(attr_name, quote(attr_value)))
                 elif row_action == 'attr':
@@ -700,6 +628,9 @@ class Table(Widget):
             # When using ONLY regexps, we might see no query_parts, therefore default query
             query = self.ROWS
 
+        return query
+
+    def _filter_rows_by_query(self, query):
         # Preload the rows to prevent stale element exceptions
         rows = []
         for row_element in self.browser.elements(query, parent=self):
@@ -712,6 +643,92 @@ class Table(Widget):
             row_pos = row_pos if self._is_header_in_body else row_pos + 1
             rows.append(self.Row(self, row_pos,
                                  logger=create_item_logger(self.logger, row_pos)))
+        return rows
+
+    def _apply_row_filter(self, rows, row_filters):
+        if row_filters:
+            remaining_rows = []
+            for row in rows:
+                for row_action, row_value in row_filters:
+                    row_action = row_action.lower()
+                    if row_action.startswith('attr'):
+                        try:
+                            attr_name, attr_value = row_value
+                            got_value = self.browser.element(row).get_attribute(attr_name) or ''
+                        except ValueError:
+                            msg = ('When passing _row__{}= into the row filter, '
+                                   'you must pass it a 2-tuple')
+                            raise ValueError(msg.format(row_action))
+                        if row_action == 'attr_startswith':
+                            if not got_value.startswith(attr_value):
+                                break
+                        elif row_action == 'attr':
+                            if got_value != attr_value:
+                                break
+                        elif row_action == 'attr_endswith':
+                            if not got_value.endswith(attr_value):
+                                break
+                        elif row_action == 'attr_contains':
+                            if attr_value not in got_value:
+                                break
+                        else:
+                            raise ValueError('Unsupported action {}'.format(row_action))
+                    else:
+                        raise ValueError('Unsupported action {}'.format(row_action))
+                else:
+                    remaining_rows.append(row)
+            return remaining_rows
+        else:
+            return rows
+
+    def _apply_processed_filters(self, rows, processed_filters):
+        if processed_filters:
+            remaining_rows = []
+            for row in rows:
+                next_row = False
+                for column_index, matchers in six.iteritems(processed_filters):
+                    # fixme: check maybe +1 isn't necessary
+                    column = row[column_index]
+                    for method, value in matchers:
+                        if method is None:
+                            # equals
+                            if column.text != value:
+                                next_row = True
+                                break
+                        elif method == 'contains':
+                            # in
+                            if value not in column.text:
+                                next_row = True
+                                break
+                        elif method == 'startswith':
+                            # starts with
+                            if not column.text.startswith(value):
+                                next_row = True
+                                break
+                        elif method == 'endswith':
+                            # ends with
+                            if not column.text.endswith(value):
+                                next_row = True
+                                break
+                        else:
+                            raise ValueError('Unknown method {}'.format(method))
+                    if next_row:
+                        break
+                else:
+                    remaining_rows.append(row)
+            return remaining_rows
+        else:
+            return rows
+
+    def _filtered_rows(self, *extra_filters, **filters):
+        processed_filters, regexp_filters, row_filters = self._process_filters(*extra_filters,
+                                                                               **filters)
+        if not self.table_tree:
+            query = self._build_query(processed_filters, row_filters)
+            rows = self._filter_rows_by_query(query)
+        else:
+            rows = self._apply_row_filter(list(self._all_rows()), row_filters)
+            rows = self._apply_processed_filters(rows, processed_filters)
 
         for row in rows:
             if regexp_filters:
@@ -857,6 +874,7 @@ class Table(Widget):
 
     @property
     def has_rowcolspan(self):
+        """Checks whether table has rowspan/colspan attributes"""
         return bool(self.browser.elements('.//td[@rowspan or @colspan]', parent=self))
 
     def _process_table(self):
@@ -871,7 +889,7 @@ class Table(Widget):
             for position, child in enumerate(children):
                 cur_tag = self.browser.tag(child)
                 if cur_tag == 'tr':
-                    # todo: add logger later
+                    # todo: add logger
                     # position has been decremented for rows because it is incremented
                     # if 0 in TableRow.__init__ for some reason
                     cur_obj = TableRow(parent=self._get_ancestor_node_obj(node), index=position)
@@ -929,8 +947,10 @@ class Table(Widget):
                 col.obj.position += modifier
 
     def print_tree(self):
-        for pre, _, node in RenderTree(self.table_tree, style=AsciiStyle()):
-            print(pre, node.name, node.position, node.obj)
+        """Prints table as it is stored in tree. Relevant for rowspan/colspan only"""
+        if self.table_tree:
+            for pre, _, node in RenderTree(self.table_tree, style=AsciiStyle()):
+                print(pre, node.name, node.position, node.obj)
 
     @staticmethod
     def _get_ancestor_node_obj(node):
@@ -957,3 +977,73 @@ class Table(Widget):
         # checking whether we have gaps in column positions
         gaps = {c for c in range(len(node.children))} - {c.position for c in node.children}
         return min(gaps) if spans and gaps else len(node.children)
+
+
+class TableResolver(Resolver):
+    """
+    anytree's Resolver has very limited support of xpath.
+    This class slightly improves that by adding ability to specify node index number.
+    It will be removed when xpath support is enhanced in anytree
+    """
+    index_regexp = re.compile('(.*?)\[(\d+)\]$')
+
+    def get(self, node, path):
+        node, parts = self._Resolver__start(node, path)
+        for part in parts:
+            if part == "..":
+                node = node.parent
+            elif part in ("", "."):
+                pass
+            elif self.index_regexp.match(part):
+                node = self._get_node_by_index(node, part)
+            else:
+                node = self._Resolver__get(node, part)
+        return node
+
+    def glob(self, node, path):
+        node, parts = self._Resolver__start(node, path)
+        return self.__glob(node, parts)
+
+    def __glob(self, node, parts):
+        nodes = []
+        if not parts:
+            return [node]
+        name = parts[0]
+        remainder = parts[1:]
+        # handle relative
+        if name == "..":
+            nodes += self.__glob(node.parent, remainder)
+        elif name in ("", "."):
+            nodes += self.__glob(node, remainder)
+        elif self.index_regexp.match(name):
+            nodes += self.__glob(self._get_node_by_index(node, name), remainder)
+        else:
+            matches = self.__find(node, name, remainder)
+            if not matches and not self.is_wildcard(name):
+                raise ChildResolverError(node, name, self.pathattr)
+            nodes += matches
+        return nodes
+
+    def _get_node_by_index(self, node, part):
+            part, position = self.index_regexp.match(part).groups()
+            if self.is_wildcard(part):
+                cur_node = self.__glob(node, part)[0]
+            else:
+                cur_node = self._Resolver__get(node, part)
+
+            return cur_node.parent.children[int(position)]
+
+    def __find(self, node, pat, remainder):
+        matches = []
+        for child in node.children:
+            name = getattr(child, self.pathattr, None)
+            try:
+                if self._Resolver__match(name, pat):
+                    if remainder:
+                        matches += self.__glob(child, remainder)
+                    else:
+                        matches.append(child)
+            except ResolverError as exc:
+                if not self.is_wildcard(pat):
+                    raise exc
+        return matches

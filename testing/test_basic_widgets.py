@@ -133,38 +133,77 @@ def test_nested_views_read_fill_flat(browser):
 def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
+        table1 = Table('#rowcolspan_table',
+                       column_widgets={'Last Name':  TextInput(locator='./input')})
 
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
+    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username')
+
     assert len(list(view.table.rows())) == 3
+    assert len(list(view.table1.rows())) == 8
+
     assert len(list(view.table.rows(column_1='qwer'))) == 1
+    assert len(list(view.table1.rows(first_name='Mark'))) == 1
+
     assert len(list(view.table.rows(column_1__startswith='bar_'))) == 2
+    assert len(list(view.table1.rows(username__startswith='@psav'))) == 2
+
     assert len(list(view.table.rows(column_1__contains='_'))) == 2
+    assert len(list(view.table1.rows(first_name__contains='Mike'))) == 2
+
     assert len(list(view.table.rows(column_1__endswith='_x'))) == 1
+    assert len(list(view.table1.rows(last_name__endswith='Thornton'))) == 1
 
     assert len(list(view.table.rows(column_1__startswith='bar_', column_1__endswith='_x'))) == 1
+    assert len(list(view.table1.rows(first_name__startswith='Larry',
+                                     first_name__endswith='Bird'))) == 1
 
     assert len(list(view.table.rows(_row__attr=('data-test', 'def-345')))) == 1
+    assert len(list(view.table1.rows(_row__attr=('data-test', 'def-345')))) == 1
+
     assert len(list(view.table.rows(_row__attr_startswith=('data-test', 'abc')))) == 2
+    assert len(list(view.table1.rows(_row__attr_startswith=('data-test', 'abc')))) == 2
+
     assert len(list(view.table.rows(_row__attr_endswith=('data-test', '345')))) == 2
+    assert len(list(view.table1.rows(_row__attr_endswith=('data-test', '345')))) == 2
+
     assert len(list(view.table.rows(_row__attr_contains=('data-test', '3')))) == 3
+    assert len(list(view.table1.rows(_row__attr_contains=('data-test', '3')))) == 3
+
     assert len(list(view.table.rows(
        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
+    assert len(list(view.table1.rows(
+        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
 
     assert len(list(view.table.rows(_row__attr=('data-test', 'abc-345'), column_1='qwer'))) == 0
+    assert len(list(view.table1.rows(_row__attr=('data-test', 'abc-345'), first_name='qwer'))) == 0
 
     with pytest.raises(ValueError):
         list(view.table.rows(_row__papalala=('foo', 'bar')))
 
     with pytest.raises(ValueError):
+        list(view.table1.rows(_row__papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
         list(view.table.rows(_row__attr_papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
+        list(view.table1.rows(_row__attr_papalala=('foo', 'bar')))
 
     with pytest.raises(ValueError):
         list(view.table.rows(_row__attr='foobar'))
 
+    with pytest.raises(ValueError):
+        list(view.table1.rows(_row__attr='foobar'))
+
     assert len(list(view.table.rows((0, 'asdf')))) == 1
     assert len(list(view.table.rows((1, 'startswith', 'bar_')))) == 2
     assert len(list(view.table.rows((1, 'startswith', 'bar_'), column_1__endswith='_x'))) == 1
+
+    assert len(list(view.table1.rows((0, '1')))) == 1
+    assert len(list(view.table1.rows((1, 'startswith', 'Jacob')))) == 1
+    assert len(list(view.table1.rows((1, 'startswith', 'Jacob'), username__endswith='at'))) == 1
 
     assert len(list(view.table.rows((1, re.compile(r'_x$'))))) == 1
     assert len(list(view.table.rows((1, re.compile(r'^bar_'))))) == 2
@@ -176,11 +215,26 @@ def test_table(browser):
         (1, 'contains', '_'),
         column_3__endswith='_x'))) == 1
 
+    assert len(list(view.table1.rows((1, re.compile(r'Mark$'))))) == 1
+    assert len(list(view.table1.rows((1, re.compile(r'^Jacob'))))) == 1
+    assert len(list(view.table1.rows(('Last Name', re.compile(r'^Otto'))))) == 1
+    assert len(list(view.table1.rows((0, re.compile(r'^2')), (3, re.compile(r'fat$'))))) == 1
+    assert len(list(view.table1.rows(
+        (0, re.compile(r'^4')),
+        (1, 'contains', ' '),
+        username__endswith='psav'))) == 1
+
     row = view.table.row(
         (0, re.compile(r'^foo_')),
         (1, 'contains', '_'),
         column_3__endswith='_x')
     assert row[0].text == 'foo_x'
+
+    row = view.table1.row(
+        (0, re.compile(r'^5')),
+        (1, 'contains', 'Shriver'),
+        username__endswith='ver')
+    assert row[1].text == 'Mike Shriver'
 
     #  attributized columns for a table with thead
     row = view.table.row(column_1='bar_x')
@@ -203,6 +257,24 @@ def test_table(browser):
 
     assert view.table[0].column_2.text == 'yxcv'
 
+    row = view.table1.row(username='@slacker')
+    assert row[0].text == '3'
+    assert row['First Name'].text == 'Larry the Bird'
+    assert row.first_name.text == 'Larry the Bird'
+
+    assert row.read() == {u'#': u'3',
+                          u'First Name': u'Larry the Bird',
+                          u'Last Name': u'Larry the Bird',
+                          u'Username': u'@slacker'}
+
+    unpacking_fake_read = [(header, column.text) for header, column in row]
+    assert unpacking_fake_read == [(u'#', u'3'),
+                                   (u'First Name', u'Larry the Bird'),
+                                   (u'Last Name', u'Larry the Bird'),
+                                   (u'Username', u'@slacker')]
+
+    assert view.table1[1].last_name.text == 'Thornton'
+
     with pytest.raises(AttributeError):
         row.papalala
 
@@ -214,6 +286,26 @@ def test_table(browser):
 
     row = next(view.table.rows())
     assert row.column_1.text == 'qwer'
+
+    row = next(view.table1.rows())
+    assert row.first_name.text == 'Mark'
+
+    assert view.table1.read() == [{u'#': u'1', u'First Name': u'Mark', u'Last Name': u'Otto',
+                                   u'Username': u'@mdo'},
+                                  {u'#': u'2', u'First Name': u'Jacob', u'Last Name': u'Thornton',
+                                   u'Username': u'@fat'},
+                                  {u'#': u'3', u'First Name': u'Larry the Bird',
+                                   u'Last Name': u'Larry the Bird', u'Username': u'@slacker'},
+                                  {u'#': u'4', u'First Name': u'Pete Savage', u'Last Name': u'',
+                                   u'Username': u'@psav'},
+                                  {u'#': u'4', u'First Name': u'Pete Savage', u'Last Name': u'',
+                                   u'Username': u'@psav1'},
+                                  {u'#': u'5', u'First Name': u'Mike Shriver',
+                                   u'Last Name': u'Mike Shriver', u'Username': u'@mshriver'},
+                                  {u'#': u'5', u'First Name': u'Mike Shriver',
+                                   u'Last Name': u'Mike Shriver', u'Username': u'@iamhero'},
+                                  {u'#': u'6', u'First Name': u'', u'Last Name': u'',
+                                   u'Username': u'@blabla'}]
 
 
 def test_table_no_header(browser):
@@ -276,6 +368,13 @@ def test_table_with_widgets(browser):
 
     view = TestForm(browser)
 
+    class TestForm1(View):
+        table1 = Table('#rowcolspan_table',
+                       column_widgets={'First Name':  TextInput(locator='./input'),
+                                       'Last Name': TextInput(locator='./input')})
+
+    view1 = TestForm1(browser)
+
     assert view.read() == {
         'table': [
             {0: 'foo', 'Column 2': '', 'Column 3': 'foo col 3'},
@@ -295,6 +394,12 @@ def test_table_with_widgets(browser):
             {0: 'foo', 'Column 2': 'foobaaar', 'Column 3': 'foo col 3'},
             {0: 'bar', 'Column 2': 'bar col 2', 'Column 3': 'yolo'}
         ]}
+
+    assert view1.table1[7]['First Name'].fill('some value')
+    assert view1.table1[7]['First Name'].read() == 'some value'
+
+    assert view1.table1[7]['Last Name'].fill('new value')
+    assert view1.table1[7]['Last Name'].read() == 'new value'
 
     with pytest.raises(TypeError):
         # There is nothing to be filled
@@ -456,27 +561,6 @@ def test_table_dynamic_add_assoc(browser):
         'Pepa': {'Last Name': 'Z Depa', 'ID': '2.'}}
     assert not view.table.fill(view.table.read())
     assert not view.fill(view.read())
-
-
-def test_table_rowcol_span(browser):
-    class MyView(View):
-        table = Table('#rowcolspan_table',
-                      column_widgets={'First Name': Text(locator='//*[BlaBla]')})
-
-    view = MyView(browser)
-
-    # check parsing colspan
-    assert view.table.read()
-    assert view.table
-
-    # check parsing rowspan
-
-    # check parsing both rowspan and colspan together
-
-    # check widgets support in such row/colspan cells
-
-    # todo: add test when there are two widgets in one column
-    pass
 
 
 def test_simple_select(browser):
