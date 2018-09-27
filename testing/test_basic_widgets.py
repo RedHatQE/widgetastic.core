@@ -55,7 +55,7 @@ def test_basic_widgets(browser):
     assert form.fill({'input3': '#beefed'})
     assert not form.fill({'input3': '#beefed'})
 
-    assert form.fileinput.fill('foo')
+    assert form.fileinput.fill('/etc/resolv.conf')
     with pytest.raises(DoNotReadThisWidget):
         form.fileinput.read()
 
@@ -714,11 +714,11 @@ def test_with_including(browser):
 
     form2.fill({'input6': 'some input'})
     assert form2.input6.read() == 'some input'
-    form2.fill({'fileinput': 'blabla'})
+    form2.fill({'fileinput': '/etc/resolv.conf'})
     assert form2.fill({'input1': 'typed into input 1'})
     assert form2.input1.read() == 'typed into input 1'
     assert form2.h3.read() == 'test test'
 
-    assert form.fileinput.fill('foo')
+    assert form.fileinput.fill('/etc/resolv.conf')
     with pytest.raises(DoNotReadThisWidget):
         form.fileinput.read()

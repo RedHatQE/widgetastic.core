@@ -2096,10 +2096,8 @@ class Select(Widget):
 
     def get_value_by_text(self, text):
         """Given the visible text, retrieve the underlying value."""
-        opt = self.browser.element(
-            ".//option[normalize-space(.)={}]".format(quote(normalize_space(text))),
-            parent=self)
-        return self.browser.get_attribute("value", opt)
+        locator = ".//option[normalize-space(.)={}]".format(quote(normalize_space(text)))
+        return self.browser.get_attribute("value", locator=locator, parent=self)
 
     def select_by_value(self, *items):
         """Selects item(s) by their respective values in the select.

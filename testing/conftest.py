@@ -7,6 +7,7 @@ import os
 import sys
 
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 from widgetastic.browser import Browser
 
@@ -21,7 +22,9 @@ class CustomBrowser(Browser):
 
 @pytest.fixture(scope='session')
 def selenium(request):
-    driver = webdriver.PhantomJS()
+    options = Options()
+    options.add_argument('-headless')
+    driver = webdriver.Firefox(options=options)
     request.addfinalizer(driver.quit)
     driver.maximize_window()
     global selenium_browser

@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import inspect
 import six
-import time
 from cached_property import cached_property
 from collections import namedtuple
 from jsmin import jsmin
@@ -22,7 +21,7 @@ from .exceptions import (
     StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented,
     WebDriverException)
 from .log import create_widget_logger, null_logger
-from .utils import crop_string_middle
+from .utils import crop_string_middle, retry_stale_element
 from .xpath import normalize_space
 
 Size = namedtuple('Size', ['width', 'height'])
@@ -159,8 +158,6 @@ class Browser(object):
 
     @property
     def handles_alerts(self):
-        """Important for unit testing as PhantomJS does not handle alerts. This makes the alert
-        handling functions do nothing."""
         return self.selenium.capabilities.get('handlesAlerts', True)
 
     @property
@@ -217,6 +214,7 @@ class Browser(object):
         else:
             return None
 
+    @retry_stale_element
     def elements(
             self, locator, parent=None, check_visibility=False, check_safe=True,
             force_check_safe=False):
@@ -235,14 +233,17 @@ class Browser(object):
             check_visibility: If set to ``True`` it will filter out elements that are not visible.
             check_safe: You can turn off the page safety check. It is turned off automatically when
                 :py:class:`WebElement` is passed.
-            force_check_safe: If you want to override the :py:class:`WebElement` detection and force
-                the page safety check, pass True.
 
         Returns:
             A :py:class:`list` of :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
-        if (check_safe and not isinstance(locator, WebElement)) or force_check_safe:
-            # If we have a webelement so it is pointless to check it
+        if force_check_safe:
+            import warnings
+            warnings.warn("force_check_safe has been removed and left in definition "
+                          "only for backward compatibility. "
+                          "It will also be removed from definition soon.",
+                          category=DeprecationWarning)
+        if check_safe:
             self.plugin.ensure_page_safe()
         from .widget import Widget
         locator = self._process_locator(locator)
@@ -296,7 +297,8 @@ class Browser(object):
         """
         try:
             result = wait_for(
-                lambda: self.elements(locator, parent=parent, check_visibility=visible),
+                lambda: self.elements(locator, parent=parent, check_visibility=visible,
+                                      check_safe=ensure_page_safe),
                 num_sec=timeout, delay=delay, fail_condition=lambda elements: not bool(elements),
                 fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None)
         except TimedOutError:
@@ -342,6 +344,7 @@ class Browser(object):
         """Double-clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).double_click().perform()
 
+    @retry_stale_element
     def click(self, locator, *args, **kwargs):
         """Clicks at a specific element using two separate events (mouse move, mouse click).
 
@@ -360,9 +363,10 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
+    @retry_stale_element
     def double_click(self, locator, *args, **kwargs):
         """Double-clicks at a specific element using two separate events (mouse move, mouse click).
 
@@ -381,9 +385,10 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
+    @retry_stale_element
     def raw_click(self, locator, *args, **kwargs):
         """Clicks at a specific element using the direct event.
 
@@ -401,9 +406,10 @@ class Browser(object):
                 pass
         try:
             self.plugin.after_click(el, locator)
-        except (StaleElementReferenceException, UnexpectedAlertPresentException):
+        except UnexpectedAlertPresentException:
             pass
 
+    @retry_stale_element
     def is_displayed(self, locator, *args, **kwargs):
         """Check if the element represented by the locator is displayed.
 
@@ -413,25 +419,12 @@ class Browser(object):
             A :py:class:`bool`
         """
         kwargs['check_visibility'] = False
-        retry = True
-        tries = 10
-        while retry:
-            retry = False
-            try:
-                return self.move_to_element(locator, *args, **kwargs).is_displayed()
-            except (NoSuchElementException, MoveTargetOutOfBoundsException):
-                return False
-            except StaleElementReferenceException:
-                if isinstance(locator, WebElement) or tries <= 0:
-                    # We cannot fix this one.
-                    raise
-                retry = True
-                tries -= 1
-                time.sleep(0.1)
+        try:
+            return self.move_to_element(locator, *args, **kwargs).is_displayed()
+        except (NoSuchElementException, MoveTargetOutOfBoundsException):
+            return False
 
-        # Just in case
-        return False
-
+    @retry_stale_element
     def move_to_element(self, locator, *args, **kwargs):
         """Moves the mouse cursor to the middle of the element represented by the locator.
 
@@ -443,6 +436,7 @@ class Browser(object):
         Returns:
             :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
+        force_scroll = kwargs.pop('force_scroll', False)
         self.logger.debug('move_to_element: %r', locator)
         el = self.element(locator, *args, **kwargs)
         if el.tag_name == "option":
@@ -451,6 +445,11 @@ class Browser(object):
             if parent.tag_name == "select":
                 self.move_to_element(parent)
                 return el
+
+        # FF60+ doesn't raise MoveTargetOutOfBoundsException. it just silently does nothing
+        if self.browser_type == 'firefox' and self.browser_version >= 60 and force_scroll:
+            self.execute_script("arguments[0].scrollIntoView();", el)
+
         move_to = ActionChains(self.selenium).move_to_element(el)
         try:
             move_to.perform()
@@ -472,7 +471,7 @@ class Browser(object):
             # It seems Firefox 60 or geckodriver have an issue related to moving to hidden elements
             # https://github.com/mozilla/geckodriver/issues/1269
             if (self.browser_type == 'firefox' and self.browser_version >= 60 and
-                    'rect is undefined' in e.msg):
+                    ('rect is undefined' in e.msg or 'Component returned failure code' in e.msg)):
                 pass
             else:
                 # Something else, never let it sink
@@ -527,6 +526,7 @@ class Browser(object):
         self.logger.debug('move_by_offset X:%r Y:%r', x, y)
         ActionChains(self.selenium).move_by_offset(x, y).perform()
 
+    @retry_stale_element
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
         from .widget import Widget
@@ -544,6 +544,7 @@ class Browser(object):
         """Triggers a page refresh."""
         return self.selenium.refresh()
 
+    @retry_stale_element
     def classes(self, locator, *args, **kwargs):
         """Return a list of classes attached to the element.
 
@@ -583,6 +584,7 @@ class Browser(object):
         """
         return self.element(*args, **kwargs).tag_name
 
+    @retry_stale_element
     def text(self, locator, *args, **kwargs):
         """Returns the text inside the element represented by the locator passed.
 
@@ -612,9 +614,11 @@ class Browser(object):
         self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
         return result
 
+    @retry_stale_element
     def get_attribute(self, attr, *args, **kwargs):
         return self.element(*args, **kwargs).get_attribute(attr)
 
+    @retry_stale_element
     def set_attribute(self, attr, value, *args, **kwargs):
         return self.execute_script(
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
