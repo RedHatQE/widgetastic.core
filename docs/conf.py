@@ -51,7 +51,7 @@ def run_apidoc(_):
     for module in modules:
         cur_dir = os.path.abspath(os.path.dirname(__file__))
         output_path = os.path.join(cur_dir, module, 'doc')
-        apidoc_main(['-e', '-f', '-o', output_path, module, '--force'])
+        apidoc_main(['-e', '-f', '-o', output_path, '.', '--force'])
 
 
 def setup(app):

@@ -8,8 +8,8 @@ widgetastic.core
 .. image:: https://coveralls.io/repos/github/RedHatQE/widgetastic.core/badge.svg?branch=master
     :target: https://coveralls.io/github/RedHatQE/widgetastic.core?branch=master
 
-.. image:: https://readthedocs.org/projects/widgetasticcore/badge/?version=latest
-    :target: http://widgetasticcore.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/widgetastic/badge/?version=latest
+    :target: http://widgetastic.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 .. image:: https://www.quantifiedcode.com/api/v1/project/2f1c121257cc44acb1241aa640c4d266/badge.svg
@@ -24,19 +24,6 @@ other contributors since 2016.
 Licensed under Apache license, Version 2.0
 
 *WARNING:* Until this library reaches v1.0, the interfaces may change!
-
-Currently the documentation build on RTD is broken. You can generate and browse it like
-this:
-
-.. code-block:: bash
-
-    cd widgetastic.core/    # Your git repository's root folder
-    tox -e docs
-    google-chrome build/htmldocs/index.html   # Or a browser of your choice
-
-I have set up `my Jenkins <https://up.falesnik.net/wt-doc/>`_ to build docs on new releases while
-RTD can't build the documentation.
-
 
 Projects using widgetastic
 --------------------------
