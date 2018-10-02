@@ -1,39 +1,39 @@
 language: python
+addons:
+  firefox: latest-esr
 python:
-- '2.7'
-- '3.5'
-- '3.6'
-- pypy
+  - '2.7'
+  - '3.5'
+  - '3.6'
+  - pypy
+stages:
+  - test
+  - name: deploy
+    if: tag IS true
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      before_install:
+      after_success:
+      install: pip install -U setuptools setuptools_scm
+      script: skip
+      deploy:
+        provider: pypi
+        user: mfalesni
+        distributions: sdist bdist_wheel
+        password:
+          secure: Maw1EXXZRQJq14rsTdYCjIYpm+GBfqsdRNOBbqPnImwpJC76RLmH1jR88oYM2wgN8WNTX84qLnMUHyacBABFCmo5Sky57FxuLQWHrPkM6KsdSq9pHys0TB9y0b1wuJktF/HHLqWkty99gAZfP/bvaYq3B0Qo9WTEpaaBGDJo/ZDL23hcRgf+L9Xo0a+K8SuG8zcVijTNDP9HM6pAG3zXk4GuwUV04oUY1bSfFI0MoOR9/7us7c59jQx8iY2LPpVkdqAD5zkd/lwHZiIcsfKpWTKvQsRQ6Ze2r51Pc/bFa/8SCiFRykQm88pf4/F1BR1iR09DRiy6FnBWNQy06sIJfwjjHl5oVX+WKpcrO+3hdofSY8tH+uu2Kex0S+12ZhxbHd5Ylk9TzvGFzp7NWqmGtCzpixnekSC4VuuSe7nw/RYlqC0Fm0vo8PbX8aRXn6rwqzugZUkSFnRbf2wT2JIjQo12Rskvi+F1d3fr8WevcVW163C5nStZuwRCeejpwA7qS8XCuIqGJkfet9nYCFJjQHKH20Lp3kEb2DSvOzFCeB0ZWg1I4Ew64MkOGoS0ijXxdfQHYsOB5OMfqz0vBfxgOpYht5i28fAjTghslzwOHbWV6wvPh9DJrTbOojrdzEq9zoSeQ81akWpzq1U1dHaRDELO2rJ6oE9WlGMmqs0Ce0A=
+        on:
+          tags: true
+          repo: RedHatQE/widgetastic.core
 install:
-- pip install -U pip
-- pip install -U setuptools
-- pip install -U tox tox-travis coveralls
+  - pip install -U pip
+  - pip install -U setuptools
+  - pip install -U tox tox-travis coveralls
+  - pip install git+https://github.com/quarckster/webdriverdownloader.git@geckodriver_fix
+  - webdriverdownloader firefox:v0.20.1
 script:
-- tox
+  - tox
 after_success:
-- coveralls
-deploy:
-  provider: pypi
-  user: mfalesni
-  password:
-    secure: Maw1EXXZRQJq14rsTdYCjIYpm+GBfqsdRNOBbqPnImwpJC76RLmH1jR88oYM2wgN8WNTX84qLnMUHyacBABFCmo5Sky57FxuLQWHrPkM6KsdSq9pHys0TB9y0b1wuJktF/HHLqWkty99gAZfP/bvaYq3B0Qo9WTEpaaBGDJo/ZDL23hcRgf+L9Xo0a+K8SuG8zcVijTNDP9HM6pAG3zXk4GuwUV04oUY1bSfFI0MoOR9/7us7c59jQx8iY2LPpVkdqAD5zkd/lwHZiIcsfKpWTKvQsRQ6Ze2r51Pc/bFa/8SCiFRykQm88pf4/F1BR1iR09DRiy6FnBWNQy06sIJfwjjHl5oVX+WKpcrO+3hdofSY8tH+uu2Kex0S+12ZhxbHd5Ylk9TzvGFzp7NWqmGtCzpixnekSC4VuuSe7nw/RYlqC0Fm0vo8PbX8aRXn6rwqzugZUkSFnRbf2wT2JIjQo12Rskvi+F1d3fr8WevcVW163C5nStZuwRCeejpwA7qS8XCuIqGJkfet9nYCFJjQHKH20Lp3kEb2DSvOzFCeB0ZWg1I4Ew64MkOGoS0ijXxdfQHYsOB5OMfqz0vBfxgOpYht5i28fAjTghslzwOHbWV6wvPh9DJrTbOojrdzEq9zoSeQ81akWpzq1U1dHaRDELO2rJ6oE9WlGMmqs0Ce0A=
-  on:
-    tags: true
-    distributions: sdist bdist_wheel
-    repo: RedHatQE/widgetastic.core
-before_install:
-  - "export FF_VERSION=61.0.2"
-  - "export FF_INST_PATH=${PWD}/travis_firefox/firefox-${FF_VERSION}-linux-x86_64"
-  - "export FF_PATH=${FF_INST_PATH}/firefox; export PATH=${FF_PATH}:${PATH}"
-  - "export FF_BIN=${FF_PATH}/firefox"
-  - "[[ ! -d ${FF_PATH}  || ! -e ${FF_BIN} || ! $(${FF_BIN} -headless -version) =~ ${FF_VERSION} ]] && export INSTALL_REQUIRED=1"
-  - "if [[ -v INSTALL_REQUIRED ]]; then rm -rf {FF_PATH}; mkdir -p ${FF_PATH}; fi"
-  - "export FFURL=https://ftp.mozilla.org/pub/firefox/releases/${FF_VERSION}/linux-x86_64/en-US/firefox-${FF_VERSION}.tar.bz2"
-  - "export TARFILE=${PWD}/travis_firefox/firefox-${FF_VERSION}-linux-x86_64.tar.bz2"
-  - "[[ -v INSTALL_REQUIRED ]] && wget ${FFURL} -O ${TARFILE}"
-  - "[[ -v INSTALL_REQUIRED ]] && tar -jxvf ${TARFILE} -C ${FF_INST_PATH}"
-  - "[[ -v INSTALL_REQUIRED ]] && rm -f ${TARFILE}"
-  - "firefox -headless -version"
-  - "export GURL=https://github.com/mozilla/geckodriver/releases/download/v0.20.1/geckodriver-v0.20.1-linux64.tar.gz"
-  - "[[ -v INSTALL_REQUIRED ]] && wget -q -O- ${GURL}|tar zvxf - -C ${FF_PATH}"
-  - "which geckodriver"
+  - coveralls
