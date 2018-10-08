@@ -217,7 +217,7 @@ class Browser(object):
     @retry_stale_element
     def elements(
             self, locator, parent=None, check_visibility=False, check_safe=True,
-            force_check_safe=False):
+            force_check_safe=False, *args, **kwargs):
         """Method that resolves locators into selenium webelements.
 
         Args:
