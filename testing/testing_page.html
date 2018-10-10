@@ -169,5 +169,62 @@
     i++;
     });
 </script>
+
+ <table class="table table-striped table-bordered" id="rowcolspan_table">
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Username</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr data-test="abc-123">
+      <td>1</td>
+      <td>Mark</td>
+      <td>Otto</td>
+      <td>@mdo</td>
+    </tr>
+    <tr data-test="abc-345">
+      <td>2</td>
+      <td>Jacob</td>
+      <td>Thornton</td>
+      <td>@fat</td>
+    </tr>
+    <tr data-test="def-345">
+      <td>3</td>
+      <td colspan="2">Larry the Bird</td>
+      <td>@slacker</td>
+    </tr>
+    <tr>
+      <td rowspan="2">4</td>
+      <td rowspan="2">Pete Savage</td>
+      <td></td>
+      <td>@psav</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>@psav1</td>
+    </tr>
+
+    <tr>
+      <td rowspan="2">5</td>
+      <td rowspan="2" colspan="2">Mike Shriver</td>
+      <td>@mshriver</td>
+    </tr>
+    <tr>
+      <td>@iamhero</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td colspan="2">
+       <input name="some_input_obj" type="text">
+      </td>
+      <td>@blabla</td>
+    </tr>
+    </tbody>
+  </table>
+
 </body>
 </html>
