@@ -436,9 +436,10 @@ class Browser(object):
         Returns:
             :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
-        force_scroll = kwargs.pop('force_scroll', False)
+        kw = kwargs.copy()
+        force_scroll = kw.pop('force_scroll', False)
         self.logger.debug('move_to_element: %r', locator)
-        el = self.element(locator, *args, **kwargs)
+        el = self.element(locator, *args, **kw)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
             parent = self.element("..", parent=el)
