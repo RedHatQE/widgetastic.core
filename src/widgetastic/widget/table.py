@@ -330,12 +330,14 @@ class Table(Widget):
         self.top_ignore_fill = top_ignore_fill
         self.bottom_ignore_fill = bottom_ignore_fill
 
+    @cached_property
+    def table_tree(self):
         if self.has_rowcolspan:
-            self.table_tree = self._process_table()
-            # column positions have to be recalculated because of all those references
-            self._recalc_column_positions(self.table_tree)
+            tmp_tree = self._process_table()
+            self._recalc_column_positions(tmp_tree)
+            return tmp_tree
         else:
-            self.table_tree = None
+            return None
 
     @cached_property
     def resolver(self):
