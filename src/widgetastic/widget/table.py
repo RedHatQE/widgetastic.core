@@ -456,7 +456,10 @@ class Table(Widget):
         if self.table_tree:
             nodes = self.resolver.glob(self.table_tree, '/table/tbody/tr*')
             at_index = at_index + 1 if self._is_header_in_body else at_index or 1
-            return next(n.obj for n in nodes if n.position == at_index)
+            try:
+                return six.next(n.obj for n in nodes if n.position == at_index)
+            except StopIteration:
+                raise RowNotFound('Row not found by index {} via {}'.format(at_index, item))
         else:
             return self.Row(self, at_index, logger=create_item_logger(self.logger, item))
 
