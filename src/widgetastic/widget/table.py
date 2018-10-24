@@ -990,7 +990,7 @@ class TableResolver(Resolver):
     This class slightly improves that by adding ability to specify node index number.
     It will be removed when xpath support is enhanced in anytree
     """
-    index_regexp = re.compile('(.*?)\[(\d+)\]$')
+    index_regexp = re.compile(r'(.*?)\[(\d+)\]$')
 
     def get(self, node, path):
         node, parts = self._Resolver__start(node, path)
