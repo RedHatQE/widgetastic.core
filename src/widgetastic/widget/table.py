@@ -369,7 +369,7 @@ class Table(Widget):
         """Clear all cached properties."""
         for item in [
                 'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping',
-                'assoc_column_position']:
+                'assoc_column_position', 'table_tree']:
             try:
                 delattr(self, item)
             except AttributeError:
@@ -880,7 +880,7 @@ class Table(Widget):
     @property
     def has_rowcolspan(self):
         """Checks whether table has rowspan/colspan attributes"""
-        return bool(self.browser.elements('.//td[@rowspan or @colspan]', parent=self))
+        return bool(self.browser.elements('./tbody//td[@rowspan or @colspan]', parent=self))
 
     def _process_table(self):
         queue = deque()
