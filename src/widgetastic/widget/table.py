@@ -138,9 +138,7 @@ class TableRow(Widget, ClickableMixin):
 
     def __init__(self, parent, index, logger=None):
         Widget.__init__(self, parent, logger=logger)
-        # todo: get rid of all these indexes
-        needs_increment = parent._is_header_in_body or self.table.has_rowcolspan
-        self.index = index + 1 if needs_increment else index or 1
+        self.index = index + 1 if parent._is_header_in_body else index
 
     @property
     def table(self):
@@ -150,7 +148,7 @@ class TableRow(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
-        loc = self.parent.ROW_AT_INDEX.format(self.index)
+        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
         return self.browser.element(loc, parent=self.parent)
 
     def position_to_column_name(self, position):
@@ -168,7 +166,7 @@ class TableRow(Widget, ClickableMixin):
         if self.table.table_tree:
             # todo: add support of xpath and/or iteration to anytree lib
             return self.table.resolver.glob(self.table.table_tree,
-                                            '/table/tbody/tr[{}]/*[{}]'.format(self.index-1,
+                                            '/table/tbody/tr[{}]/*[{}]'.format(self.index,
                                                                                index))[0].obj
 
         else:
@@ -363,7 +361,7 @@ class Table(Widget):
         if (- nindex) > max_index:
             raise IndexError('Negative index {} wanted but we only have {} rows'
                              .format(nindex, max_index))
-        return max_index + nindex + 1
+        return max_index + nindex
 
     def clear_cache(self):
         """Clear all cached properties."""
@@ -455,7 +453,7 @@ class Table(Widget):
 
         if self.table_tree:
             nodes = self.resolver.glob(self.table_tree, '/table/tbody/tr*')
-            at_index = at_index + 1 if self._is_header_in_body else at_index or 1
+            at_index = at_index + 1 if self._is_header_in_body else at_index
             try:
                 return six.next(n.obj for n in nodes if n.position == at_index)
             except StopIteration:
@@ -522,7 +520,7 @@ class Table(Widget):
             for node in self.resolver.glob(self.table_tree, '/table/tbody/tr*'):
                 yield node.obj
         else:
-            for row_pos in range(1, self.row_count + 1):
+            for row_pos in range(self.row_count):
                 yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
 
     def _process_filters(self, *extra_filters, **filters):
@@ -641,12 +639,11 @@ class Table(Widget):
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
             # get_number_preceeding_rows is javascript driven, and does not account for thead
-            # When it counts rows, if the header is in the body of the table, then our index
-            #     for this element is correct
+            # When it counts rows, if the header is in the body of the table, then our index is
+            # incorrect and has to be decreased
             # If the header is not in the body of the table, number of preceeding rows is 0-based
-            #    and we add 1 to the index to get correct XPATH index offset
-            row_pos = row_pos if self._is_header_in_body else row_pos + 1
-            rows.append(self.Row(self, row_pos,
+            # what is correct
+            rows.append(self.Row(self, row_pos - 1 if self._is_header_in_body else row_pos,
                                  logger=create_item_logger(self.logger, row_pos)))
         return rows
 
@@ -692,7 +689,6 @@ class Table(Widget):
             for row in rows:
                 next_row = False
                 for column_index, matchers in six.iteritems(processed_filters):
-                    # fixme: check maybe +1 isn't necessary
                     column = row[column_index]
                     for method, value in matchers:
                         if method is None:
@@ -758,7 +754,6 @@ class Table(Widget):
         Raises:
             :py:class:`RowNotFound`
         """
-        # todo: add support of rowspan
         try:
             return self.row((column, value))
         except RowNotFound:
@@ -895,8 +890,6 @@ class Table(Widget):
                 cur_tag = self.browser.tag(child)
                 if cur_tag == 'tr':
                     # todo: add logger
-                    # position has been decremented for rows because it is incremented
-                    # if 0 in TableRow.__init__ for some reason
                     cur_obj = TableRow(parent=self._get_ancestor_node_obj(node), index=position)
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
