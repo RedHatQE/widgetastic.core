@@ -31,8 +31,8 @@ install:
   - pip install -U pip
   - pip install -U setuptools
   - pip install -U tox tox-travis coveralls
-  - pip install git+https://github.com/quarckster/webdriverdownloader.git@geckodriver_fix
-  - webdriverdownloader firefox:v0.20.1
+  - pip install git+https://github.com/quarckster/webdriverdownloader.git@fix_github
+  - webdrivermanager firefox:v0.20.1
 script:
   - tox
 after_success:
