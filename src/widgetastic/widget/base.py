@@ -483,13 +483,15 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         return self.browser.is_displayed(self)
 
     @logged()
-    def wait_displayed(self, timeout='10s'):
+    def wait_displayed(self, timeout='10s', delay=0.2):
         """Wait for the element to be displayed. Uses the :py:meth:`is_displayed`
 
         Args:
-            timout: If you want, you can override the default timeout here
+            timeout: If you want, you can override the default timeout here
+            delay: override default delay for wait_for iterations
         """
-        wait_for(lambda: self.is_displayed, timeout=timeout, delay=0.2)
+        ret, _ = wait_for(lambda: self.is_displayed, timeout=timeout, delay=delay)
+        return ret
 
     @logged()
     def move_to(self):
