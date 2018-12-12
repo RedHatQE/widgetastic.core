@@ -300,7 +300,8 @@ class Browser(object):
                 lambda: self.elements(locator, parent=parent, check_visibility=visible,
                                       check_safe=ensure_page_safe),
                 num_sec=timeout, delay=delay, fail_condition=lambda elements: not bool(elements),
-                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None)
+                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None,
+                handle_exception=True)
         except TimedOutError:
             if exception:
                 raise NoSuchElementException('Could not wait for element {!r}'.format(locator))
