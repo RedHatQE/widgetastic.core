@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest
 
-from widgetastic.browser import BrowserParentWrapper
+from widgetastic.browser import BrowserParentWrapper, WebElement
 from widgetastic.exceptions import NoSuchElementException, LocatorNotImplemented
 from widgetastic.widget import View, Text
 
@@ -65,7 +65,10 @@ def test_elements_check_visibility(browser):
 def test_wait_for_element_visible(browser):
     # Click on the button
     browser.click('#invisible_appear_button')
-    assert browser.wait_for_element('#invisible_appear_p', visible=True) is not None
+    try:
+        assert isinstance(browser.wait_for_element('#invisible_appear_p', visible=True), WebElement)
+    except NoSuchElementException:
+        pytest.fail('NoSuchElementException raised when webelement expected')
 
 
 def test_wait_for_element_visible_fail_except(browser):
@@ -73,13 +76,6 @@ def test_wait_for_element_visible_fail_except(browser):
     browser.click('#invisible_appear_button')
     with pytest.raises(NoSuchElementException):
         browser.wait_for_element('#invisible_appear_p', visible=True, timeout=1.5)
-
-
-def test_wait_for_element_visible_fail_none(browser):
-    # Click on the button
-    browser.click('#invisible_appear_button')
-    assert browser.wait_for_element(
-        '#invisible_appear_p', visible=True, timeout=1.5, exception=False) is None
 
 
 def test_element_only_invisible(browser):
