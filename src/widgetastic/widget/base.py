@@ -934,7 +934,7 @@ class View(Widget):
         except LocatorNotImplemented:
             return None
 
-    def fill(self, values):
+    def fill(self, values, wait_widget=0):
         """Implementation of form filling.
 
         This method goes through all widgets defined on this view one by one and calls their
@@ -950,6 +950,8 @@ class View(Widget):
 
         Args:
             values: A dictionary of ``widget_name: value_to_fill``.
+            wait_widget: wait_for value. If wait > 0 widget.wait_displayed(wait) is called for every
+                         widget
 
         Returns:
             :py:class:`bool` if the fill changed any value.
@@ -979,6 +981,8 @@ class View(Widget):
 
             try:
                 value = values[name]
+                if wait_widget:
+                    widget.wait_displayed(timeout=wait_widget)
                 if widget.fill(value):
                     was_change = True
             except NotImplementedError:
