@@ -688,7 +688,16 @@ def retry_stale_element(method):
     return wrap
 
 
-class BasicFillViewStrategy(object):
+class BaseFillViewStrategy(object):
+
+    # uses parent fill strategy if set and not overridden in current view
+    respect_parent = False
+
+    def do_fill(self, fill_list):
+        raise NotImplementedError('view should use at least some fill strategy')
+
+
+class DefaultFillViewStrategy(BaseFillViewStrategy):
     """Used to fill view's widgets by default. It just calls fill for every passed widget
 
     """
@@ -702,7 +711,7 @@ class BasicFillViewStrategy(object):
         return any(changes)
 
 
-class WaitFillViewStrategy(object):
+class WaitFillViewStrategy(BaseFillViewStrategy):
     """It is used to fill view's widgets where changes in one widget
     may cause another widget appear.
 

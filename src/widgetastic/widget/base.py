@@ -15,7 +15,7 @@ from widgetastic.log import (create_child_logger, call_sig, logged, PrependParen
                              create_widget_logger)
 from widgetastic.utils import (Fillable, ConstructorResolvable, ParametrizedString, Widgetable,
                                ParametrizedLocator, nested_getattr, deflatten_dict,
-                               BasicFillViewStrategy)
+                               DefaultFillViewStrategy)
 
 
 def do_not_read_this_widget():
@@ -880,7 +880,12 @@ class View(Widget):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
         self.last_fill_data = None
-        self.fill_strategy = BasicFillViewStrategy()
+
+        if not self.fill_strategy:
+            if getattr(getattr(self.parent, 'fill_strategy'), 'respect_parent', False):
+                self.fill_strategy = self.parent.fill_strategy
+            else:
+                self.fill_strategy = DefaultFillViewStrategy()
 
     @staticmethod
     def nested(view_class):
