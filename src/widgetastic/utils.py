@@ -718,7 +718,7 @@ class WaitFillViewStrategy(BaseFillViewStrategy):
     New widgets may appear after some delay.
     So such strategy gives next widget some time to turn up.
     """
-    def __init__(self, wait_widget='2s'):
+    def __init__(self, wait_widget='5s'):
         self.wait_widget = wait_widget
 
     def do_fill(self, fill_list):
@@ -726,7 +726,8 @@ class WaitFillViewStrategy(BaseFillViewStrategy):
         for widget, value in fill_list:
             try:
                 widget.wait_displayed(timeout=self.wait_widget)
-                changes.append(widget.fill(value))
+                result = widget.fill(value)
+                changes.append(result)
             except NotImplementedError:
                 continue
         return any(changes)

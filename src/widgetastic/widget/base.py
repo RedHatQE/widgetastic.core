@@ -882,7 +882,7 @@ class View(Widget):
         self.last_fill_data = None
 
         if not self.fill_strategy:
-            if getattr(getattr(self.parent, 'fill_strategy'), 'respect_parent', False):
+            if getattr(getattr(self.parent, 'fill_strategy', None), 'respect_parent', False):
                 self.fill_strategy = self.parent.fill_strategy
             else:
                 self.fill_strategy = DefaultFillViewStrategy()
