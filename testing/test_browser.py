@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import pytest
-from functools import partial
 
 from widgetastic.browser import BrowserParentWrapper, WebElement
 from widgetastic.exceptions import NoSuchElementException, LocatorNotImplemented
