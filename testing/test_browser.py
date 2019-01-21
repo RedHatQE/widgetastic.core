@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import pytest
+from functools import partial
 
 from widgetastic.browser import BrowserParentWrapper, WebElement
 from widgetastic.exceptions import NoSuchElementException, LocatorNotImplemented
@@ -71,18 +73,21 @@ def test_wait_for_element_visible(browser):
         pytest.fail('NoSuchElementException raised when webelement expected')
 
 
-def test_wait_for_element_visible_fail_except(browser):
-    # Click on the button
+@pytest.mark.parametrize('exception', [True, False], ids=['with_exception', 'without_exception'])
+def test_wait_for_element_exception_control(browser, exception):
+    # Click on the button, element will not appear
     browser.click('#invisible_appear_button')
-    with pytest.raises(NoSuchElementException):
-        browser.wait_for_element('#invisible_appear_p', visible=True, timeout=1.5)
-
-
-def test_wait_for_element_visible_fail_none(browser):
-    # Click on the button
-    browser.click('#invisible_appear_button')
-    assert browser.wait_for_element(
-        '#invisible_appear_p', visible=True, timeout=1.5, exception=False) is None
+    wait_for_args = dict(
+        locator='#invisible_appear_p',
+        visible=True,
+        timeout=1.5,
+        exception=exception
+    )
+    if exception:
+        with pytest.raises(NoSuchElementException):
+            browser.wait_for_element(**wait_for_args)
+    else:
+        assert browser.wait_for_element(**wait_for_args) is None
 
 
 def test_element_only_invisible(browser):
