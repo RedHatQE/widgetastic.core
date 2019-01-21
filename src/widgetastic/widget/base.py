@@ -14,7 +14,8 @@ from widgetastic.exceptions import DoNotReadThisWidget, LocatorNotImplemented
 from widgetastic.log import (create_child_logger, call_sig, logged, PrependParentsAdapter,
                              create_widget_logger)
 from widgetastic.utils import (Fillable, ConstructorResolvable, ParametrizedString, Widgetable,
-                               ParametrizedLocator, nested_getattr, deflatten_dict)
+                               ParametrizedLocator, nested_getattr, deflatten_dict,
+                               DefaultFillViewStrategy)
 
 
 def do_not_read_this_widget():
@@ -873,11 +874,18 @@ class View(Widget):
     """
     #: Skip this view in the element lookup hierarchy
     INDIRECT = False
+    fill_strategy = None
 
     def __init__(self, parent, logger=None, **kwargs):
         Widget.__init__(self, parent, logger=logger)
         self.context = kwargs.pop('additional_context', {})
         self.last_fill_data = None
+
+        if not self.fill_strategy:
+            if getattr(getattr(self.parent, 'fill_strategy', None), 'respect_parent', False):
+                self.fill_strategy = self.parent.fill_strategy
+            else:
+                self.fill_strategy = DefaultFillViewStrategy()
 
     @staticmethod
     def nested(view_class):
@@ -954,41 +962,22 @@ class View(Widget):
         Returns:
             :py:class:`bool` if the fill changed any value.
         """
+        changed = []
         values = deflatten_dict(values)
         self.last_fill_data = values
-        was_change = False
-        b_fill = self.before_fill(values)
-        if b_fill is True:
-            # Only on True, nothing else
-            was_change = True
+        changed.append(self.before_fill(values))
+
         extra_keys = set(values.keys()) - set(self.widget_names)
         if extra_keys:
             self.logger.warning(
                 'Extra values that have no corresponding fill fields passed: %s',
                 ', '.join(extra_keys))
-        for name in self.widget_names:
-            widget = getattr(self, name)
-            if name not in values or values[name] is None:
-                if name not in values:
-                    self.logger.debug(
-                        'Skipping fill of %r because value was not specified', name)
-                else:
-                    self.logger.debug(
-                        'Skipping fill of %r because value was None', name)
-                continue
+        to_fill = [(getattr(self, n), values[n]) for n in self.widget_names
+                   if n in values and values[n] is not None]
+        changed.append(self.fill_strategy.do_fill(to_fill))
 
-            try:
-                value = values[name]
-                if widget.fill(value):
-                    was_change = True
-            except NotImplementedError:
-                continue
-
-        a_fill = self.after_fill(was_change)
-        if isinstance(a_fill, bool):
-            return a_fill
-        else:
-            return was_change
+        a_fill = self.after_fill(any(changed))
+        return a_fill if isinstance(a_fill, bool) else any(changed)
 
     def read(self):
         """Reads the contents of the view and presents them as a dictionary.
