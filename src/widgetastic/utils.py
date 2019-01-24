@@ -12,7 +12,7 @@ from smartloc import Locator
 from threading import Lock
 from selenium.common.exceptions import StaleElementReferenceException
 
-from . import xpath
+from . import xpath, log
 
 
 class Widgetable(object):
@@ -688,46 +688,79 @@ def retry_stale_element(method):
     return wrap
 
 
-class BaseFillViewStrategy(object):
+class FillContext(object):
+    def __init__(self, parent, logger=None, **kwargs):
+        self.parent = parent
+        self.logger = logger or log.create_child_logger(getattr(self.parent, 'logger',
+                                                                log.null_logger), 'fill')
+        self.__dict__.update(kwargs)
 
-    # uses parent fill strategy if set and not overridden in current view
-    respect_parent = False
 
-    def do_fill(self, fill_list):
-        raise NotImplementedError('view should use at least some fill strategy')
-
-
-class DefaultFillViewStrategy(BaseFillViewStrategy):
+class DefaultFillViewStrategy(object):
     """Used to fill view's widgets by default. It just calls fill for every passed widget
 
     """
-    def do_fill(self, fill_list):
+    def __init__(self, respect_parent=False):
+        # uses parent fill strategy if set and not overridden in current view
+        self.respect_parent = respect_parent
+        self._context = FillContext(parent=None)
+
+    @property
+    def context(self):
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        self._context = context
+
+    def fill_order(self, values):
+        values = deflatten_dict(values)
+        widget_names = self.context.parent.widget_names
+        extra_keys = set(values.keys()) - set(widget_names)
+        if extra_keys:
+            self.context.logger.warning(
+                'Extra values that have no corresponding fill fields passed: %s',
+                ', '.join(extra_keys))
+        return [(n, values[n]) for n in self.context.parent.widget_names
+                if n in values and values[n] is not None]
+
+    def do_fill(self, values):
         changes = []
-        for widget, value in fill_list:
+        for widget_name, value in self.fill_order(values):
+            widget = getattr(self.context.parent, widget_name)
             try:
-                changes.append(widget.fill(value))
+                result = widget.fill(value)
+                self.context.logger.debug("Filled %r to value %r with result %r",
+                                          widget_name, value, result)
+                changes.append(result)
             except NotImplementedError:
+                self.context.logger.warning("Widget %r doesn't have fill method", widget_name)
                 continue
         return any(changes)
 
 
-class WaitFillViewStrategy(BaseFillViewStrategy):
+class WaitFillViewStrategy(DefaultFillViewStrategy):
     """It is used to fill view's widgets where changes in one widget
     may cause another widget appear.
 
     New widgets may appear after some delay.
     So such strategy gives next widget some time to turn up.
     """
-    def __init__(self, wait_widget='5s'):
+    def __init__(self, respect_parent=False, wait_widget='5s'):
         self.wait_widget = wait_widget
+        super(WaitFillViewStrategy, self).__init__(respect_parent=respect_parent)
 
-    def do_fill(self, fill_list):
+    def do_fill(self, values):
         changes = []
-        for widget, value in fill_list:
+        for widget_name, value in self.fill_order(values):
+            widget = getattr(self.context.parent, widget_name)
             try:
                 widget.wait_displayed(timeout=self.wait_widget)
                 result = widget.fill(value)
+                self.context.logger.debug("Filled %r to value %r with result %r",
+                                          widget_name, value, result)
                 changes.append(result)
             except NotImplementedError:
+                self.context.logger.warning("Widget %r doesn't have fill method", widget_name)
                 continue
         return any(changes)
