@@ -536,6 +536,32 @@ def test_switchable_view_with_default(browser):
     assert view.the_switchable_view.widget.read() == 'footest'
 
 
+def test_switchable_view_fill(browser):
+    class FooView(View):
+        widget1 = Checkbox(id='switchabletesting-3')
+
+    class BarView(View):
+        widget2 = Checkbox(id='switchabletesting-4')
+
+    class MyView(View):
+        the_reference = Select(id='switchabletesting-select')
+        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+
+        the_switchable_view.register('foo', default=True, widget=FooView)
+        the_switchable_view.register('bar', widget=BarView)
+
+    view = MyView(browser)
+    view.the_reference.fill('bar')
+    assert view.the_reference.read() == 'bar'
+    view.the_switchable_view.widget2.fill(True)
+    assert view.the_switchable_view.widget2.read(), "non default not filled"
+
+    view.the_reference.fill('foo')
+    assert view.the_reference.read() == 'foo'
+    view.the_switchable_view.widget1.fill(True)
+    assert view.the_switchable_view.widget1.read(), "default not filled"
+
+
 def test_switchable_view_without_default_and_unhandled_value(browser):
     class MyView(View):
         the_reference = Select(id='switchabletesting-select')

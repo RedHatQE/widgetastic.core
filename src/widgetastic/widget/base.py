@@ -15,7 +15,7 @@ from widgetastic.log import (create_child_logger, call_sig, logged, PrependParen
                              create_widget_logger)
 from widgetastic.utils import (Fillable, ConstructorResolvable, ParametrizedString, Widgetable,
                                ParametrizedLocator, nested_getattr, deflatten_dict,
-                               DefaultFillViewStrategy)
+                               DefaultFillViewStrategy, FillContext)
 
 
 def do_not_read_this_widget():
@@ -966,16 +966,11 @@ class View(Widget):
         values = deflatten_dict(values)
         self.last_fill_data = values
         changed.append(self.before_fill(values))
-
-        extra_keys = set(values.keys()) - set(self.widget_names)
-        if extra_keys:
-            self.logger.warning(
-                'Extra values that have no corresponding fill fields passed: %s',
-                ', '.join(extra_keys))
-        to_fill = [(getattr(self, n), values[n]) for n in self.widget_names
-                   if n in values and values[n] is not None]
-        changed.append(self.fill_strategy.do_fill(to_fill))
-
+        # there are some views like ConditionalView which are dynamically updated
+        # it is necessary to pass current view at least for
+        # name -> widget resolution right before fill and for logging
+        self.fill_strategy.context = FillContext(parent=self)
+        changed.append(self.fill_strategy.do_fill(values))
         a_fill = self.after_fill(any(changed))
         return a_fill if isinstance(a_fill, bool) else any(changed)
 
