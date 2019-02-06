@@ -17,6 +17,12 @@ from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attri
 from widgetastic.xpath import quote
 from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
+# Python 3.7 formalised the RE pattern type, so let's use that if we can
+try:
+    Pattern = re.Pattern
+except AttributeError:
+    Pattern = re._pattern_type
+
 
 class TableColumn(Widget, ClickableMixin):
     """Represents a cell in the row."""
@@ -537,7 +543,8 @@ class Table(Widget):
             else:
                 column = filter_column
                 method = None
-                if isinstance(filter_value, re._pattern_type):
+                # Check if this is a regular expression object
+                if isinstance(filter_value, Pattern):
                     regexp_filters.append((self.map_column(column), filter_value))
                     continue
 
@@ -550,7 +557,8 @@ class Table(Widget):
                 # Column / string match
                 column, value = argfilter
                 method = None
-                if isinstance(value, re._pattern_type):
+                # Check if this is a regular expression object
+                if isinstance(value, Pattern):
                     regexp_filters.append((self.map_column(column), value))
                     continue
             elif len(argfilter) == 3:
@@ -907,7 +915,7 @@ class Table(Widget):
                     additional_coordinates = set()
                     for col, row in coordinates:
                         if col > 0 and row > 0:
-                            for new_coord in itertools.product(range(col+1), range(row+1)):
+                            for new_coord in itertools.product(range(col + 1), range(row + 1)):
                                 if new_coord == (0, 0):
                                     continue
                                 additional_coordinates.add(new_coord)
@@ -1023,13 +1031,13 @@ class TableResolver(Resolver):
         return nodes
 
     def _get_node_by_index(self, node, part):
-            part, position = self.index_regexp.match(part).groups()
-            if self.is_wildcard(part):
-                cur_node = self.__glob(node, part)[0]
-            else:
-                cur_node = self._Resolver__get(node, part)
+        part, position = self.index_regexp.match(part).groups()
+        if self.is_wildcard(part):
+            cur_node = self.__glob(node, part)[0]
+        else:
+            cur_node = self._Resolver__get(node, part)
 
-            return cur_node.parent.children[int(position)]
+        return cur_node.parent.children[int(position)]
 
     def __find(self, node, pat, remainder):
         matches = []
