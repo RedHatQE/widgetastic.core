@@ -1031,13 +1031,13 @@ class TableResolver(Resolver):
         return nodes
 
     def _get_node_by_index(self, node, part):
-            part, position = self.index_regexp.match(part).groups()
-            if self.is_wildcard(part):
-                cur_node = self.__glob(node, part)[0]
-            else:
-                cur_node = self._Resolver__get(node, part)
+        part, position = self.index_regexp.match(part).groups()
+        if self.is_wildcard(part):
+            cur_node = self.__glob(node, part)[0]
+        else:
+            cur_node = self._Resolver__get(node, part)
 
-            return cur_node.parent.children[int(position)]
+        return cur_node.parent.children[int(position)]
 
     def __find(self, node, pat, remainder):
         matches = []
