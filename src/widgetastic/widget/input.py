@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from jsmin import jsmin
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 
 from widgetastic.exceptions import DoNotReadThisWidget
@@ -54,7 +55,7 @@ class TextInput(BaseInput):
     def read(self):
         return self.value
 
-    def fill(self, value):
+    def fill(self, value, send_enter=False):
         current_value = self.value
         if value == current_value:
             return False
@@ -62,6 +63,8 @@ class TextInput(BaseInput):
         self.browser.click(self)
         self.browser.clear(self)
         self.browser.send_keys(value, self)
+        if send_enter:
+            self.browser.send_keys(Keys.ENTER, self)
         return True
 
 
