@@ -139,7 +139,7 @@ def test_table(browser):
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
     assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username')
-
+    dir(view.table[0])
     assert len(list(view.table.rows())) == 3
     assert len(list(view.table1.rows())) == 8
 
