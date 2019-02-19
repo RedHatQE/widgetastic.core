@@ -185,7 +185,7 @@ class TableRow(Widget, ClickableMixin):
             raise AttributeError('Cannot find column {} in the table'.format(attr))
 
     def __dir__(self):
-        parent_dir = getattr(super(TableRow, self), '__dir__', [])
+        parent_dir = dir(super(TableRow, self))
         parent_dir.extend(self.table.attributized_headers.keys())
         return sorted(parent_dir)
 
