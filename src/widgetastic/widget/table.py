@@ -314,7 +314,7 @@ class Table(Widget):
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
-    HEADERS = './thead/tr/th|./tr/th' + '|' + HEADER_IN_ROWS
+    HEADERS = './thead/tr/th|./tr/th|./thead/tr/td' + '|' + HEADER_IN_ROWS
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
     ROOT = ParametrizedLocator('{@locator}')
