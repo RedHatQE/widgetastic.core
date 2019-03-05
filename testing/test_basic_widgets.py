@@ -134,11 +134,14 @@ def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
         table1 = Table('#rowcolspan_table',
-                       column_widgets={'Last Name':  TextInput(locator='./input')})
+                       column_widgets={'First Name':  TextInput(locator='./input'),
+                                       'Last Name': TextInput(locator='./input'),
+                                       'Widget': TextInput(locator='./input'),
+                                       })
 
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
-    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username')
+    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
     dir(view.table[0])
     assert len(list(view.table.rows())) == 3
     assert len(list(view.table1.rows())) == 8
@@ -265,13 +268,15 @@ def test_table(browser):
     assert row.read() == {u'#': u'3',
                           u'First Name': u'Larry the Bird',
                           u'Last Name': u'Larry the Bird',
-                          u'Username': u'@slacker'}
+                          u'Username': u'@slacker',
+                          u'Widget': u'widget3'}
 
     unpacking_fake_read = [(header, column.text) for header, column in row]
     assert unpacking_fake_read == [(u'#', u'3'),
                                    (u'First Name', u'Larry the Bird'),
                                    (u'Last Name', u'Larry the Bird'),
-                                   (u'Username', u'@slacker')]
+                                   (u'Username', u'@slacker'),
+                                   (u'Widget', u'')]
 
     assert view.table1[1].last_name.text == 'Thornton'
 
@@ -290,22 +295,46 @@ def test_table(browser):
     row = next(view.table1.rows())
     assert row.first_name.text == 'Mark'
 
-    assert view.table1.read() == [{u'#': u'1', u'First Name': u'Mark', u'Last Name': u'Otto',
-                                   u'Username': u'@mdo'},
-                                  {u'#': u'2', u'First Name': u'Jacob', u'Last Name': u'Thornton',
-                                   u'Username': u'@fat'},
-                                  {u'#': u'3', u'First Name': u'Larry the Bird',
-                                   u'Last Name': u'Larry the Bird', u'Username': u'@slacker'},
-                                  {u'#': u'4', u'First Name': u'Pete Savage', u'Last Name': u'',
-                                   u'Username': u'@psav'},
-                                  {u'#': u'4', u'First Name': u'Pete Savage', u'Last Name': u'',
-                                   u'Username': u'@psav1'},
-                                  {u'#': u'5', u'First Name': u'Mike Shriver',
-                                   u'Last Name': u'Mike Shriver', u'Username': u'@mshriver'},
-                                  {u'#': u'5', u'First Name': u'Mike Shriver',
-                                   u'Last Name': u'Mike Shriver', u'Username': u'@iamhero'},
-                                  {u'#': u'6', u'First Name': u'', u'Last Name': u'',
-                                   u'Username': u'@blabla'}]
+    assert view.table1.read() == [{u'#': u'1',
+                                   u'First Name': u'Mark',
+                                   u'Last Name': u'Otto',
+                                   u'Username': u'@mdo',
+                                   u'Widget': u'widget1'},
+                                  {u'#': u'2',
+                                   u'First Name': u'Jacob',
+                                   u'Last Name': u'Thornton',
+                                   u'Username': u'@fat',
+                                   u'Widget': u'widget2'},
+                                  {u'#': u'3',
+                                   u'First Name': u'Larry the Bird',
+                                   u'Last Name': u'Larry the Bird',
+                                   u'Username': u'@slacker',
+                                   u'Widget': u'widget3'},
+                                  {u'#': u'4',
+                                   u'First Name': u'Pete Savage',
+                                   u'Last Name': u'',
+                                   u'Username': u'@psav',
+                                   u'Widget': u'widget41'},
+                                  {u'#': u'4',
+                                   u'First Name': u'Pete Savage',
+                                   u'Last Name': u'',
+                                   u'Username': u'@psav1',
+                                   u'Widget': u'widget42'},
+                                  {u'#': u'5',
+                                   u'First Name': u'Mike Shriver',
+                                   u'Last Name': u'Mike Shriver',
+                                   u'Username': u'@mshriver',
+                                   u'Widget': u'widget51'},
+                                  {u'#': u'5',
+                                   u'First Name': u'Mike Shriver',
+                                   u'Last Name': u'Mike Shriver',
+                                   u'Username': u'@iamhero',
+                                   u'Widget': u'widget52'},
+                                  {u'#': u'6',
+                                   u'First Name': u'',
+                                   u'Last Name': u'',
+                                   u'Username': u'@blabla',
+                                   u'Widget': u'widget6'}]
 
 
 def test_table_no_header(browser):
@@ -371,7 +400,9 @@ def test_table_with_widgets(browser):
     class TestForm1(View):
         table1 = Table('#rowcolspan_table',
                        column_widgets={'First Name':  TextInput(locator='./input'),
-                                       'Last Name': TextInput(locator='./input')})
+                                       'Last Name': TextInput(locator='./input'),
+                                       'Widget': TextInput(locator='./input'),
+                                       })
 
     view1 = TestForm1(browser)
 
@@ -400,6 +431,20 @@ def test_table_with_widgets(browser):
 
     assert view1.table1[7]['Last Name'].fill('new value')
     assert view1.table1[7]['Last Name'].read() == 'new value'
+
+    old_state = view1.table1.read()
+    ending = ' updated'
+    for row in view1.table1.rows():
+        cell = row['Widget']
+        value = cell.read()
+        row['Widget'].fill(str(value) + ending)
+    assert old_state != view1.table1.read()
+
+    for row in view1.table1.rows():
+        cell = row['Widget']
+        value = cell.read()
+        row['Widget'].fill(str(value)[:-len(ending)])
+    assert old_state == view1.table1.read()
 
     with pytest.raises(TypeError):
         # There is nothing to be filled

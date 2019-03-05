@@ -172,13 +172,14 @@
     });
 </script>
 
- <table class="table table-striped table-bordered" id="rowcolspan_table">
+ <table class="table table-striped table-bordered" border="1" id="rowcolspan_table">
     <thead>
     <tr>
       <th>#</th>
       <th>First Name</th>
       <th>Last Name</th>
       <th>Username</th>
+      <th>Widget</th>
     </tr>
     </thead>
     <tbody>
@@ -187,36 +188,43 @@
       <td>Mark</td>
       <td>Otto</td>
       <td>@mdo</td>
+      <td><input name="widget1" type="text" value="widget1"></td>
     </tr>
     <tr data-test="abc-345">
       <td>2</td>
       <td>Jacob</td>
       <td>Thornton</td>
       <td>@fat</td>
+      <td><input name="widget2" type="text" value="widget2"></td>
     </tr>
     <tr data-test="def-345">
       <td>3</td>
       <td colspan="2">Larry the Bird</td>
       <td>@slacker</td>
+      <td><input name="widget3" type="text" value="widget3"></td>
     </tr>
     <tr>
       <td rowspan="2">4</td>
       <td rowspan="2">Pete Savage</td>
       <td></td>
       <td>@psav</td>
+      <td><input name="widget41" type="text" value="widget41"></td>
     </tr>
     <tr>
       <td></td>
       <td>@psav1</td>
+      <td><input name="widget42" type="text" value="widget42"></td>
     </tr>
 
     <tr>
       <td rowspan="2">5</td>
       <td rowspan="2" colspan="2">Mike Shriver</td>
       <td>@mshriver</td>
+      <td><input name="widget51" type="text" value="widget51"></td>
     </tr>
     <tr>
       <td>@iamhero</td>
+      <td><input name="widget52" type="text" value="widget52"></td>
     </tr>
     <tr>
       <td>6</td>
@@ -224,6 +232,7 @@
        <input name="some_input_obj" type="text">
       </td>
       <td>@blabla</td>
+      <td><input name="widget6" type="text" value="widget6"></td>
     </tr>
     </tbody>
   </table>
