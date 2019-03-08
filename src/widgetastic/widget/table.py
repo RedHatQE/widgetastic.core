@@ -26,9 +26,10 @@ except AttributeError:
 
 class TableColumn(Widget, ClickableMixin):
     """Represents a cell in the row."""
-    def __init__(self, parent, position, logger=None):
+    def __init__(self, parent, position, absolute_position=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
-        self.position = position
+        self.position = position  # relative position
+        self.absolute_position = absolute_position  # absolute position according to row/colspan
 
     def __locator__(self):
         return self.browser.element('./td[{}]'.format(self.position + 1), parent=self.parent)
@@ -40,7 +41,11 @@ class TableColumn(Widget, ClickableMixin):
     def column_name(self):
         """If there is a name associated with this column, return it. Otherwise returns None."""
         try:
-            return self.row.position_to_column_name(self.position)
+            if self.absolute_position and self.absolute_position != self.position:
+                position = self.absolute_position
+            else:
+                position = self.position
+            return self.row.position_to_column_name(position)
         except KeyError:
             return None
 
@@ -49,10 +54,16 @@ class TableColumn(Widget, ClickableMixin):
         """Returns the associated widget if defined. If there is none defined, returns None."""
         args = ()
         kwargs = {}
+
+        if self.absolute_position and self.absolute_position != self.position:
+            position = self.absolute_position
+        else:
+            position = self.position
+
         if self.column_name is None:
-            if self.position not in self.table.column_widgets:
+            if position not in self.table.column_widgets:
                 return None
-            wcls = self.table.column_widgets[self.position]
+            wcls = self.table.column_widgets[position]
         else:
             if self.column_name not in self.table.column_widgets:
                 return None
@@ -903,7 +914,8 @@ class Table(Widget):
                     queue.append(cur_node)
                 elif cur_tag == 'td':
                     cur_position = self._get_position_respecting_spans(node)
-                    cur_obj = TableColumn(parent=node.obj, position=cur_position)
+                    cur_obj = TableColumn(parent=node.obj, position=cur_position,
+                                          absolute_position=cur_position)
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
                     rowsteps = range(1, int(child.get_attribute('rowspan') or 0))
