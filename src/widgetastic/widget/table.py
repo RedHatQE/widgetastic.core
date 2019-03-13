@@ -32,7 +32,10 @@ class TableColumn(Widget, ClickableMixin):
         self.absolute_position = absolute_position  # absolute position according to row/colspan
 
     def __locator__(self):
-        return self.browser.element('./td[{}]'.format(self.position + 1), parent=self.parent)
+        return self.browser.element(
+            '.{}[{}]'.format(self.parent.table.COLUMN_RESOLVER_PATH, self.position + 1),
+            parent=self.parent
+        )
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
@@ -182,9 +185,14 @@ class TableRow(Widget, ClickableMixin):
 
         if self.table.table_tree:
             # todo: add support of xpath and/or iteration to anytree lib
-            return self.table.resolver.glob(self.table.table_tree,
-                                            '/table/tbody/tr[{}]/*[{}]'.format(self.index,
-                                                                               index))[0].obj
+            return self.table.resolver.glob(
+                self.table.table_tree, '{}[{}]/{}[{}]'.format(
+                    self.table.ROW_RESOLVER_PATH,
+                    self.index,
+                    self.table.COLUMN_RESOLVER_PATH,
+                    index
+                )
+            )[0].obj
 
         else:
             return self.Column(self, index, logger=create_item_logger(self.logger, item))
@@ -311,19 +319,35 @@ class Table(Widget):
 
     If you subclass :py:class:`Table`, :py:class:`TableRow`, or :py:class:`TableColumn`, do not
     forget to update the :py:attr:`Table.Row` and :py:attr:`TableRow.Column` in order for the
-    classes to use the correct class.
+    classes to use the correct class. You can also adjust the class variable constants to change
+    the way :py:class:`Table` looks for rows. For example, you could use the following to create
+    a table class that builds rows based on each 'tbody' tag within the table, with each
+    row being a custom defined class.
+
+    .. code-block:: python
+
+        class MyCustomTable(Table):
+            ROWS = './tbody'
+            ROW_RESOLVER_PATH = '/table/tbody'
+            ROW_TAG = 'tbody'
+            ROW_AT_INDEX = './tbody[{0}]'
+            Row = MyCustomTableRowClass
 
     Args:
         locator: A locator to the table ``<table>`` tag.
         column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
             value is the widget definition.
-        assoc_column: Index or name of the column used for associative filling.
+        assoc_column: Indexlooks or name of the column used for associative filling.
         rows_ignore_top: Number of rows to ignore from top when reading/filling.
         rows_ignore_bottom: Number of rows to ignore from bottom when reading/filling.
         top_ignore_fill: Whether to also strip these top rows for fill.
         bottom_ignore_fill: Whether to also strip these top rows for fill.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+    ROW_RESOLVER_PATH = '/table/tbody/tr'
+    COLUMN_RESOLVER_PATH = '/td'
+    ROW_TAG = 'tr'
+    COLUMN_TAG = 'td'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
     HEADERS = './thead/tr/th|./tr/th|./thead/tr/td' + '|' + HEADER_IN_ROWS
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
@@ -331,6 +355,7 @@ class Table(Widget):
     ROOT = ParametrizedLocator('{@locator}')
 
     Row = TableRow
+    Column = TableColumn
 
     def __init__(
             self, parent, locator, column_widgets=None, assoc_column=None,
@@ -469,7 +494,7 @@ class Table(Widget):
             at_index = self._process_negative_index(at_index)
 
         if self.table_tree:
-            nodes = self.resolver.glob(self.table_tree, '/table/tbody/tr*')
+            nodes = self.resolver.glob(self.table_tree, self.ROW_RESOLVER_PATH)
             at_index = at_index + 1 if self._is_header_in_body else at_index
             try:
                 return six.next(n.obj for n in nodes if n.position == at_index)
@@ -534,7 +559,7 @@ class Table(Widget):
         # passing index to TableRow, should not be <1
         # +1 offset on end because xpath index vs 0-based range()
         if self.table_tree:
-            for node in self.resolver.glob(self.table_tree, '/table/tbody/tr*'):
+            for node in self.resolver.glob(self.table_tree, self.ROW_RESOLVER_PATH):
                 yield node.obj
         else:
             for row_pos in range(self.row_count):
@@ -641,11 +666,13 @@ class Table(Widget):
                 raise ValueError('Unsupported action {}'.format(row_action))
 
         if query_parts and row_parts:
-            query = './/tr[{}][{}]'.format(' and '.join(row_parts), ' and '.join(query_parts))
+            query = './/{}[{}][{}]'.format(
+                self.ROW_TAG, ' and '.join(row_parts), ' and '.join(query_parts)
+            )
         elif query_parts:
-            query = './/tr[{}]'.format(' and '.join(query_parts))
+            query = './/{}[{}]'.format(self.ROW_TAG, ' and '.join(query_parts))
         elif row_parts:
-            query = './/tr[{}]'.format(' and '.join(row_parts))
+            query = './/{}[{}]'.format(self.ROW_TAG, ' and '.join(row_parts))
         else:
             # When using ONLY regexps, we might see no query_parts, therefore default query
             query = self.ROWS
@@ -907,14 +934,14 @@ class Table(Widget):
             children = self.browser.elements('./*[descendant-or-self::node()]', parent=node.obj)
             for position, child in enumerate(children):
                 cur_tag = self.browser.tag(child)
-                if cur_tag == 'tr':
+                if cur_tag == self.ROW_TAG:
                     # todo: add logger
-                    cur_obj = TableRow(parent=self._get_ancestor_node_obj(node), index=position)
+                    cur_obj = self.Row(parent=self._get_ancestor_node_obj(node), index=position)
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
-                elif cur_tag == 'td':
+                elif cur_tag == self.COLUMN_TAG:
                     cur_position = self._get_position_respecting_spans(node)
-                    cur_obj = TableColumn(parent=node.obj, position=cur_position,
+                    cur_obj = self.Column(parent=self._get_ancestor_node_obj(node), position=cur_position,
                                           absolute_position=cur_position)
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
@@ -955,9 +982,9 @@ class Table(Widget):
         return tree
 
     def _recalc_column_positions(self, tree):
-        for row in self.resolver.glob(tree, '/table/tbody/tr'):
+        for row in self.resolver.glob(tree, self.ROW_RESOLVER_PATH):
             modifier = 0
-            cols = self.resolver.glob(row, './*')
+            cols = self.resolver.glob(row, './{}'.format(self.COLUMN_RESOLVER_PATH))
             for col in cols:
                 if getattr(col.obj, 'refers_to', None):
                     modifier -= 1
