@@ -15,7 +15,7 @@ from widgetastic.exceptions import RowNotFound
 from widgetastic.log import create_child_logger, create_item_logger
 from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
 from widgetastic.xpath import quote
-from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
+from .base import GenericLocatorWidget, Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
 # Python 3.7 formalised the RE pattern type, so let's use that if we can
 try:
@@ -33,7 +33,7 @@ class TableColumn(Widget, ClickableMixin):
 
     def __locator__(self):
         return self.browser.element(
-            '.{}[{}]'.format(self.parent.table.COLUMN_RESOLVER_PATH, self.position + 1),
+            self.parent.table.COLUMN_AT_POSITION.format(self.position + 1),
             parent=self.parent
         )
 
@@ -168,7 +168,7 @@ class TableRow(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
-        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
+        loc = self.parent.ROW_ELEMENT_PATH.format(self.index + 1)
         return self.browser.element(loc, parent=self.parent)
 
     def position_to_column_name(self, position):
@@ -329,8 +329,10 @@ class Table(Widget):
         class MyCustomTable(Table):
             ROWS = './tbody'
             ROW_RESOLVER_PATH = '/table/tbody'
-            ROW_TAG = 'tbody'
             ROW_AT_INDEX = './tbody[{0}]'
+            COLUMN_RESOLVER_PATH = '/tr[0]/td'
+            COLUMN_AT_POSITION = '/tr[1]/td[{0}]'
+            ROW_TAG = 'tbody'
             Row = MyCustomTableRowClass
 
     Args:
@@ -344,13 +346,21 @@ class Table(Widget):
         bottom_ignore_fill: Whether to also strip these top rows for fill.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+
+    # Resolve path is used for self.resolver for anytree node lookups
+    # where position starts at '0' for elements in the node tree
     ROW_RESOLVER_PATH = '/table/tbody/tr'
     COLUMN_RESOLVER_PATH = '/td'
+
+    # These path vars are used for selenium browser.element lookups,
+    # where position starts at '1' for elements
+    COLUMN_AT_POSITION = './td[{0}]'
+    ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
+
     ROW_TAG = 'tr'
     COLUMN_TAG = 'td'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
     HEADERS = './thead/tr/th|./tr/th|./thead/tr/td' + '|' + HEADER_IN_ROWS
-    ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
     ROOT = ParametrizedLocator('{@locator}')
 
@@ -977,7 +987,7 @@ class Table(Widget):
                         # analyzes headers itself
                         # todo: move headers to tree later
                         continue
-                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)
+                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)    
                     queue.append(cur_node)
         return tree
 
