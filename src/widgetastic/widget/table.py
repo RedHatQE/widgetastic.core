@@ -214,7 +214,7 @@ class TableRow(Widget, ClickableMixin):
             )[0].obj
 
         else:
-            return self._create_column(self, index, logger=create_item_logger(self.logger, item))
+            return self.table._create_column(self, index, logger=create_item_logger(self.logger, item))
 
     def __getattr__(self, attr):
         try:
