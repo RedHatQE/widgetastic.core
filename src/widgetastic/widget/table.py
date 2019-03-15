@@ -16,7 +16,7 @@ from widgetastic.exceptions import RowNotFound
 from widgetastic.log import create_child_logger, create_item_logger
 from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
 from widgetastic.xpath import quote
-from .base import GenericLocatorWidget, Widget, ClickableMixin, WidgetDescriptor, Widgetable
+from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
 # Python 3.7 formalised the RE pattern type, so let's use that if we can
 try:
@@ -31,10 +31,10 @@ def resolve_table_widget(parent, wcls):
 
     This turns the WidgetDescriptor into a completed Widget, tied to the
     appropriate parent.
-    
+
     For example, if you pass in 'column_widgets' to a table like so:
     {'columnA': MyWidget(somearg1, somearg2)}
-    
+
     Then upon calling the TableColumn '.widget' function, this function will resolve
     the "MyWidget" WidgetDescriptor into a "MyWidget" Widget with parent set to the TableColumn.
     """
@@ -47,6 +47,9 @@ def resolve_table_widget(parent, wcls):
 
     # We cannot use WidgetDescriptor's facility for instantiation as it does caching and all
     # that stuff
+    args = ()
+    kwargs = {}
+
     if isinstance(wcls, WidgetDescriptor):
         args = wcls.args
         kwargs = wcls.kwargs
@@ -88,9 +91,6 @@ class TableColumn(Widget, ClickableMixin):
     @cached_property
     def widget(self):
         """Returns the associated widget if defined. If there is none defined, returns None."""
-        args = ()
-        kwargs = {}
-
         if self.absolute_position and self.absolute_position != self.position:
             position = self.absolute_position
         else:
@@ -600,7 +600,9 @@ class Table(Widget):
                 yield node.obj
         else:
             for row_pos in range(self.row_count):
-                yield self._create_row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
+                yield self._create_row(
+                    self, row_pos, logger=create_item_logger(self.logger, row_pos)
+                )
 
     def _process_filters(self, *extra_filters, **filters):
         # Pre-process the filters
@@ -973,13 +975,19 @@ class Table(Widget):
                 cur_tag = self.browser.tag(child)
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
-                    cur_obj = self._create_row(parent=self._get_ancestor_node_obj(node), index=position)
+                    cur_obj = self._create_row(
+                        parent=self._get_ancestor_node_obj(node),
+                        index=position
+                    )
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
                 elif cur_tag == self.COLUMN_TAG:
                     cur_position = self._get_position_respecting_spans(node)
-                    cur_obj = self._create_column(parent=self._get_ancestor_node_obj(node), position=cur_position,
-                                          absolute_position=cur_position)
+                    cur_obj = self._create_column(
+                        parent=self._get_ancestor_node_obj(node),
+                        position=cur_position,
+                        absolute_position=cur_position
+                    )
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
                     rowsteps = range(1, int(child.get_attribute('rowspan') or 0))
@@ -1009,7 +1017,7 @@ class Table(Widget):
                              position=ref_position)
 
                 else:
-                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)    
+                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)
                     queue.append(cur_node)
         return tree
 
