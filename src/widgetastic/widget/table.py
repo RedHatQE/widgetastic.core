@@ -11,6 +11,7 @@ from collections import defaultdict, deque
 from copy import copy
 from jsmin import jsmin
 
+from widgetastic.browser import Browser
 from widgetastic.exceptions import RowNotFound
 from widgetastic.log import create_child_logger, create_item_logger
 from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
@@ -22,6 +23,38 @@ try:
     Pattern = re.Pattern
 except AttributeError:
     Pattern = re._pattern_type
+
+
+def resolve_table_widget(parent, wcls):
+    """
+    Used for applying a parent to a WidgetDescriptor passed in at Table init time.
+
+    This turns the WidgetDescriptor into a completed Widget, tied to the
+    appropriate parent.
+    
+    For example, if you pass in 'column_widgets' to a table like so:
+    {'columnA': MyWidget(somearg1, somearg2)}
+    
+    Then upon calling the TableColumn '.widget' function, this function will resolve
+    the "MyWidget" WidgetDescriptor into a "MyWidget" Widget with parent set to the TableColumn.
+    """
+    if not isinstance(parent, (Browser, Widget)):
+        raise TypeError("'parent' must be an instance of widgetastic.Widget or widgetastic.Browser")
+
+    # Verpick, ...
+    if isinstance(wcls, ConstructorResolvable):
+        return wcls.resolve(parent)
+
+    # We cannot use WidgetDescriptor's facility for instantiation as it does caching and all
+    # that stuff
+    if isinstance(wcls, WidgetDescriptor):
+        args = wcls.args
+        kwargs = wcls.kwargs
+        wcls = wcls.klass
+    kwargs = copy(kwargs)
+    if 'logger' not in kwargs:
+        kwargs['logger'] = create_child_logger(parent.logger, wcls.__name__)
+    return wcls(parent, *args, **kwargs)
 
 
 class TableColumn(Widget, ClickableMixin):
@@ -71,21 +104,7 @@ class TableColumn(Widget, ClickableMixin):
             if self.column_name not in self.table.column_widgets:
                 return None
             wcls = self.table.column_widgets[self.column_name]
-
-        # Verpick, ...
-        if isinstance(wcls, ConstructorResolvable):
-            return wcls.resolve(self)
-
-        # We cannot use WidgetDescriptor's facility for instantiation as it does caching and all
-        # that stuff
-        if isinstance(wcls, WidgetDescriptor):
-            args = wcls.args
-            kwargs = wcls.kwargs
-            wcls = wcls.klass
-        kwargs = copy(kwargs)
-        if 'logger' not in kwargs:
-            kwargs['logger'] = create_child_logger(self.logger, wcls.__name__)
-        return wcls(self, *args, **kwargs)
+        return resolve_table_widget(self, wcls)
 
     @property
     def text(self):
@@ -195,7 +214,7 @@ class TableRow(Widget, ClickableMixin):
             )[0].obj
 
         else:
-            return self.Column(self, index, logger=create_item_logger(self.logger, item))
+            return self._create_column(self, index, logger=create_item_logger(self.logger, item))
 
     def __getattr__(self, attr):
         try:
@@ -319,7 +338,7 @@ class Table(Widget):
 
     If you subclass :py:class:`Table`, :py:class:`TableRow`, or :py:class:`TableColumn`, do not
     forget to update the :py:attr:`Table.Row` and :py:attr:`TableRow.Column` in order for the
-    classes to use the correct class. You can also adjust the class variable constants to change
+    the Table to use the correct class. You can also adjust the class variable constants to change
     the way :py:class:`Table` looks for rows. For example, you could use the following to create
     a table class that builds rows based on each 'tbody' tag within the table, with each
     row being a custom defined class.
@@ -481,6 +500,14 @@ class Table(Widget):
             raise TypeError(
                 'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
 
+    def _create_row(self, parent, index, logger=None):
+        """Override these if you wish to change row behavior in a child class."""
+        return self.Row(parent, index, logger)
+
+    def _create_column(self, parent, position, absolute_position=None, logger=None):
+        """Override this if you wish to change column behavior in a child class."""
+        return self.Column(parent, position, absolute_position, logger)
+
     def __getitem__(self, item):
         if isinstance(item, six.string_types):
             if self.assoc_column is None:
@@ -511,7 +538,7 @@ class Table(Widget):
             except StopIteration:
                 raise RowNotFound('Row not found by index {} via {}'.format(at_index, item))
         else:
-            return self.Row(self, at_index, logger=create_item_logger(self.logger, item))
+            return self._create_row(self, at_index, logger=create_item_logger(self.logger, item))
 
     def row(self, *extra_filters, **filters):
         try:
@@ -573,7 +600,7 @@ class Table(Widget):
                 yield node.obj
         else:
             for row_pos in range(self.row_count):
-                yield self.Row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
+                yield self._create_row(self, row_pos, logger=create_item_logger(self.logger, row_pos))
 
     def _process_filters(self, *extra_filters, **filters):
         # Pre-process the filters
@@ -699,7 +726,7 @@ class Table(Widget):
             # incorrect and has to be decreased
             # If the header is not in the body of the table, number of preceeding rows is 0-based
             # what is correct
-            rows.append(self.Row(self, row_pos - 1 if self._is_header_in_body else row_pos,
+            rows.append(self._create_row(self, row_pos - 1 if self._is_header_in_body else row_pos,
                                  logger=create_item_logger(self.logger, row_pos)))
         return rows
 
@@ -946,12 +973,12 @@ class Table(Widget):
                 cur_tag = self.browser.tag(child)
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
-                    cur_obj = self.Row(parent=self._get_ancestor_node_obj(node), index=position)
+                    cur_obj = self._create_row(parent=self._get_ancestor_node_obj(node), index=position)
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
                 elif cur_tag == self.COLUMN_TAG:
                     cur_position = self._get_position_respecting_spans(node)
-                    cur_obj = self.Column(parent=self._get_ancestor_node_obj(node), position=cur_position,
+                    cur_obj = self._create_column(parent=self._get_ancestor_node_obj(node), position=cur_position,
                                           absolute_position=cur_position)
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
@@ -982,11 +1009,6 @@ class Table(Widget):
                              position=ref_position)
 
                 else:
-                    if cur_tag == 'thead':
-                        # not necessary now since current Table implementation
-                        # analyzes headers itself
-                        # todo: move headers to tree later
-                        continue
                     cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)    
                     queue.append(cur_node)
         return tree
