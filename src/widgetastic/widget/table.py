@@ -187,7 +187,7 @@ class TableRow(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
-        loc = self.parent.ROW_ELEMENT_PATH.format(self.index + 1)
+        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
         return self.browser.element(loc, parent=self.parent)
 
     def position_to_column_name(self, position):
@@ -214,7 +214,9 @@ class TableRow(Widget, ClickableMixin):
             )[0].obj
 
         else:
-            return self.table._create_column(self, index, logger=create_item_logger(self.logger, item))
+            return self.table._create_column(
+                self, index, logger=create_item_logger(self.logger, item)
+            )
 
     def __getattr__(self, attr):
         try:
@@ -728,8 +730,13 @@ class Table(Widget):
             # incorrect and has to be decreased
             # If the header is not in the body of the table, number of preceeding rows is 0-based
             # what is correct
-            rows.append(self._create_row(self, row_pos - 1 if self._is_header_in_body else row_pos,
-                                 logger=create_item_logger(self.logger, row_pos)))
+            rows.append(
+                self._create_row(
+                    self,
+                    row_pos - 1 if self._is_header_in_body else row_pos,
+                    logger=create_item_logger(self.logger, row_pos)
+                )
+            )
         return rows
 
     def _apply_row_filter(self, rows, row_filters):
