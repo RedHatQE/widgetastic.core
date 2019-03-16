@@ -10,6 +10,7 @@ from cached_property import cached_property
 from collections import defaultdict, deque
 from copy import copy
 from jsmin import jsmin
+from operator import attrgetter
 
 from widgetastic.browser import Browser
 from widgetastic.exceptions import RowNotFound
@@ -203,15 +204,38 @@ class TableRow(Widget, ClickableMixin):
             raise TypeError('row[] accepts only integers and strings')
 
         if self.table.table_tree:
-            # todo: add support of xpath and/or iteration to anytree lib
-            return self.table.resolver.glob(
-                self.table.table_tree, '{}[{}]/{}[{}]'.format(
+            # We could find either a TableColumn or a TableReference node at this position...
+            # First look for a TableColumn element at this position
+            cols = self.table.resolver.glob(
+                self.table.table_tree,
+                '{}[{}]{}[{}]'.format(
                     self.table.ROW_RESOLVER_PATH,
                     self.index,
                     self.table.COLUMN_RESOLVER_PATH,
                     index
+                ),
+                handle_resolver_error=True
+            )
+            if not cols:
+                # Next look for a TableReference element at this position
+                cols.extend(
+                    self.table.resolver.glob(
+                        self.table.table_tree,
+                        '{}[{}]/ref[{}]'.format(
+                            self.table.ROW_RESOLVER_PATH,
+                            self.index,
+                            index
+                        ),
+                        handle_resolver_error=True
+                    )
                 )
-            )[0].obj
+            if not cols:
+                raise IndexError(
+                    "Row {} has no TableColumn or TableReference node at position {}".format(
+                        repr(self), index
+                    )
+                )
+            return cols[0].obj
 
         else:
             return self.table._create_column(
@@ -676,8 +700,12 @@ class Table(Widget):
                     raise ValueError('Unknown method {}'.format(method))
                 col_query_parts.append(q)
 
-            query_parts.append('./td[{}][{}]'.format(column_index + 1,
-                                                     ' and '.join(col_query_parts)))
+            query_parts.append(
+                '{}[{}]'.format(
+                    self.COLUMN_AT_POSITION.format(column_index + 1),
+                    ' and '.join(col_query_parts)
+                )
+            )
 
         # Row query
         row_parts = []
@@ -707,16 +735,16 @@ class Table(Widget):
                 raise ValueError('Unsupported action {}'.format(row_action))
 
         if query_parts and row_parts:
-            query = './/{}[{}][{}]'.format(
-                self.ROW_TAG, ' and '.join(row_parts), ' and '.join(query_parts)
+            query = '{}[{}][{}]'.format(
+                self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts), ' and '.join(query_parts)
             )
         elif query_parts:
-            query = './/{}[{}]'.format(self.ROW_TAG, ' and '.join(query_parts))
+            query = '{}[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(query_parts))
         elif row_parts:
-            query = './/{}[{}]'.format(self.ROW_TAG, ' and '.join(row_parts))
+            query = '{}[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts))
         else:
             # When using ONLY regexps, we might see no query_parts, therefore default query
-            query = self.ROWS
+            query = self.ROW_AT_INDEX.format('*')
 
         return query
 
@@ -971,7 +999,7 @@ class Table(Widget):
 
     def _process_table(self):
         queue = deque()
-        tree = Node(name=self.browser.tag(self), obj=self, position=None)
+        tree = Node(name=self.browser.tag(self), obj=self, position=0)
         queue.append(tree)
 
         while len(queue) > 0:
@@ -1024,15 +1052,18 @@ class Table(Widget):
                              position=ref_position)
 
                 else:
-                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=None)
+                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=position)
                     queue.append(cur_node)
         return tree
 
     def _recalc_column_positions(self, tree):
         for row in self.resolver.glob(tree, self.ROW_RESOLVER_PATH):
             modifier = 0
+            # Look for column nodes
             cols = self.resolver.glob(row, './{}'.format(self.COLUMN_RESOLVER_PATH))
-            for col in cols:
+            # Look for TableReference nodes, not always guaranteed to be present
+            cols.extend(self.resolver.glob(row, './ref', handle_resolver_error=True))
+            for col in sorted(cols, key=attrgetter('position')):
                 if getattr(col.obj, 'refers_to', None):
                     modifier -= 1
                     continue
@@ -1092,9 +1123,15 @@ class TableResolver(Resolver):
                 node = self._Resolver__get(node, part)
         return node
 
-    def glob(self, node, path):
+    def glob(self, node, path, handle_resolver_error=False):
         node, parts = self._Resolver__start(node, path)
-        return self.__glob(node, parts)
+        try:
+            return self.__glob(node, parts)
+        except ResolverError:
+            if handle_resolver_error:
+                return []
+            else:
+                raise
 
     def __glob(self, node, parts):
         nodes = []
@@ -1118,12 +1155,22 @@ class TableResolver(Resolver):
 
     def _get_node_by_index(self, node, part):
         part, position = self.index_regexp.match(part).groups()
-        if self.is_wildcard(part):
-            cur_node = self.__glob(node, part)[0]
-        else:
-            cur_node = self._Resolver__get(node, part)
 
-        return cur_node.parent.children[int(position)]
+        matching_nodes = self._Resolver__find(node, part, None)
+        for node_at_pos in filter(lambda n: n.position == int(position), matching_nodes):
+            return node_at_pos
+        else:
+            names = [
+                "{}[{}]".format(repr(getattr(c, self.pathattr, None)), c.position)
+                for c in node.children
+            ]
+            raise ResolverError(
+                node,
+                part,
+                "{} has no child '{}' with position={}. Children are: {}".format(
+                    repr(node), part, position, ", ".join(names)
+                )
+            )
 
     def __find(self, node, pat, remainder):
         matches = []
