@@ -721,13 +721,13 @@ class Table(Widget):
                 raise ValueError('Unsupported action {}'.format(row_action))
 
         if query_parts and row_parts:
-            query = '{}[{}][{}]'.format(
+            query = '({})[{}][{}]'.format(
                 self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts), ' and '.join(query_parts)
             )
         elif query_parts:
-            query = '{}[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(query_parts))
+            query = '({})[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(query_parts))
         elif row_parts:
-            query = '{}[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts))
+            query = '({})[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts))
         else:
             # When using ONLY regexps, we might see no query_parts, therefore default query
             query = self.ROW_AT_INDEX.format('*')
