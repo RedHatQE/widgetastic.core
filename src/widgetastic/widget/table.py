@@ -205,7 +205,6 @@ class TableRow(Widget, ClickableMixin):
 
         if self.table.table_tree:
             # We could find either a TableColumn or a TableReference node at this position...
-            # First look for a TableColumn element at this position
             cols = self.table.resolver.glob(
                 self.table.table_tree,
                 '{}[{}]{}[{}]'.format(
@@ -216,19 +215,6 @@ class TableRow(Widget, ClickableMixin):
                 ),
                 handle_resolver_error=True
             )
-            if not cols:
-                # Next look for a TableReference element at this position
-                cols.extend(
-                    self.table.resolver.glob(
-                        self.table.table_tree,
-                        '{}[{}]/ref[{}]'.format(
-                            self.table.ROW_RESOLVER_PATH,
-                            self.index,
-                            index
-                        ),
-                        handle_resolver_error=True
-                    )
-                )
             if not cols:
                 raise IndexError(
                     "Row {} has no TableColumn or TableReference node at position {}".format(
@@ -1048,7 +1034,7 @@ class Table(Widget):
                             ref_parent = node
                         ref_obj = TableReference(parent=ref_parent, reference=cur_obj)
                         ref_position = cur_position if col_step == 0 else cur_position + col_step
-                        Node(name='ref', parent=ref_parent, obj=ref_obj,
+                        Node(name=cur_tag, parent=ref_parent, obj=ref_obj,
                              position=ref_position)
 
                 else:
@@ -1061,8 +1047,6 @@ class Table(Widget):
             modifier = 0
             # Look for column nodes
             cols = self.resolver.glob(row, './{}'.format(self.COLUMN_RESOLVER_PATH))
-            # Look for TableReference nodes, not always guaranteed to be present
-            cols.extend(self.resolver.glob(row, './ref', handle_resolver_error=True))
             for col in sorted(cols, key=attrgetter('position')):
                 if getattr(col.obj, 'refers_to', None):
                     modifier -= 1

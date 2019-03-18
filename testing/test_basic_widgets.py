@@ -358,7 +358,7 @@ def test_table_multiple_tbody(browser):
 
         @property
         def is_displayed(self):
-            return self.browser.is_displayed(locator=self.ROW, parent=self)
+            return self.browser.is_displayed(self.ROW, parent=self)
 
     class TBodyTable(Table):
         ROWS = "./tbody"
