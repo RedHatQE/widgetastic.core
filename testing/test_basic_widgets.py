@@ -388,7 +388,7 @@ def test_table_multiple_tbody(browser):
                 'Widget': TextInput(locator='./input'),
             }
         )
-    
+
     view = TestForm(browser)
 
     assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
