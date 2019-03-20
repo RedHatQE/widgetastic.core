@@ -370,7 +370,7 @@ class Table(Widget):
         locator: A locator to the table ``<table>`` tag.
         column_widgets: A mapping to widgets that are present in cells. Keys signify column name,
             value is the widget definition.
-        assoc_column: Indexlooks or name of the column used for associative filling.
+        assoc_column: Index or name of the column used for associative filling.
         rows_ignore_top: Number of rows to ignore from top when reading/filling.
         rows_ignore_bottom: Number of rows to ignore from bottom when reading/filling.
         top_ignore_fill: Whether to also strip these top rows for fill.
