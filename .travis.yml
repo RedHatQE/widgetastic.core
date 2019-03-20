@@ -20,10 +20,11 @@ jobs:
       script: skip
       deploy:
         provider: pypi
-        user: mfalesni
+        skip_existing: true
+        user: mshriver
         distributions: sdist bdist_wheel
         password:
-          secure: Maw1EXXZRQJq14rsTdYCjIYpm+GBfqsdRNOBbqPnImwpJC76RLmH1jR88oYM2wgN8WNTX84qLnMUHyacBABFCmo5Sky57FxuLQWHrPkM6KsdSq9pHys0TB9y0b1wuJktF/HHLqWkty99gAZfP/bvaYq3B0Qo9WTEpaaBGDJo/ZDL23hcRgf+L9Xo0a+K8SuG8zcVijTNDP9HM6pAG3zXk4GuwUV04oUY1bSfFI0MoOR9/7us7c59jQx8iY2LPpVkdqAD5zkd/lwHZiIcsfKpWTKvQsRQ6Ze2r51Pc/bFa/8SCiFRykQm88pf4/F1BR1iR09DRiy6FnBWNQy06sIJfwjjHl5oVX+WKpcrO+3hdofSY8tH+uu2Kex0S+12ZhxbHd5Ylk9TzvGFzp7NWqmGtCzpixnekSC4VuuSe7nw/RYlqC0Fm0vo8PbX8aRXn6rwqzugZUkSFnRbf2wT2JIjQo12Rskvi+F1d3fr8WevcVW163C5nStZuwRCeejpwA7qS8XCuIqGJkfet9nYCFJjQHKH20Lp3kEb2DSvOzFCeB0ZWg1I4Ew64MkOGoS0ijXxdfQHYsOB5OMfqz0vBfxgOpYht5i28fAjTghslzwOHbWV6wvPh9DJrTbOojrdzEq9zoSeQ81akWpzq1U1dHaRDELO2rJ6oE9WlGMmqs0Ce0A=
+          secure: "CdM5neluGVCqh+RhWnQiR3Ysewm5rgMpGYkpFuwJZYxDhNu2Kc/TlwWNcKW9GVO5i0HszGNsFrbi8ky2jg+nhrzZihSOnpPuWsXdt73IGrcts3cHM6IAyMOJYFnqZjfRHH0VFxfxMQNik4hOpHtkdC9N/0P1r9j4uQTYjxiATOKcPIGMwKJApQ9RWY7csWVZJs+RBvJMQhTSzZYqQt1vZ1upwjB9demqM+Uv0XpdoCuegojmR2Z01Jy1mL2CHwVi+HSWzkX0fKKhi+TSuTVz2iBlyqghuGWkWWh7wHU2yB+c1i0HivW98Ii/Wqe6+rY55g6wISP1s5QzCxbRODYwtprmiVCe6u8Ly0Rc39txdQk6U9F6IqnUhd/o/nauZbxlNGtHGbGg6naz93pY1648G7aWHaLO0GR2l2lBiHH54g17aHGpPjoXloFOgfrGIXtWjnBdjrv5WObtPXHIED71P59b9xWgrTxtZMMyfto61EhqnmzsxSnRqRvtMXGmqWgv8O2TIkMjE04XxGJ6mVOdENXyQvPVorLmAep18/XvDE3zdd33SNHjdYxmVIezakUFqHUaOcsHRxlbk/MxODpi9TE3zpgwmhQVsBcj/oWLAv6st0oIPrQAiA13J41gVWupFVpCKcDSYOxVBFl/GzNQo/tWaM71NTVLyRze6NFOB2c="
         on:
           tags: true
           repo: RedHatQE/widgetastic.core
