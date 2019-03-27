@@ -353,8 +353,7 @@ def test_table_multiple_tbody(browser):
         def __locator__(self):
             # We don't need to adjust index by +1 because anytree Node position will
             # already be '+1' due to presence of 'thead' among the 'tbody' rows
-            loc = self.parent.ROW_AT_INDEX.format(self.index)
-            return self.browser.element(loc, parent=self.parent)
+            return self.parent.ROW_AT_INDEX.format(self.index)
 
         @property
         def is_displayed(self):

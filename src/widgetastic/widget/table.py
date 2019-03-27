@@ -69,10 +69,7 @@ class TableColumn(Widget, ClickableMixin):
         self.absolute_position = absolute_position  # absolute position according to row/colspan
 
     def __locator__(self):
-        return self.browser.element(
-            self.parent.table.COLUMN_AT_POSITION.format(self.position + 1),
-            parent=self.parent
-        )
+        return self.parent.table.COLUMN_AT_POSITION.format(self.position + 1),
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
@@ -188,8 +185,7 @@ class TableRow(Widget, ClickableMixin):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
-        loc = self.parent.ROW_AT_INDEX.format(self.index + 1)
-        return self.browser.element(loc, parent=self.parent)
+        return self.parent.ROW_AT_INDEX.format(self.index + 1)
 
     def position_to_column_name(self, position):
         """Maps the position index into the column name (pretty)"""
