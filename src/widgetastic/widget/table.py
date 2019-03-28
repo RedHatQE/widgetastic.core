@@ -69,7 +69,7 @@ class TableColumn(Widget, ClickableMixin):
         self.absolute_position = absolute_position  # absolute position according to row/colspan
 
     def __locator__(self):
-        return self.parent.table.COLUMN_AT_POSITION.format(self.position + 1),
+        return self.parent.table.COLUMN_AT_POSITION.format(self.position + 1)
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
