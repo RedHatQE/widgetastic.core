@@ -53,9 +53,8 @@ def resolve_table_widget(parent, wcls):
 
     if isinstance(wcls, WidgetDescriptor):
         args = wcls.args
-        kwargs = wcls.kwargs
+        kwargs.update(wcls.kwargs)
         wcls = wcls.klass
-    kwargs = copy(kwargs)
     if 'logger' not in kwargs:
         kwargs['logger'] = create_child_logger(parent.logger, wcls.__name__)
     return wcls(parent, *args, **kwargs)
