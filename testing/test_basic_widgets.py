@@ -5,7 +5,8 @@ import re
 
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.widget import (
-    View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput)
+    View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput, Widget)
+from widgetastic.widget.table import TableRow
 from widgetastic.utils import Fillable, ParametrizedString, VersionPick, Version
 
 
@@ -335,6 +336,144 @@ def test_table(browser):
                                    u'Last Name': u'',
                                    u'Username': u'@blabla',
                                    u'Widget': u'widget6'}]
+
+
+def test_table_multiple_tbody(browser):
+    class TBodyRow(TableRow):
+        ROW = "./tr[1]"
+        HIDDEN_CONTENT = "./tr[2]/td[1]"
+
+        def __init__(self, parent, index, logger=None):
+            Widget.__init__(self, parent, logger=logger)
+            # We don't need to adjust index by +1 because anytree Node position will
+            # already be '+1' due to presence of 'thead' among the 'tbody' rows
+            self.index = index
+            self.hidden_content = Text(parent=self, locator=self.HIDDEN_CONTENT)
+
+        def __locator__(self):
+            # We don't need to adjust index by +1 because anytree Node position will
+            # already be '+1' due to presence of 'thead' among the 'tbody' rows
+            return self.parent.ROW_AT_INDEX.format(self.index)
+
+        @property
+        def is_displayed(self):
+            return self.browser.is_displayed(self.ROW, parent=self)
+
+    class TBodyTable(Table):
+        ROWS = "./tbody"
+        ROW_RESOLVER_PATH = "/table/tbody"
+        ROW_AT_INDEX = "./tbody[{0}]"
+        COLUMN_RESOLVER_PATH = "/tr[0]/td"
+        COLUMN_AT_POSITION = "./tr[1]/td[{0}]"
+        ROW_TAG = "tbody"
+        Row = TBodyRow
+
+        @property
+        def _is_header_in_body(self):
+            """Override this to always return true.
+
+            Since we are resolving rows by the 'tbody' tag, widgetastic.Table._process_table
+            creates the rows with a position starting at 1 (because a <thead> tag is present
+            when enumerating through the <table> tag's children)
+            """
+            return True
+
+    class TestForm(View):
+        table1 = TBodyTable(
+            '#multiple_tbody_table',
+            column_widgets={
+                'First Name':  TextInput(locator='./input'),
+                'Last Name': TextInput(locator='./input'),
+                'Widget': TextInput(locator='./input'),
+            }
+        )
+
+    view = TestForm(browser)
+
+    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
+    assert len(list(view.table1.rows())) == 3
+
+    assert len(list(view.table1.rows(first_name='Mark'))) == 1
+    assert len(list(view.table1.rows(username__startswith='@slacker'))) == 1
+    assert len(list(view.table1.rows(first_name__startswith='Larry',
+                                     first_name__endswith='Bird'))) == 1
+    assert len(list(view.table1.rows(_row__attr=('data-test', 'def-345')))) == 1
+    assert len(list(view.table1.rows(_row__attr_startswith=('data-test', 'abc')))) == 2
+    assert len(list(view.table1.rows(_row__attr_endswith=('data-test', '345')))) == 2
+    assert len(list(view.table1.rows(_row__attr_contains=('data-test', '3')))) == 3
+    assert len(list(view.table1.rows(
+        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
+    assert len(list(view.table1.rows(_row__attr=('data-test', 'abc-345'), first_name='qwer'))) == 0
+
+    with pytest.raises(ValueError):
+        list(view.table1.rows(_row__papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
+        list(view.table1.rows(_row__attr_papalala=('foo', 'bar')))
+
+    with pytest.raises(ValueError):
+        list(view.table1.rows(_row__attr='foobar'))
+
+    assert len(list(view.table1.rows((0, '1')))) == 1
+    assert len(list(view.table1.rows((1, 'startswith', 'Jacob')))) == 1
+    assert len(list(view.table1.rows((1, 'startswith', 'Jacob'), username__endswith='at'))) == 1
+
+    assert len(list(view.table1.rows((1, re.compile(r'Mark$'))))) == 1
+    assert len(list(view.table1.rows((1, re.compile(r'^Jacob'))))) == 1
+    assert len(list(view.table1.rows(('Last Name', re.compile(r'^Otto'))))) == 1
+    assert len(list(view.table1.rows((0, re.compile(r'^2')), (3, re.compile(r'fat$'))))) == 1
+
+    row = view.table1.row(username='@slacker')
+    assert row[0].text == '3'
+    assert row['First Name'].text == 'Larry the Bird'
+    assert row.first_name.text == 'Larry the Bird'
+
+    assert row.read() == {u'#': u'3',
+                          u'First Name': u'Larry the Bird',
+                          u'Last Name': u'Larry the Bird',
+                          u'Username': u'@slacker',
+                          u'Widget': u'widget3'}
+
+    unpacking_fake_read = [(header, column.text) for header, column in row]
+    assert unpacking_fake_read == [(u'#', u'3'),
+                                   (u'First Name', u'Larry the Bird'),
+                                   (u'Last Name', u'Larry the Bird'),
+                                   (u'Username', u'@slacker'),
+                                   (u'Widget', u'')]
+
+    assert view.table1[1].last_name.text == 'Thornton'
+
+    with pytest.raises(AttributeError):
+        row.papalala
+
+    with pytest.raises(TypeError):
+        view.table1['boom!']
+
+    with pytest.raises(IndexError):
+        view.table1[1000]
+
+    row = next(view.table1.rows())
+    assert row.first_name.text == 'Mark'
+
+    assert view.table1.read() == [{u'#': u'1',
+                                   u'First Name': u'Mark',
+                                   u'Last Name': u'Otto',
+                                   u'Username': u'@mdo',
+                                   u'Widget': u'widget1'},
+                                  {u'#': u'2',
+                                   u'First Name': u'Jacob',
+                                   u'Last Name': u'Thornton',
+                                   u'Username': u'@fat',
+                                   u'Widget': u'widget2'},
+                                  {u'#': u'3',
+                                   u'First Name': u'Larry the Bird',
+                                   u'Last Name': u'Larry the Bird',
+                                   u'Username': u'@slacker',
+                                   u'Widget': u'widget3'}]
+
+    for row in view.table1:
+        assert row.is_displayed
+        assert not row.hidden_content.is_displayed
 
 
 def test_table_no_header(browser):
