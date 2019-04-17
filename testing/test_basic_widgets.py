@@ -143,6 +143,7 @@ def test_table(browser):
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
     assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
+    assert view.table1.caption == "Some caption"
     dir(view.table[0])
     assert len(list(view.table.rows())) == 3
     assert len(list(view.table1.rows())) == 8
@@ -391,6 +392,7 @@ def test_table_multiple_tbody(browser):
     view = TestForm(browser)
 
     assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
+    assert view.table1.caption == "Some caption"
     assert len(list(view.table1.rows())) == 3
 
     assert len(list(view.table1.rows(first_name='Mark'))) == 1

@@ -383,6 +383,10 @@ class Table(Widget):
     COLUMN_AT_POSITION = './td[{0}]'
     ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
 
+    # These tags are not added as Node objects to the table tree when
+    # _process_table is called.
+    IGNORE_TAGS = ['caption']
+
     ROW_TAG = 'tr'
     COLUMN_TAG = 'td'
     HEADER_IN_ROWS = './tbody/tr[1]/th'
@@ -418,6 +422,13 @@ class Table(Widget):
     @cached_property
     def resolver(self):
         return TableResolver()
+
+    @cached_property
+    def caption(self):
+        try:
+            return self.browser.elements('./caption')[0].text
+        except IndexError:
+            return None
 
     def __repr__(self):
         return (
@@ -987,8 +998,10 @@ class Table(Widget):
             node = queue.popleft()
             # visit node
             children = self.browser.elements('./*[descendant-or-self::node()]', parent=node.obj)
-            for position, child in enumerate(children):
+            position = 0
+            for child in children:
                 cur_tag = self.browser.tag(child)
+
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
                     cur_obj = self._create_row(
@@ -997,6 +1010,7 @@ class Table(Widget):
                     )
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
+
                 elif cur_tag == self.COLUMN_TAG:
                     cur_position = self._get_position_respecting_spans(node)
                     cur_obj = self._create_column(
@@ -1033,8 +1047,14 @@ class Table(Widget):
                              position=ref_position)
 
                 else:
-                    cur_node = Node(name=cur_tag, parent=node, obj=child, position=position)
-                    queue.append(cur_node)
+                    if cur_tag in self.IGNORE_TAGS:
+                        # Ignore these tags and don't increase position,
+                        # since it will throw off row indexing
+                        continue
+                    else:
+                        cur_node = Node(name=cur_tag, parent=node, obj=child, position=position)
+                        queue.append(cur_node)
+                position += 1
         return tree
 
     def _recalc_column_positions(self, tree):
