@@ -989,14 +989,8 @@ class Table(Widget):
         """Checks whether table has rowspan/colspan attributes"""
         return bool(self.browser.elements('./tbody//td[@rowspan or @colspan]', parent=self))
 
-    def _enumerate_children(self, children):
-        position = 0
-        for child in children:
-            # Ignore these tags when building table tree
-            if self.browser.tag(child) in self.IGNORE_TAGS:
-                continue
-            yield position, child
-            position += 1
+    def _filter_child(self, child):
+        return child.tag_name not in self.IGNORE_TAGS
 
     def _process_table(self):
         queue = deque()
@@ -1007,9 +1001,9 @@ class Table(Widget):
             node = queue.popleft()
             # visit node
             children = self.browser.elements('./*[descendant-or-self::node()]', parent=node.obj)
-            position = 0
-            for position, child in self._enumerate_children(children):
-                cur_tag = self.browser.tag(child)
+
+            for position, child in enumerate(filter(self._filter_child, children)):
+                cur_tag = child.tag_name
 
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
