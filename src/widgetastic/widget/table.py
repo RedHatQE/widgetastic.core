@@ -385,7 +385,7 @@ class Table(Widget):
 
     # These tags are not added as Node objects to the table tree when
     # _process_table is called.
-    IGNORE_TAGS = ['caption']
+    IGNORE_TAGS = ['caption', 'thead', 'tfoot', 'colgroup']
 
     ROW_TAG = 'tr'
     COLUMN_TAG = 'td'
