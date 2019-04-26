@@ -5,7 +5,7 @@ import re
 
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.widget import (
-    View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput, Widget)
+    View, Table, Text, TextInput, FileInput, Checkbox, Select, ColourInput)
 from widgetastic.widget.table import TableRow
 from widgetastic.utils import Fillable, ParametrizedString, VersionPick, Version
 
