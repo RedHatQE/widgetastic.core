@@ -345,16 +345,8 @@ def test_table_multiple_tbody(browser):
         HIDDEN_CONTENT = "./tr[2]/td[1]"
 
         def __init__(self, parent, index, logger=None):
-            Widget.__init__(self, parent, logger=logger)
-            # We don't need to adjust index by +1 because anytree Node position will
-            # already be '+1' due to presence of 'thead' among the 'tbody' rows
-            self.index = index
+            super(TBodyRow, self).__init__(parent, index, logger=logger)
             self.hidden_content = Text(parent=self, locator=self.HIDDEN_CONTENT)
-
-        def __locator__(self):
-            # We don't need to adjust index by +1 because anytree Node position will
-            # already be '+1' due to presence of 'thead' among the 'tbody' rows
-            return self.parent.ROW_AT_INDEX.format(self.index)
 
         @property
         def is_displayed(self):
@@ -368,16 +360,6 @@ def test_table_multiple_tbody(browser):
         COLUMN_AT_POSITION = "./tr[1]/td[{0}]"
         ROW_TAG = "tbody"
         Row = TBodyRow
-
-        @property
-        def _is_header_in_body(self):
-            """Override this to always return true.
-
-            Since we are resolving rows by the 'tbody' tag, widgetastic.Table._process_table
-            creates the rows with a position starting at 1 (because a <thead> tag is present
-            when enumerating through the <table> tag's children)
-            """
-            return True
 
     class TestForm(View):
         table1 = TBodyTable(
