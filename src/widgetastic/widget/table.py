@@ -538,9 +538,9 @@ class Table(Widget):
             at_index = row.index
         elif isinstance(item, int):
             at_index = item
-            if at_index > self.row_count:
-                raise IndexError('Integer row index {} is greater than row count {}'
-                                 .format(at_index, self.row_count))
+            if at_index >= self.row_count:
+                raise IndexError('Integer row index {} is greater than max index {}'
+                                 .format(at_index, self.row_count - 1))
         else:
             raise TypeError('Table [] accepts only strings or integers.')
         if at_index < 0:
