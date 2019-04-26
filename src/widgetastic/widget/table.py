@@ -395,7 +395,6 @@ class Table(Widget):
     ROOT = ParametrizedLocator('{@locator}')
 
     Row = TableRow
-    Column = TableColumn
 
     def __init__(
             self, parent, locator, column_widgets=None, assoc_column=None,
@@ -524,7 +523,7 @@ class Table(Widget):
 
     def _create_column(self, parent, position, absolute_position=None, logger=None):
         """Override this if you wish to change column behavior in a child class."""
-        return self.Column(parent, position, absolute_position, logger)
+        return self.Row.Column(parent, position, absolute_position, logger)
 
     def __getitem__(self, item):
         if isinstance(item, six.string_types):
