@@ -24,7 +24,7 @@ jobs:
         user: mshriver
         distributions: sdist bdist_wheel
         password:
-          secure: "CdM5neluGVCqh+RhWnQiR3Ysewm5rgMpGYkpFuwJZYxDhNu2Kc/TlwWNcKW9GVO5i0HszGNsFrbi8ky2jg+nhrzZihSOnpPuWsXdt73IGrcts3cHM6IAyMOJYFnqZjfRHH0VFxfxMQNik4hOpHtkdC9N/0P1r9j4uQTYjxiATOKcPIGMwKJApQ9RWY7csWVZJs+RBvJMQhTSzZYqQt1vZ1upwjB9demqM+Uv0XpdoCuegojmR2Z01Jy1mL2CHwVi+HSWzkX0fKKhi+TSuTVz2iBlyqghuGWkWWh7wHU2yB+c1i0HivW98Ii/Wqe6+rY55g6wISP1s5QzCxbRODYwtprmiVCe6u8Ly0Rc39txdQk6U9F6IqnUhd/o/nauZbxlNGtHGbGg6naz93pY1648G7aWHaLO0GR2l2lBiHH54g17aHGpPjoXloFOgfrGIXtWjnBdjrv5WObtPXHIED71P59b9xWgrTxtZMMyfto61EhqnmzsxSnRqRvtMXGmqWgv8O2TIkMjE04XxGJ6mVOdENXyQvPVorLmAep18/XvDE3zdd33SNHjdYxmVIezakUFqHUaOcsHRxlbk/MxODpi9TE3zpgwmhQVsBcj/oWLAv6st0oIPrQAiA13J41gVWupFVpCKcDSYOxVBFl/GzNQo/tWaM71NTVLyRze6NFOB2c="
+          secure: "Q827iwdwXsovAMi1WKmlgCiGu+2PNwFhmQ2W6+AsnKhkfvMCQ53BclpqeY5ONbGZM5FtsOy5inbsOfJ4neZkM5hjfVYvnOdimdQkd9YCuJfnPf0zMlavdNrnKBqjnCT9UGcjtKB3XhaoNFd0rXWqzOwxIeEAbwblIDHKKKHDYtESrM4wiTIPpDzOjc9MUWMz3hkbi3Z58oDY+vXKAjkoegJMRVy8PutWUNgSTPJCCQtcE+SCLaXKkkojR71TxWXaPBQqzCXc+/M86HaU/iug6+wAC9vOeBtHgVDZQY11M38q7qkTMMu/slt39qz5mKisbImKOgenCNJozX1lI+vBFZijzOGKL3C6+PYU1lVhfHtYlFV/1+ln7uyL9DdoYxvS6rOrnnNkrdtP0YT4RZ280pqhkbhFWQoBnm0imA458TrY9c1zME948algffW+D5mVnXmXMoa6RHM/QbllcpE7dwua473scc+UxdAjyJpoMkXxzKxhsrEWwvIoUQaNs+zRw0Ml3jlohqseJa/q6hT5kYdoSst3+rxcsC3LEHdVARnxayhvvW9TIW0dBEEr/il0/trUYtzDdWO59aORX8CfVvvAK8yCN96cDFmuAsump08UDhVijjLeHX4cvD5UAkN0O0o2Ba/sraIxgIoucKQi2JCcR3rDqVISfksCbtYJG8Y="
         on:
           tags: true
           repo: RedHatQE/widgetastic.core
