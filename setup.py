@@ -19,6 +19,7 @@ setup(
         'cached_property',
         'jsmin',
         'pytest',
+        'selenium==3.14.0',
         'selenium-smart-locator',
         'six',
         'wait_for',

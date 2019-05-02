@@ -36,7 +36,8 @@ install:
   - pip install -U setuptools
   - pip install -U tox tox-travis coveralls
   - pip install git+https://github.com/quarckster/webdriverdownloader.git@fix_github
-  - webdrivermanager firefox:v0.20.1
+  - webdrivermanager firefox:v0.24.0
+  - firefox --version
 script:
   - tox
 after_success:

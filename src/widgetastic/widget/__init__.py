@@ -9,4 +9,3 @@ from .input import BaseInput, ColourInput, FileInput, TextInput  # noqa: F401
 from .select import Select  # noqa: F401
 from .table import Table, TableColumn, TableRow  # noqa: F401
 from .text import Text  # noqa: F401
-from .iframe import IFrameView  # noqa: F401

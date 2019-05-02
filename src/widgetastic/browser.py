@@ -805,7 +805,8 @@ class Browser(object):
                 raise
 
     def switch_to_frame(self, *args, **kwargs):
-        self.selenium.switch_to.frame(self.element(*args, **kwargs))
+        parent = kwargs.pop('parent', self.browser)
+        self.selenium.switch_to.frame(self.element(parent=parent, *args, **kwargs))
 
     def switch_to_main_frame(self):
         self.selenium.switch_to.default_content()

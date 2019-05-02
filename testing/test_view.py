@@ -7,8 +7,7 @@ from widgetastic.exceptions import NoSuchElementException
 from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
 from widgetastic.widget import (
     ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin,
-    IFrameView)
+    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin)
 
 
 def test_can_create_view(browser):
@@ -676,19 +675,19 @@ def test_ignore_decorator(browser):
 
 
 def test_iframe_view(browser):
-    class MyIFrameView(IFrameView):
+    class MyIFrameView(View):
         FRAME = '//iframe[@name="some_iframe"]'
         h3 = Text('.//h3')
         select1 = Select(id='iframe_select1')
         select2 = Select(name='iframe_select2')
 
-        class nested_iframe_view(IFrameView):
+        class nested_iframe_view(View):
             FRAME = './/iframe[@name="another_iframe"]'
             h3 = Text('.//h3')
             select3 = Select(id='iframe_select3')
 
             class nested(View):
-                ROOT = '#nested_view'
+                ROOT = './/div[@id="nested_view"]'
                 nested_checkbox = Checkbox(id='input222')
 
     class ParentView(View):

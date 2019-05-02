@@ -1024,17 +1024,14 @@ class View(Widget):
         Args:
             widget: The widget being accessed.
         """
-        parents = self.hierarchy
-        parents.insert(0, self.root_browser)
-        for parent in parents:
-            frame = getattr(parent, 'FRAME', None)
-            if frame is None:
-                self.browser.switch_to_main_frame()
-            else:
-                self.browser.switch_to_frame(frame)
+        parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
 
-        # replace this with starting from default frame + all possible other frames
-        
+        self.browser.switch_to_main_frame()
+
+        if parents:
+            for parent in parents:
+                self.browser.switch_to_frame(getattr(parent, 'FRAME'))
+
 
 class ParametrizedView(View):
     """View that needs parameters to be run.
