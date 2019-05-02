@@ -688,7 +688,7 @@ def test_iframe_view(browser):
 
             class nested(View):
                 ROOT = './/div[@id="nested_view"]'
-                nested_checkbox = Checkbox(id='input222')
+                nested_input = TextInput(name='input222')
 
     class ParentView(View):
         h3 = Text('//h3[@id="switchabletesting-1"]')
@@ -719,6 +719,6 @@ def test_iframe_view(browser):
             iframe_view.nested_iframe_view.select3.read() == 'Bar')
 
     assert iframe_view.nested_iframe_view.nested.is_displayed
-    assert (not iframe_view.nested_iframe_view.nested.nested_checkbox.read() and
-            iframe_view.nested_iframe_view.nested.nested_checkbox.fill(True) and
-            iframe_view.nested_iframe_view.nested.nested_checkbox.read())
+    assert iframe_view.nested_iframe_view.nested.nested_input.read() == 'Default Value'
+    assert iframe_view.nested_iframe_view.nested.nested_input.fill('New Value')
+    assert iframe_view.nested_iframe_view.nested.nested_input.read() == 'New Value'

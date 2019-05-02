@@ -1017,20 +1017,17 @@ class View(Widget):
         pass
 
     def child_widget_accessed(self, widget):
-        """Called when a child widget of this widget gets accessed.
+        """This hook is called when a child widget of current view is accessed.
 
-        Useful when eg. the containing widget needs to open for the child widget to become visible.
+        One of useful examples is below. it allows us to switch between frames.
 
         Args:
             widget: The widget being accessed.
         """
-        parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
-
         self.browser.switch_to_main_frame()
-
-        if parents:
-            for parent in parents:
-                self.browser.switch_to_frame(getattr(parent, 'FRAME'))
+        parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
+        for parent in parents:
+            self.browser.switch_to_frame(getattr(parent, 'FRAME'))
 
 
 class ParametrizedView(View):
