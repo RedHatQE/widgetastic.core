@@ -874,6 +874,7 @@ class View(Widget):
     """
     #: Skip this view in the element lookup hierarchy
     INDIRECT = False
+    FRAME = None
     fill_strategy = None
 
     def __init__(self, parent, logger=None, **kwargs):
@@ -1014,6 +1015,19 @@ class View(Widget):
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
         """
         pass
+
+    def child_widget_accessed(self, widget):
+        """This hook is called when a child widget of current view is accessed.
+
+        One of useful examples is below. it allows us to switch between frames.
+
+        Args:
+            widget: The widget being accessed.
+        """
+        self.browser.switch_to_main_frame()
+        parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
+        for parent in parents:
+            self.browser.switch_to_frame(getattr(parent, 'FRAME'))
 
 
 class ParametrizedView(View):

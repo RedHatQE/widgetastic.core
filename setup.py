@@ -18,6 +18,8 @@ setup(
         'anytree',
         'cached_property',
         'jsmin',
+        'pytest',
+        'selenium',
         'selenium-smart-locator',
         'six',
         'wait_for',
