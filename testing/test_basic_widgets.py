@@ -16,6 +16,8 @@ def test_basic_widgets(browser):
         input1 = TextInput(name='input1')
         input2 = Checkbox(id='input2')
         input3 = ColourInput(id='colourinput')
+        input4 = Checkbox(name='input1_disabled')
+        input5 = Checkbox(id='input2_disabled')
         fileinput = FileInput(id='fileinput')
 
     class AFillable(Fillable):
@@ -59,6 +61,11 @@ def test_basic_widgets(browser):
     assert form.fileinput.fill('/etc/resolv.conf')
     with pytest.raises(DoNotReadThisWidget):
         form.fileinput.read()
+
+    assert form.input1.is_enabled
+    assert not form.input4.is_enabled
+    assert form.input2.is_enabled
+    assert not form.input5.is_enabled
 
 
 def test_nested_views_read_fill(browser):
