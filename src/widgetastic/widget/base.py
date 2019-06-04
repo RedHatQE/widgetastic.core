@@ -323,7 +323,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
         It uses :py:meth:`__locator__` to retrieve the locator and then it looks up the WebElement
         on the parent's browser.
 
-        If hte ``__locator__`` isbadly implemented and returns a ``WebElement`` instance, it returns
+        If the ``__locator__`` isbadly implemented and returns a ``WebElement`` instance, it returns
         it directly.
 
         You usually want this method to be intact.
@@ -482,6 +482,18 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             :py:class:`bool`
         """
         return self.browser.is_displayed(self)
+
+    @property
+    def is_enabled(self):
+        """Check widget is enabled or not.
+
+        The logic behind `is_enabled` is WebElement property. If `__locator__` not pointing to the
+        expected `WebElement`, you can always override this.
+
+        Returns:
+            :py:class:`bool`
+        """
+        return self.browser.element(self).is_enabled()
 
     @logged()
     def wait_displayed(self, timeout='10s', delay=0.2):
