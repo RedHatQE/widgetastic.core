@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 """This module contains the base classes that are used to implement the more specific behaviour."""
 
 import itertools
 import re
-import six
 from anytree import Node, RenderTree, AsciiStyle, Resolver, ResolverError, ChildResolverError
 from cached_property import cached_property
 from collections import defaultdict, deque
@@ -191,7 +189,7 @@ class TableRow(Widget, ClickableMixin):
         return self.table.index_header_mapping[position]
 
     def __getitem__(self, item):
-        if isinstance(item, six.string_types):
+        if isinstance(item, str):
             index = self.table.header_index_mapping[self.table.ensure_normal(item)]
         elif isinstance(item, int):
             index = item
@@ -504,7 +502,7 @@ class Table(Widget):
             return None
         elif isinstance(self.assoc_column, int):
             return self.assoc_column
-        elif isinstance(self.assoc_column, six.string_types):
+        elif isinstance(self.assoc_column, str):
             if self.assoc_column in self.attributized_headers:
                 header = self.attributized_headers[self.assoc_column]
             elif self.assoc_column in self.headers:
@@ -526,7 +524,7 @@ class Table(Widget):
         return self.Row.Column(parent, position, absolute_position, logger)
 
     def __getitem__(self, item):
-        if isinstance(item, six.string_types):
+        if isinstance(item, str):
             if self.assoc_column is None:
                 raise TypeError('You cannot use string indices when no assoc_column specified!')
             try:
@@ -551,7 +549,7 @@ class Table(Widget):
             nodes = self.resolver.glob(self.table_tree, self.ROW_RESOLVER_PATH)
             at_index = at_index + 1 if self._is_header_in_body else at_index
             try:
-                return six.next(n.obj for n in nodes if n.position == at_index)
+                return next(n.obj for n in nodes if n.position == at_index)
             except StopIteration:
                 raise RowNotFound('Row not found by index {} via {}'.format(at_index, item))
         else:
@@ -559,7 +557,7 @@ class Table(Widget):
 
     def row(self, *extra_filters, **filters):
         try:
-            return six.next(self.rows(*extra_filters, **filters))
+            return next(self.rows(*extra_filters, **filters))
         except StopIteration:
             raise RowNotFound(
                 'Row not found when using filters {!r}/{!r}'.format(extra_filters, filters))
@@ -626,7 +624,7 @@ class Table(Widget):
         processed_filters = defaultdict(list)
         regexp_filters = []
         row_filters = []
-        for filter_column, filter_value in six.iteritems(filters):
+        for filter_column, filter_value in filters.items():
             if filter_column.startswith('_row__'):
                 row_filters.append((filter_column.split('__', 1)[-1], filter_value))
                 continue
@@ -667,7 +665,7 @@ class Table(Widget):
     def _build_query(self, processed_filters, row_filters):
         # Build the query
         query_parts = []
-        for column_index, matchers in six.iteritems(processed_filters):
+        for column_index, matchers in processed_filters.items():
             col_query_parts = []
             for method, value in matchers:
                 if method is None:
@@ -799,7 +797,7 @@ class Table(Widget):
             remaining_rows = []
             for row in rows:
                 next_row = False
-                for column_index, matchers in six.iteritems(processed_filters):
+                for column_index, matchers in processed_filters.items():
                     column = row[column_index]
                     for method, value in matchers:
                         if method is None:
@@ -920,7 +918,7 @@ class Table(Widget):
             if self.assoc_column_position is None:
                 raise TypeError('In order to support dict you need to specify assoc_column')
             changed = False
-            for key, fill_value in six.iteritems(value):
+            for key, fill_value in value.items():
                 try:
                     row = self.row_by_cell_or_widget_value(self.assoc_column_position, key)
                 except RowNotFound:
@@ -1024,7 +1022,7 @@ class Table(Widget):
 
                     rowsteps = range(1, int(child.get_attribute('rowspan') or 0))
                     colsteps = range(1, int(child.get_attribute('colspan') or 0))
-                    coordinates = set(six.moves.zip_longest(colsteps, rowsteps, fillvalue=0))
+                    coordinates = set(itertools.zip_longest(colsteps, rowsteps, fillvalue=0))
 
                     # when there are both rowspan and colspan set, we need to generate additional
                     # cell references

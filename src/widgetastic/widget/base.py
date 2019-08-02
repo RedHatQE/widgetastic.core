@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+import functools
 import inspect
-import six
 import types
 from copy import copy
 
@@ -25,7 +25,7 @@ def do_not_read_this_widget():
 
 def wrap_fill_method(method):
     """Generates a method that automatically coerces the first argument as Fillable."""
-    @six.wraps(method)
+    @functools.wraps(method)
     def wrapped(self, value, *args, **kwargs):
         return method(self, Fillable.coerce(value), *args, **kwargs)
 
@@ -34,7 +34,7 @@ def wrap_fill_method(method):
 
 def resolve_verpicks_in_method(method):
     """Generates a method that automatically resolves VersionPick attributes"""
-    @six.wraps(method)
+    @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         def resolve_arg(parent, arg):
             if (isinstance(arg, ConstructorResolvable) and not (
@@ -149,7 +149,7 @@ class ExtraData(object):
 
     @property
     def _extra_objects_list(self):
-        return list(six.iterkeys(self._widget.browser.extra_objects))
+        return list(self._widget.browser.extra_objects)
 
     def __dir__(self):
         return self._extra_objects_list
@@ -206,7 +206,7 @@ class WidgetMetaclass(type):
         desc_name_mapping = {}
         included_widgets = []
         for base in bases:
-            for key, value in six.iteritems(getattr(base, '_desc_name_mapping', {})):
+            for key, value in getattr(base, '_desc_name_mapping', {}).items():
                 desc_name_mapping[key] = value
             for widget_includer in getattr(base, '_included_widgets', ()):
                 included_widgets.append(widget_includer)
@@ -214,7 +214,7 @@ class WidgetMetaclass(type):
                     new_attrs[widget_name] = IncludedWidget(widget_includer._seq_id, widget_name,
                                                             widget_includer.use_parent)
 
-        for key, value in six.iteritems(attrs):
+        for key, value in attrs.items():
             if inspect.isclass(value) and issubclass(value, View):
                 new_attrs[key] = WidgetDescriptor(value)
                 desc_name_mapping[new_attrs[key]] = key
@@ -255,7 +255,7 @@ class WidgetMetaclass(type):
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
-class Widget(six.with_metaclass(WidgetMetaclass, object)):
+class Widget(object, metaclass=WidgetMetaclass):
     """Base class for all UI objects.
 
     Does couple of things:
@@ -564,7 +564,7 @@ class Widget(six.with_metaclass(WidgetMetaclass, object)):
             A 2-tuple consisting of ``(action_callable, obj_for_repr)``. The ``obj_for_repr`` is an
             object that can be passed to a logger that uses ``%r``.
         """
-        if isinstance(handler, six.string_types):
+        if isinstance(handler, str):
             try:
                 handler = getattr(self, handler)
             except AttributeError:
@@ -685,7 +685,7 @@ class GenericLocatorWidget(Widget, ClickableMixin):
         return '{}({!r})'.format(type(self).__name__, self.locator)
 
 
-class WTMixin(six.with_metaclass(WidgetMetaclass, object)):
+class WTMixin(object, metaclass=WidgetMetaclass):
     """Base class for mixins for views.
 
     Lightweight class that only has the bare minimum of what is required for widgetastic operation.

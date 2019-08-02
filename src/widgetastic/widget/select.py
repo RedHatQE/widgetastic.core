@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import six
 from collections import namedtuple
 
 from cached_property import cached_property
 from jsmin import jsmin
-from six.moves import html_parser
+from html.parser import HTMLParser
 
 from widgetastic.utils import normalize_space
 from .base import Widget
@@ -119,7 +118,7 @@ class Select(Widget):
         """
         # More reliable using javascript
         options = self.browser.execute_script(self.ALL_OPTIONS, self.browser.element(self))
-        parser = html_parser.HTMLParser()
+        parser = HTMLParser()
         return [
             self.Option(normalize_space(parser.unescape(option[0])), option[1])
             for option in options]
@@ -127,7 +126,7 @@ class Select(Widget):
     @property
     def all_selected_options(self):
         """Returns a list of all selected options as their displayed texts."""
-        parser = html_parser.HTMLParser()
+        parser = HTMLParser()
         return [
             normalize_space(parser.unescape(option))
             for option
@@ -261,7 +260,7 @@ class Select(Widget):
             if isinstance(item, tuple):
                 try:
                     mod, value = item
-                    if not isinstance(mod, six.string_types):
+                    if not isinstance(mod, str):
                         raise ValueError('The select modifier must be a string')
                     mod = mod.lower()
                 except ValueError:

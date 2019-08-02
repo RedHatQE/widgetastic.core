@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 """This module contains some supporting classes."""
-
+import functools
 import re
-import six
 import string
 import time
 from cached_property import cached_property
-from six import wraps
 from smartloc import Locator
 from threading import Lock
 from selenium.common.exceptions import StaleElementReferenceException
@@ -525,7 +522,7 @@ def nested_getattr(o, steps):
     Returns:
         The value of required attribute.
     """
-    if isinstance(steps, six.string_types):
+    if isinstance(steps, str):
         steps = steps.split('.')
     if not isinstance(steps, (list, tuple)):
         raise TypeError(
@@ -566,8 +563,8 @@ def deflatten_dict(d):
         A dictionary.
     """
     current_dict = {}
-    for key, value in six.iteritems(d):
-        if not isinstance(key, six.string_types):
+    for key, value in d.items():
+        if not isinstance(key, str):
             current_dict[key] = value
             continue
         local_dict = current_dict
@@ -674,7 +671,7 @@ def retry_stale_element(method):
        to work with it. There is no 100% robust solution to check that all JS are over on some page.
     """
 
-    @wraps(method)
+    @functools.wraps(method)
     def wrap(*args, **kwargs):
         attempts = 10
         for _ in range(attempts):

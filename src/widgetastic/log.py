@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
+import functools
 import logging
 import time
-from six import wraps, get_method_function, get_method_self
 
 from .exceptions import DoNotReadThisWidget
 
@@ -108,7 +106,7 @@ def logged(log_args=False, log_result=False):
         log_result: Whether to log the result value returned from the method.
     """
     def g(f):
-        @wraps(f)
+        @functools.wraps(f)
         def wrapped(self, *args, **kwargs):
             start_time = time.time()
             signature = f.__name__ + (call_sig(args, kwargs) if log_args else '')
@@ -158,6 +156,6 @@ def call_unlogged(method, *args, **kwargs):
     try:
         f = method.original_function
     except AttributeError:
-        f = get_method_function(method)
+        f = method.__func__
 
-    return f(get_method_self(method), *args, **kwargs)
+    return f(method.__self__, *args, **kwargs)
