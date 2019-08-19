@@ -815,6 +815,43 @@ class Browser(object):
         # useful if it is necessary to recognize current frame
         return self.execute_script('return self.location.toString()')
 
+    @property
+    def current_window_handle(self):
+        """Returns the current window handle"""
+        window_handle = self.selenium.current_window_handle
+        self.logger.debug('current_window_handle -> %r', window_handle)
+        return window_handle
+
+    @property
+    def window_handles(self):
+        """Returns all available window handles"""
+        window_handles = self.selenium.window_handles
+        self.logger.debug('window_handles -> %r', window_handles)
+        return window_handles
+
+    def switch_to_window(self, window_name):
+        """switches focus to the specified window
+
+        Args:
+            window_name: The name or window handle
+        """
+        self.logger.debug("switch_to_window -> %r", window_name)
+        self.selenium.switch_to.window(window_name)
+
+    def new_window(self, url):
+        """Opens the url in new window of the browser.
+
+        Args:
+            url: web address to open in new window
+        """
+        self.logger.info('Opening URL %r in new window', url)
+        self.selenium.execute_script("window.open('{url}', 'new window')".format(url=url))
+
+    def close_window(self):
+        """Close current window form browser"""
+        self.logger.debug("close_window -> %r", self.current_window_handle)
+        self.selenium.close()
+
 
 class BrowserParentWrapper(object):
     """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
