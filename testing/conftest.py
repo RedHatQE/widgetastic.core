@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import pytest
 
 import codecs
@@ -9,7 +8,7 @@ import sys
 from pytest_localserver.http import ContentServer, Request, Response
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from six.moves.urllib_parse import urlsplit
+from urllib.parse import urlsplit
 
 from widgetastic.browser import Browser
 

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import inspect
-import six
 from cached_property import cached_property
 from collections import namedtuple
 from jsmin import jsmin
@@ -671,7 +668,7 @@ class Browser(object):
             *args: See :py:meth:`elements`
             **kwargs: See :py:meth:`elements`
         """
-        text = six.text_type(text) or ''
+        text = str(text) or ''
         file_intercept = False
         # If the element is input type file, we will need to use the file detector
         if self.tag(locator, *args, **kwargs) == 'input':
@@ -863,7 +860,7 @@ class BrowserParentWrapper(object):
         """
         value = getattr(self._browser, attr)
         if inspect.ismethod(value):
-            function = six.get_method_function(value)
+            function = value.__func__
             # Bind the function like it was defined on this class
             value = function.__get__(self, BrowserParentWrapper)
         return value

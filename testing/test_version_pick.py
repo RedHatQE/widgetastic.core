@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from six import string_types
-
 import pytest
 
 from widgetastic.widget import Checkbox, View, TextInput, Select, Table
@@ -83,7 +80,7 @@ def test_versionpick_on_view(browser):
     assert 'widget' in view.widget_names
     assert 'view_attr' not in view.widget_names
     assert isinstance(view.widget, TextInput)
-    assert isinstance(view.view_attr, string_types)
+    assert isinstance(view.view_attr, str)
     assert view.view_attr == 'version_1_attr'
     assert view.widget.fill('test text')
     assert view.widget.read() == 'test text'

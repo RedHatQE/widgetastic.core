@@ -4,15 +4,12 @@ dist: xenial
 addons:
   firefox: latest-esr
 python:
-  - '2.7'
   - '3.5'
   - '3.6'
   - '3.7'
-  - pypy
+  - 'pypy3.5'
 stages:
   - test
-  - name: deploy
-    if: tag IS true
 jobs:
   include:
     - stage: deploy
@@ -24,6 +21,7 @@ jobs:
       deploy:
         provider: pypi
         skip_existing: true
+        # Ievgen
         user: ghislieri
         distributions: sdist bdist_wheel
         password:
