@@ -159,9 +159,9 @@ class Browser(object):
     @property
     def title(self):
         """Returns current title"""
-        result = self.selenium.title
-        self.logger.info('current title -> %r', result)
-        return result
+        current_title = self.selenium.title
+        self.logger.info('Current title: %r', current_title)
+        return current_title
 
     @property
     def handles_alerts(self):

@@ -218,3 +218,67 @@ def test_size(browser):
     width, height = browser.size_of('#exact_dimensions')
     assert width == 42
     assert height == 69
+
+
+def test_current_window_handle(browser):
+    assert browser.title == "Test page"
+    assert browser.current_window_handle
+
+
+def test_window_handles(request, browser):
+    assert len(browser.window_handles) == 1
+    handle = browser.new_window(url="http://example.com")
+
+    @request.addfinalizer
+    def _close_window():
+        browser.close_window(handle)
+
+    assert len(browser.window_handles) == 2
+    assert set(browser.window_handles) == {browser.current_window_handle, handle}
+
+
+@pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
+def test_new_window(request, browser, focus):
+    # main window handle
+    main_handle = browser.current_window_handle
+
+    # open new window focus/no-focus
+    handle = browser.new_window(url="http://example.com", focus=focus)
+
+    @request.addfinalizer
+    def _close_window():
+        browser.close_window(handle)
+
+    assert handle
+
+    if focus:
+        assert handle == browser.current_window_handle
+
+        @request.addfinalizer
+        def _back_to_main():
+            browser.switch_to_window(main_handle)
+
+    else:
+        assert handle != browser.current_window_handle
+
+
+def test_switch_to_window(browser, request):
+    # main window handle
+    main_handle = browser.current_window_handle
+
+    # open new window
+    handle = browser.new_window(url="http://example.com")
+
+    @request.addfinalizer
+    def _close_window():
+        browser.close_window(handle)
+
+    # switch to new window
+    browser.switch_to_window(handle)
+
+    @request.addfinalizer
+    def _back_to_main():
+        browser.switch_to_window(main_handle)
+
+    assert handle == browser.current_window_handle
+    assert main_handle != browser.current_window_handle
