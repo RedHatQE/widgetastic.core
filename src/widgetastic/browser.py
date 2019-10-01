@@ -481,6 +481,9 @@ class Browser(object):
             if (self.browser_type == 'firefox' and self.browser_version >= 60 and
                     ('rect is undefined' in e.msg or 'Component returned failure code' in e.msg)):
                 pass
+            elif "failed to parse value of getElementRegion" in e.msg:
+                # The element is located in Shadow DOM (at least in Chrome), so no moving
+                pass
             else:
                 # Something else, never let it sink
                 raise
