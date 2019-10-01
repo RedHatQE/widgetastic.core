@@ -115,8 +115,8 @@ def logged(log_args=False, log_result=False):
                 result = f(self, *args, **kwargs)
             except DoNotReadThisWidget:
                 elapsed_time = (time.time() - start_time) * 1000.0
-                self.logger.info(
-                    '%s not read on widget\'s request (elapsed %.0f ms)',
+                self.logger.warning(
+                    '%s - not read on widget\'s request (elapsed %.0f ms)',
                     signature, elapsed_time)
                 raise
             except Exception as e:

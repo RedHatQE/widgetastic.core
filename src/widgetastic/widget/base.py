@@ -545,8 +545,8 @@ class Widget(object, metaclass=WidgetMetaclass):
         When you implement this method, the exact return value is up to you but it *MUST* be
         consistent with what :py:meth:`fill` takes.
         """
-        raise NotImplementedError(
-            'Widget {} does not implement read()!'.format(type(self).__name__))
+        raise DoNotReadThisWidget(
+            'Widget {} does not implement read()'.format(type(self).__name__))
 
     def _process_fill_handler(self, handler):
         """Processes a given handler in the way that it is usable as a callable + its representation
