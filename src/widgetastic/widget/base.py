@@ -120,7 +120,9 @@ class WidgetDescriptor(Widgetable):
             args, kwargs = process_parameters(obj, self.args, kwargs)
             if issubclass(self.klass, ParametrizedView):
                 # Shortcut, don't cache as the ParametrizedViewRequest is not the widget yet
-                return ParametrizedViewRequest(obj, self.klass, *args, **kwargs)
+                req = ParametrizedViewRequest(obj, self.klass, *args, **kwargs)
+                obj.child_widget_accessed(req)
+                return req
             else:
                 o = self.klass(obj, *args, **kwargs)
                 o.parent_descriptor = self
@@ -521,7 +523,7 @@ class Widget(object, metaclass=WidgetMetaclass):
         Useful when eg. the containing widget needs to open for the child widget to become visible.
 
         Args:
-            widget: The widget being accessed.
+            widget: The widget being accessed or :py:class:`ParametrizedViewRequest`.
         """
         pass
 
@@ -1034,7 +1036,7 @@ class View(Widget):
         One of useful examples is below. it allows us to switch between frames.
 
         Args:
-            widget: The widget being accessed.
+            widget: The widget being accessed or :py:class:`ParametrizedViewRequest`.
         """
         self.browser.switch_to_main_frame()
         parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
