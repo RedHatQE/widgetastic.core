@@ -59,6 +59,10 @@ class DefaultPlugin(object):
         """Invoked after clicking on an element."""
         pass
 
+    def after_click_safe_timeout(self, element, locator):
+        """Invoked after clicking on an element and :py:meth:`ensure_page_safe` failing to wait."""
+        pass
+
     def before_click(self, element, locator):
         """Invoked before clicking on an element."""
         pass
@@ -366,6 +370,12 @@ class Browser(object):
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
+            except TimedOutError:
+                try:
+                    self.plugin.after_click_safe_timeout(el, locator)
+                except UnexpectedAlertPresentException:
+                    pass
+                raise
             except UnexpectedAlertPresentException:
                 pass
         try:
@@ -388,6 +398,12 @@ class Browser(object):
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
+            except TimedOutError:
+                try:
+                    self.plugin.after_click_safe_timeout(el, locator)
+                except UnexpectedAlertPresentException:
+                    pass
+                raise
             except UnexpectedAlertPresentException:
                 pass
         try:
@@ -409,6 +425,12 @@ class Browser(object):
         if not ignore_ajax:
             try:
                 self.plugin.ensure_page_safe()
+            except TimedOutError:
+                try:
+                    self.plugin.after_click_safe_timeout(el, locator)
+                except UnexpectedAlertPresentException:
+                    pass
+                raise
             except UnexpectedAlertPresentException:
                 pass
         try:
