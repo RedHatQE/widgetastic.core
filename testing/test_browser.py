@@ -8,6 +8,18 @@ from widgetastic.exceptions import NoSuchElementException, LocatorNotImplemented
 from widgetastic.widget import View, Text
 
 
+@pytest.fixture()
+def current_and_new_handle(request, browser, test_server):
+    """fixture return current and newly open window handle"""
+    handle = browser.new_window(url=test_server.url)
+
+    @request.addfinalizer
+    def _close_window():
+        if handle in browser.window_handles:
+            browser.close_window(handle)
+    return browser.current_window_handle, handle
+
+
 def test_is_displayed(browser):
     assert browser.is_displayed('#hello')
 
@@ -220,30 +232,24 @@ def test_size(browser):
     assert height == 69
 
 
-def test_current_window_handle(browser):
+def test_title(browser):
+    """Test title of current window"""
     assert browser.title == "Test page"
+
+
+def test_current_window_handle(browser):
+    """Test current window handle property"""
     assert browser.current_window_handle
 
 
-def test_window_handles(request, browser):
-    assert len(browser.window_handles) == 1
-    handle = browser.new_window(url="http://example.com")
-
-    @request.addfinalizer
-    def _close_window():
-        browser.close_window(handle)
-
-    assert len(browser.window_handles) == 2
-    assert set(browser.window_handles) == {browser.current_window_handle, handle}
-
-
 @pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
-def test_new_window(request, browser, focus):
+def test_new_window(request, browser, focus, test_server):
+    """Test open new window with and without focus"""
     # main window handle
     main_handle = browser.current_window_handle
 
     # open new window focus/no-focus
-    handle = browser.new_window(url="http://example.com", focus=focus)
+    handle = browser.new_window(url=test_server.url, focus=focus)
 
     @request.addfinalizer
     def _close_window():
@@ -257,28 +263,31 @@ def test_new_window(request, browser, focus):
         @request.addfinalizer
         def _back_to_main():
             browser.switch_to_window(main_handle)
-
     else:
         assert handle != browser.current_window_handle
 
 
-def test_switch_to_window(browser, request):
-    # main window handle
-    main_handle = browser.current_window_handle
+def test_window_handles(browser, current_and_new_handle):
+    """Test window handles property"""
+    assert len(browser.window_handles) == 2
+    assert set(browser.window_handles) == set(current_and_new_handle)
 
-    # open new window
-    handle = browser.new_window(url="http://example.com")
 
-    @request.addfinalizer
-    def _close_window():
-        browser.close_window(handle)
+def test_close_window(browser, current_and_new_handle):
+    """Test close window"""
+    main_handle, new_handle = current_and_new_handle
+
+    assert new_handle in browser.window_handles
+    browser.close_window(new_handle)
+    assert new_handle not in browser.window_handles
+
+
+def test_switch_to_window(browser, current_and_new_handle):
+    """Test switch to other window"""
+    main_handle, new_handle = current_and_new_handle
 
     # switch to new window
-    browser.switch_to_window(handle)
-
-    @request.addfinalizer
-    def _back_to_main():
-        browser.switch_to_window(main_handle)
-
-    assert handle == browser.current_window_handle
-    assert main_handle != browser.current_window_handle
+    browser.switch_to_window(new_handle)
+    assert new_handle == browser.current_window_handle
+    browser.switch_to_window(main_handle)
+    assert main_handle == browser.current_window_handle
