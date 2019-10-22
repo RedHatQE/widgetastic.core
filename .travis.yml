@@ -1,8 +1,10 @@
 language: python
 dist: xenial
-
-addons:
-  firefox: latest-esr
+services:
+  - docker
+env:
+  - BROWSER=firefox
+  - BROWSER=chrome
 python:
   - '3.5'
   - '3.6'
@@ -29,12 +31,11 @@ jobs:
         on:
           tags: true
           repo: RedHatQE/widgetastic.core
+before_install:
+  - docker run -d --network host -p 4444:4444 -v /dev/shm:/dev/shm quay.io/redhatqe/selenium-standalone
 install:
-  - pip install -U pip
-  - pip install -U setuptools
+  - pip install -U pip setuptools
   - pip install -U tox tox-travis coveralls
-  - pip install git+https://github.com/quarckster/webdriverdownloader.git@fix_github
-  - webdrivermanager firefox:v0.20.1
 script:
   - tox
 after_success:
