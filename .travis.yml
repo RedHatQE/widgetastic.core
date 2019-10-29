@@ -12,10 +12,13 @@ python:
   - 'pypy3.5'
 stages:
   - test
+  - name: deploy
+    if: tag IS true
 jobs:
   include:
     - stage: deploy
       python: 3.6
+      env:
       before_install:
       after_success:
       install: pip install -U setuptools setuptools_scm
