@@ -202,7 +202,7 @@ class Browser(object):
                 if isinstance(loc, WebElement):
                     return loc
             raise LocatorNotImplemented(
-                'You have to implement __locator__ on {!r}'.format(type(locator)))
+                'You have to implement __locator__ on {!r}'.format(type(locator))) from None
 
     @staticmethod
     def _locator_force_visibility_check(locator):
@@ -310,7 +310,7 @@ class Browser(object):
         except TimedOutError:
             if exception:
                 raise NoSuchElementException('Failed waiting for element with {} in {}'
-                                             .format(locator, parent))
+                                             .format(locator, parent)) from None
             else:
                 return None
         # wait_for returns NamedTuple, return first item from 'out', the WebElement
@@ -341,7 +341,8 @@ class Browser(object):
             else:
                 return elements[0]
         except IndexError:
-            raise NoSuchElementException('Could not find an element {}'.format(repr(locator)))
+            raise NoSuchElementException(
+                'Could not find an element {}'.format(repr(locator))) from None
 
     def perform_click(self):
         """Clicks the left mouse button at the current mouse position."""
@@ -469,7 +470,7 @@ class Browser(object):
             except MoveTargetOutOfBoundsException:  # This has become desperate now.
                 raise MoveTargetOutOfBoundsException(
                     "Despite all the workarounds, scrolling to `{}` was unsuccessful.".format(
-                        locator))
+                        locator)) from None
         except WebDriverException as e:
             # Handling Edge weirdness
             if self.browser_type == 'MicrosoftEdge' and 'Invalid argument' in e.msg:
