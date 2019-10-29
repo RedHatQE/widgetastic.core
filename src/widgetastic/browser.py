@@ -484,6 +484,15 @@ class Browser(object):
             elif "failed to parse value of getElementRegion" in e.msg:
                 # The element is located in Shadow DOM (at least in Chrome), so no moving
                 pass
+            # ChromeDriver is not able to MoveToElement that is not visible, because it has no
+            # location. Previous version silently ignored such attempts, but with version 76, it
+            # detects the invalid action and throws the error as you saw. The error message will be
+            # improved in version 78.
+            # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3110
+            # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3087
+            elif (self.browser_type == 'chrome' and self.browser_version >= 76 and
+                    ("Cannot read property 'left' of undefined" in e.msg)):
+                pass
             else:
                 # Something else, never let it sink
                 raise
