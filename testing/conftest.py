@@ -7,7 +7,7 @@ import sys
 
 from pytest_localserver.http import ContentServer, Request, Response
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from urllib.parse import urlsplit
 
 from widgetastic.browser import Browser
@@ -21,16 +21,18 @@ class CustomBrowser(Browser):
         return '1.0.0'
 
 
-@pytest.fixture(scope='session')
-def selenium(request):
-    options = Options()
-    options.add_argument('-headless')
-    driver = webdriver.Firefox(options=options)
-    request.addfinalizer(driver.quit)
-    driver.maximize_window()
+@pytest.fixture(scope="module")
+def selenium():
+    if os.environ["BROWSER"] == "firefox":
+        driver = webdriver.Remote(desired_capabilities=DesiredCapabilities.FIREFOX)
+    elif os.environ["BROWSER"] == "chrome":
+        caps = DesiredCapabilities.CHROME.copy()
+        caps["chromeOptions"] = {"args": ["--no-sandbox", "--disable-infobars"]}
+        driver = webdriver.Remote(desired_capabilities=caps)
     global selenium_browser
     selenium_browser = driver
-    return driver
+    yield driver
+    driver.quit()
 
 
 @pytest.fixture(scope='module')
@@ -81,7 +83,7 @@ def test_server(request):
 
 @pytest.fixture(scope='function')
 def browser(selenium, test_server):
-
+    selenium.maximize_window()
     b = CustomBrowser(selenium)
     b.url = test_server.url
     return b
