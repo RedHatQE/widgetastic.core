@@ -154,6 +154,13 @@ class Browser(object):
         self.selenium.get(address)
 
     @property
+    def title(self):
+        """Returns current title"""
+        current_title = self.selenium.title
+        self.logger.info('Current title: %r', current_title)
+        return current_title
+
+    @property
     def handles_alerts(self):
         return self.selenium.capabilities.get('handlesAlerts', True)
 
@@ -824,6 +831,65 @@ class Browser(object):
     def get_current_location(self):
         # useful if it is necessary to recognize current frame
         return self.execute_script('return self.location.toString()')
+
+    @property
+    def current_window_handle(self):
+        """Returns the current window handle"""
+        window_handle = self.selenium.current_window_handle
+        self.logger.debug("current_window_handle -> %r", window_handle)
+        return window_handle
+
+    @property
+    def window_handles(self):
+        """Returns all available window handles"""
+        handles = self.selenium.window_handles
+        self.logger.debug("window_handles -> %r", handles)
+        return handles
+
+    def switch_to_window(self, window_handle):
+        """switches focus to the specified window
+
+        Args:
+            window_handle: The name or window handle
+        """
+        self.logger.debug("switch_to_window -> %r", window_handle)
+        self.selenium.switch_to.window(window_handle)
+
+    def new_window(self, url, focus=False):
+        """Opens the url in new window of the browser.
+
+        Args:
+            url: web address to open in new window
+            focus: switch focus to new window; default False
+        Returns:
+            new windows handle
+        """
+        handles = set(self.window_handles)
+        self.logger.info("Opening URL %r in new window", url)
+        self.selenium.execute_script("window.open('{url}', '_blank')".format(url=url))
+        new_handle = (set(self.window_handles) - handles).pop()
+
+        if focus:
+            self.switch_to_window(new_handle)
+        return new_handle
+
+    def close_window(self, window_handle=None):
+        """Close window form browser
+
+        Args:
+            window_handle: The name or window handle; default current window handle
+        """
+        main_window_handle = self.current_window_handle
+        self.logger.debug(
+            "close_window -> %r", window_handle if window_handle else main_window_handle
+        )
+
+        if window_handle and window_handle != main_window_handle:
+            self.switch_to_window(window_handle)
+            self.selenium.close()
+            self.switch_to_window(main_window_handle)
+        else:
+            self.selenium.close()
 
 
 class BrowserParentWrapper(object):
