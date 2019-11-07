@@ -498,8 +498,13 @@ class Browser(object):
             # improved in version 78.
             # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3110
             # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3087
-            elif (self.browser_type == 'chrome' and self.browser_version >= 76 and
+            elif (self.browser_type == 'chrome' and 76 <= self.browser_version < 78 and
                     ("Cannot read property 'left' of undefined" in e.msg)):
+                pass
+            # Previous issue ^ wasn't fixed in Chrome 78 but throws another error
+            elif (self.browser_type == 'chrome' and self.browser_version >= 78 and
+                    ("Failed to execute 'elementsFromPoint' on 'Document': The provided double "
+                     "value is non-finite." in e.msg)):
                 pass
             else:
                 # Something else, never let it sink
