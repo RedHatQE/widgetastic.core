@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import inspect
-from cached_property import cached_property
 from collections import namedtuple
+from textwrap import dedent
+
+from cached_property import cached_property
 from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -10,7 +12,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from smartloc import Locator
-from textwrap import dedent
 from wait_for import wait_for, TimedOutError
 
 from .exceptions import (
@@ -340,17 +341,15 @@ class Browser(object):
         """
         try:
             vcheck = self._locator_force_visibility_check(locator)
-            if vcheck is not None:
-                kwargs['check_visibility'] = vcheck
+            self.logger.error(vcheck)
+            kwargs['check_visibility'] = vcheck or kwargs.get('check_visibility', False)
             elements = self.elements(locator, *args, **kwargs)
             if len(elements) > 1:
-                visible_elements = [e for e in elements if self.is_displayed(e)]
-                if visible_elements:
-                    return visible_elements[0]
-                else:
-                    return elements[0]
-            else:
-                return elements[0]
+                if not kwargs['check_visibility']:
+                    visible_elements = [e for e in elements if self.is_displayed(e)]
+                    if visible_elements:
+                        return visible_elements[0]
+            return elements[0]
         except IndexError:
             raise NoSuchElementException(
                 'Could not find an element {}'.format(repr(locator))) from None
