@@ -296,7 +296,7 @@ class Table(Widget):
         view.table.rows(column_name__startswith='asdf')
         view.table.rows(column_name__endswith='asdf')
         # You can put multiple filters together.
-        # And you can of course query a songle row
+        # And you can of course query a single row
         row = view.table.row(column_name='asdf')
         # You can also look the rows up by their indices
         rows = view.table.rows((0, 'asdf'))  # First column has asdf exactly
