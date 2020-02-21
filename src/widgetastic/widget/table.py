@@ -406,15 +406,22 @@ class Table(Widget):
         self.rows_ignore_bottom = rows_ignore_bottom
         self.top_ignore_fill = top_ignore_fill
         self.bottom_ignore_fill = bottom_ignore_fill
+        self.element_id = None
+        self._table_tree = None
 
-    @cached_property
+    def _get_table_tree(self):
+        current_element_id = self.browser.element(self).id
+        if not self._table_tree or current_element_id != self.element_id:
+            # no table tree processed yet, or the table at this locator has changed
+            self.element_id = current_element_id
+            tmp_tree = self._process_table()
+            self._table_tree = self._recalc_column_positions(tmp_tree)
+        return self._table_tree
+
+    @property
     def table_tree(self):
         if self.has_rowcolspan:
-            tmp_tree = self._process_table()
-            self._recalc_column_positions(tmp_tree)
-            return tmp_tree
-        else:
-            return None
+            return self._get_table_tree()
 
     @cached_property
     def resolver(self):
