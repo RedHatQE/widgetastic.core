@@ -414,8 +414,8 @@ class Table(Widget):
         if not self._table_tree or current_element_id != self.element_id:
             # no table tree processed yet, or the table at this locator has changed
             self.element_id = current_element_id
-            tmp_tree = self._process_table()
-            self._table_tree = self._recalc_column_positions(tmp_tree)
+            self._table_tree = self._process_table()
+            self._recalc_column_positions(self._table_tree)
         return self._table_tree
 
     @property
