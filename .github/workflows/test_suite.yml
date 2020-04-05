@@ -1,0 +1,90 @@
+name: 👷 Test suite
+
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    # Run unit tests on different version of python and browser
+    name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [ chrome, firefox ]
+        python-version: [ pypy3, 3.6, 3.7, 3.8 ]
+
+    steps:
+    - name: Checkout to master
+      uses: actions/checkout@master
+
+    - name: Set up Python-${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up Selenium Container
+      run: docker run -d --network host -p 4444:4444 -v /dev/shm:/dev/shm quay.io/redhatqe/selenium-standalone
+
+    - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
+      env:
+        BROWSER: ${{ matrix.browser }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions setuptools
+        tox
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        file: .coverage
+        flags: unittests
+        name: codecov-widgetastic-${{ matrix.python-version }}
+        fail_ci_if_error: true
+
+  platform:
+    # Check package properly install on different platform (dev setup)
+    name: 💻 Platform-${{ matrix.os }}
+    needs: [ unit-tests ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout to master
+        uses: actions/checkout@master
+
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Development setup check on ${{ matrix.os }}
+        run: |
+          python -m pip install pip --upgrade
+          pip install -e .[dev]
+          python -c "import pkg_resources; print(pkg_resources.get_distribution('widgetastic.core').version)"
+          python -c "from widgetastic.widget import Widget, Browser"
+
+  package:
+    name: ⚙️ Build & Verify Package
+    needs: platform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to master
+        uses: actions/checkout@master
+
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Build and check with twine
+        run: |
+          python -m pip install pip --upgrade
+          pip install twine setuptools wheel --upgrade
+          python setup.py sdist bdist_wheel
+          ls -l dist
+          python -m twine check dist/*
