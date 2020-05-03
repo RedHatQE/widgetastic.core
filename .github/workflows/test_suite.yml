@@ -1,12 +1,41 @@
-name: 👷 Test suite
+name: 🕵️ Test suite
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    # Run every Friday at 23:59 UTC
+    - cron: 59 23 * * 5
 
 jobs:
+  codechecks:
+    name: 📃 Code quality [pre-commit]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to master
+        uses: actions/checkout@master
+
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: pre-commit Checks
+        run: |
+            python -m pip install pre-commit
+            pre-commit run -a
+
+      - name: Analysis (git diff)
+        if: failure()
+        run: git diff
+
   unit-tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-latest
+    needs: [ codechecks ]
     strategy:
       matrix:
         browser: [ chrome, firefox ]
@@ -35,10 +64,9 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.6
       with:
-        file: .coverage
+        file: coverage.xml
         flags: unittests
-        name: codecov-widgetastic-${{ matrix.python-version }}
-        fail_ci_if_error: true
+        name: codecov-widgetastic-py-${{ matrix.python-version }}-${{ matrix.browser }}
 
   platform:
     # Check package properly install on different platform (dev setup)
@@ -59,7 +87,7 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      - name: Development setup check on ${{ matrix.os }}
+      - name: Development setup on ${{ matrix.os }}
         run: |
           python -m pip install pip --upgrade
           pip install -e .[dev]
@@ -68,7 +96,7 @@ jobs:
 
   package:
     name: ⚙️ Build & Verify Package
-    needs: platform
+    needs: [ unit-tests ]
     runs-on: ubuntu-latest
 
     steps:
@@ -81,7 +109,7 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      - name: Build and check with twine
+      - name: Build and verify with twine
         run: |
           python -m pip install pip --upgrade
           pip install twine setuptools wheel --upgrade
