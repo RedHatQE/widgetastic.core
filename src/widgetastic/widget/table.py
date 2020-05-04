@@ -370,6 +370,7 @@ class Table(Widget):
         bottom_ignore_fill: Whether to also strip these top rows for fill.
     """
     ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+    EMPTY_CONTENT = './/tbody[.//*[contains(@class,"ins-c-table__empty")]]'
 
     # Resolve path is used for self.resolver for anytree node lookups
     # where position starts at '0' for elements in the node tree
@@ -407,9 +408,13 @@ class Table(Widget):
         self.top_ignore_fill = top_ignore_fill
         self.bottom_ignore_fill = bottom_ignore_fill
 
+    @property
+    def is_empty(self):
+        return bool(self.browser.elements(self.EMPTY_CONTENT))
+
     @cached_property
     def table_tree(self):
-        if self.has_rowcolspan:
+        if not self.is_empty and self.has_rowcolspan:
             tmp_tree = self._process_table()
             self._recalc_column_positions(tmp_tree)
             return tmp_tree
@@ -602,7 +607,10 @@ class Table(Widget):
         return header_rows > 0
 
     def rows(self, *extra_filters, **filters):
-        if not (filters or extra_filters):
+
+        if self.is_empty:
+            return []
+        elif not (filters or extra_filters):
             return self._all_rows()
         else:
             return self._filtered_rows(*extra_filters, **filters)
@@ -740,6 +748,7 @@ class Table(Widget):
     def _filter_rows_by_query(self, query):
         # Preload the rows to prevent stale element exceptions
         rows = []
+
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
             # get_number_preceeding_rows is javascript driven, and does not account for thead
@@ -957,7 +966,10 @@ class Table(Widget):
     @property
     def row_count(self):
         """Returns how many rows are currently in the table."""
-        return len(self.browser.elements(self.ROWS, parent=self))
+        if self.is_empty:
+            return 0
+        else:
+            return len(self.browser.elements(self.ROWS, parent=self))
 
     def row_add(self):
         """To be implemented if the table has dynamic rows.
