@@ -18,6 +18,17 @@ def current_and_new_handle(request, browser, test_server):
     return browser.current_window_handle, handle
 
 
+@pytest.fixture()
+def invoke_alert(browser):
+    """fixture to invoke sample alert."""
+    alert_btn = browser.element('#alert_button')
+    alert_btn.click()
+    yield
+    if browser.alert_present:
+        alert = browser.get_alert()
+        alert.dismiss()
+
+
 def test_is_displayed(browser):
     assert browser.is_displayed('#hello')
 
@@ -289,3 +300,40 @@ def test_switch_to_window(browser, current_and_new_handle):
     assert new_handle == browser.current_window_handle
     browser.switch_to_window(main_handle)
     assert main_handle == browser.current_window_handle
+
+
+def test_alert(browser):
+    """Test alert_present, get_alert object"""
+    assert not browser.alert_present
+    alert_btn = browser.element('#alert_button')
+    alert_btn.click()
+    assert browser.alert_present
+
+    alert = browser.get_alert()
+    assert alert.text == "Please enter widget name:"
+    alert.dismiss()
+    assert not browser.alert_present
+
+
+def test_dismiss_any_alerts(browser, invoke_alert):
+    """Test dismiss_any_alerts"""
+    assert browser.alert_present
+    browser.dismiss_any_alerts()
+    assert not browser.alert_present
+
+
+@pytest.mark.parametrize(
+    "cancel_text",
+    [(True, "User dismissed alert."), (False, "User accepted alert:")],
+    ids=["dismiss", "accept"],
+)
+@pytest.mark.parametrize("prompt", [None, "Input"], ids=["without_prompt", "with_prompt"])
+def test_handle_alert(browser, cancel_text, prompt, invoke_alert):
+    """Test handle_alert method with cancel and prompt"""
+    cancel, alert_out_text = cancel_text
+    assert browser.alert_present
+    assert browser.handle_alert(cancel=cancel, prompt=prompt)
+    if not cancel:
+        alert_out_text = alert_out_text + ("Input" if prompt else "TextBox")
+    assert browser.text("#alert_out") == alert_out_text
+    assert not browser.alert_present
