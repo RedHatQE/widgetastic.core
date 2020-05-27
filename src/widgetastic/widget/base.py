@@ -776,7 +776,7 @@ class ConditionalSwitchableView(Widgetable):
                     isinstance(cls_or_descriptor, WidgetDescriptor) or
                     (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
                 raise TypeError(
-                    'Unsupported object registered into the selector (!r})'.format(
+                    'Unsupported object registered into the selector ({!r})'.format(
                         cls_or_descriptor))
             self.registered_views.append((condition, cls_or_descriptor))
             if default:
