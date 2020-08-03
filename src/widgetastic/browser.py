@@ -915,6 +915,18 @@ class Browser(object):
         else:
             self.selenium.close()
 
+    def save_screenshot(self, filename):
+        """Saves a screenshot of current browser window to a PNG image file.
+
+        Args:
+            filename: The full path you wish to save your screenshot to.
+                      This should end with a `.png` extension.
+        Returns:
+            ``False`` for any IOError else ``True``.
+        """
+        self.logger.debug("Saving screenshot to -> %r", filename)
+        self.selenium.save_screenshot(filename=filename)
+
 
 class BrowserParentWrapper(object):
     """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
