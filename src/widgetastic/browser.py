@@ -375,7 +375,8 @@ class Browser(object):
                     self.plugin.after_click_safe_timeout(el, locator)
                 except UnexpectedAlertPresentException:
                     pass
-                raise
+                except Exception:
+                    raise
             except UnexpectedAlertPresentException:
                 pass
         try:
@@ -403,7 +404,8 @@ class Browser(object):
                     self.plugin.after_click_safe_timeout(el, locator)
                 except UnexpectedAlertPresentException:
                     pass
-                raise
+                except Exception:
+                    raise
             except UnexpectedAlertPresentException:
                 pass
         try:
@@ -430,7 +432,8 @@ class Browser(object):
                     self.plugin.after_click_safe_timeout(el, locator)
                 except UnexpectedAlertPresentException:
                     pass
-                raise
+                except Exception:
+                    raise
             except UnexpectedAlertPresentException:
                 pass
         try:
