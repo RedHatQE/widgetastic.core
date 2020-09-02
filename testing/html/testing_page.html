@@ -28,6 +28,23 @@
 <input type='text' id='input' />
 <input type='file' id='fileinput' />
 <input type='color' id='colourinput' />
+
+
+<button id="alert_button" onclick="alertFunction()">Alert</button>
+<p id="alert_out"></p>
+<script>
+function alertFunction() {
+  var txt;
+  var widget = prompt("Please enter widget name:", "TextBox");
+  if (widget == null || widget == "") {
+    txt = "User dismissed alert.";
+  } else {
+    txt = "User accepted alert:"+ widget;
+  }
+  document.getElementById("alert_out").innerHTML = txt;
+}
+</script>
+
 <form id="testform">
     <h3>test test</h3>
     <input name="input1" type="text" />

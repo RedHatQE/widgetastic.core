@@ -765,7 +765,7 @@ class Browser(object):
         """
         if not self.handles_alerts:
             return None
-        return self.selenium.switch_to_alert()
+        return self.selenium.switch_to.alert
 
     @property
     def alert_present(self):
