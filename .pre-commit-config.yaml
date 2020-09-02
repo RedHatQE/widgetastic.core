@@ -1,0 +1,16 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.5.0
+  hooks:
+  - id: trailing-whitespace
+    language_version: python3
+    exclude: docs
+  - id: end-of-file-fixer
+    language_version: python3
+  - id: debug-statements
+    language_version: python3
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 3.7.9
+  hooks:
+  - id: flake8
+    language_version: python3

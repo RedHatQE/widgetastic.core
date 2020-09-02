@@ -141,14 +141,14 @@ def test_table(browser):
     class TestForm(View):
         table = Table('#with-thead')
         table1 = Table('#rowcolspan_table',
-                       column_widgets={'First Name':  TextInput(locator='./input'),
+                       column_widgets={'First Name': TextInput(locator='./input'),
                                        'Last Name': TextInput(locator='./input'),
                                        'Widget': TextInput(locator='./input'),
                                        })
 
     view = TestForm(browser)
     assert view.table.headers == (None, 'Column 1', 'Column 2', 'Column 3', 'Column 4')
-    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
+    assert view.table1.headers == ('#', 'First Name', 'Last Name', 'Username', 'Widget')
     assert view.table1.caption == "Some caption"
     dir(view.table[0])
     assert len(list(view.table.rows())) == 3
@@ -183,7 +183,7 @@ def test_table(browser):
     assert len(list(view.table1.rows(_row__attr_contains=('data-test', '3')))) == 3
 
     assert len(list(view.table.rows(
-       _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
+        _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
     assert len(list(view.table1.rows(
         _row__attr_contains=('data-test', '3'), _row__attr_startswith=('data-test', 'abc')))) == 2
 
@@ -371,7 +371,7 @@ def test_table_multiple_tbody(browser):
         table1 = TBodyTable(
             '#multiple_tbody_table',
             column_widgets={
-                'First Name':  TextInput(locator='./input'),
+                'First Name': TextInput(locator='./input'),
                 'Last Name': TextInput(locator='./input'),
                 'Widget': TextInput(locator='./input'),
             }
@@ -379,7 +379,7 @@ def test_table_multiple_tbody(browser):
 
     view = TestForm(browser)
 
-    assert view.table1.headers == ('#',	'First Name', 'Last Name', 'Username', 'Widget')
+    assert view.table1.headers == ('#', 'First Name', 'Last Name', 'Username', 'Widget')
     assert view.table1.caption == "Some caption"
     assert len(list(view.table1.rows())) == 3
 
@@ -528,7 +528,7 @@ def test_table_with_widgets(browser):
 
     class TestForm1(View):
         table1 = Table('#rowcolspan_table',
-                       column_widgets={'First Name':  TextInput(locator='./input'),
+                       column_widgets={'First Name': TextInput(locator='./input'),
                                        'Last Name': TextInput(locator='./input'),
                                        'Widget': TextInput(locator='./input'),
                                        })
