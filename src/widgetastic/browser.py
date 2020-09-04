@@ -341,14 +341,9 @@ class Browser(object):
         """
         try:
             vcheck = self._locator_force_visibility_check(locator)
-            self.logger.error(vcheck)
-            kwargs['check_visibility'] = vcheck or kwargs.get('check_visibility', False)
+            if vcheck is not None:
+                kwargs['check_visibility'] = vcheck
             elements = self.elements(locator, *args, **kwargs)
-            if len(elements) > 1:
-                if not kwargs['check_visibility']:
-                    visible_elements = [e for e in elements if self.is_displayed(e)]
-                    if visible_elements:
-                        return visible_elements[0]
             return elements[0]
         except IndexError:
             raise NoSuchElementException(

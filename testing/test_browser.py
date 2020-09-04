@@ -119,7 +119,9 @@ def test_element_only_visible(browser):
 
 
 def test_element_visible_after_invisible_and_classes_and_execute_script(browser):
-    assert 'visible' in browser.classes('//div[@id="visible_invisible"]/p', check_visibility=False)
+    assert 'invisible' in browser.classes(
+        '//div[@id="visible_invisible"]/p', check_visibility=False
+    )
 
 
 def test_element_nonexisting(browser):
