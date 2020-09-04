@@ -826,7 +826,9 @@ class ConditionalSwitchableView(Widgetable):
                         break
             else:
                 # Parse the callable's args and inject the correct args
-                c_args, c_varargs, c_keywords, c_defaults = inspect.getargspec(condition)
+                c_args, c_varargs, c_keywords, c_defaults, _, _, _ = inspect.getfullargspec(
+                    condition
+                )
                 if c_varargs or c_keywords or c_defaults:
                     raise TypeError('You can only use simple arguments in lambda conditions')
                 arg_values = []
