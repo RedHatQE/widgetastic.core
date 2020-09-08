@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
 import pytest
 
 from widgetastic.browser import BrowserParentWrapper, WebElement
@@ -339,3 +343,12 @@ def test_handle_alert(browser, cancel_text, prompt, invoke_alert):
         alert_out_text = alert_out_text + ("Input" if prompt else "TextBox")
     assert browser.text("#alert_out") == alert_out_text
     assert not browser.alert_present
+
+
+def test_save_screenshot(browser):
+    """Test browser save screenshot method."""
+    tmp_dir = tempfile._get_default_tempdir()
+    filename = Path(tmp_dir) / f"{datetime.now()}.png"
+    assert not filename.exists()
+    browser.save_screenshot(filename=filename.as_posix())
+    assert filename.exists()
