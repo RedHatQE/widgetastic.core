@@ -177,6 +177,15 @@ def test_simple_input_send_keys_clear(browser):
     assert browser.get_attribute('value', '#input') == ''
 
 
+def test_copy_paste(browser):
+    t = 'copy and paste text'
+    browser.send_keys(t, '#input')
+    assert browser.get_attribute('value', '#input') == t
+    browser.copy('#input')
+    browser.paste('#input_paste')
+    assert browser.get_attribute('value', '#input_paste') == t
+
+
 def test_nested_views_parent_injection(browser):
     class MyView(View):
         ROOT = '#proper'

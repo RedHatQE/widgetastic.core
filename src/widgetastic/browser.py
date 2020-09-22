@@ -762,6 +762,28 @@ class Browser(object):
         """
         ActionChains(self.selenium).send_keys(*keys).perform()
 
+    def copy(self, locator, *args, **kwargs):
+        """Select all and copy to clipboard."""
+        self.logger.debug('copy: %r', locator)
+        el = self.element(locator)
+        self.click(locator, *args, **kwargs)
+        self.plugin.before_keyboard_input(el, None)
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('a').key_up(
+            Keys.CONTROL).perform()
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('c').key_up(
+            Keys.CONTROL).perform()
+        self.plugin.after_keyboard_input(el, None)
+
+    def paste(self, locator, *args, **kwargs):
+        """Paste from clipboard to current element."""
+        self.logger.debug('paste: %r', locator)
+        el = self.element(locator)
+        self.click(locator, *args, **kwargs)
+        self.plugin.before_keyboard_input(el, None)
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('v').key_up(
+            Keys.CONTROL).perform()
+        self.plugin.after_keyboard_input(el, None)
+
     def get_alert(self):
         """Returns the current alert object.
 
