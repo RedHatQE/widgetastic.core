@@ -50,15 +50,18 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Set up Selenium Container
-      run: podman run -d --network host -p 4444:4444 --shm-size=2g quay.io/redhatqe/selenium-standalone:latest
+    - name: Get Webdriver Container
+      # tox-docker will run the container
+      run: |
+          docker pull quay.io/redhatqe/selenium-standalone:latest
 
     - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
       env:
         BROWSER: ${{ matrix.browser }}
       run: |
         python -m pip install --upgrade pip
-        pip install tox tox-gh-actions setuptools
+        pip install setuptools
+        pip install -e .[development]
         tox
 
     - name: Upload coverage to Codecov
