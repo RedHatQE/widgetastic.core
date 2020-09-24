@@ -6,7 +6,7 @@ components. There are three base classes: :py:class:`widgetastic.ouia.OUIAMixin`
 :py:class:`widgetastic.ouia.OUIAGenericView` and :py:class:`widgetastic.ouia.OUIAGenericWidget`.
 
 In order to start creating an OUIA compatible widget or view just inherit a respectful class.
-Children classes must have the same name as the value of ``data-ouia-component-type`` attriburte of
+Children classes must have the same name as the value of ``data-ouia-component-type`` attribute of
 the root HTML element. Besides children classes should define ``OUIA_NAMESPACE`` class attribute if
 it's appicable.
 

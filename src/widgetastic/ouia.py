@@ -37,7 +37,7 @@ class OUIABase:
 class OUIAGenericView(OUIABase, View):
     """A base class for any OUIA compatible view.
 
-    Children classes must have the same name as the value of ``data-ouia-component-type`` attriburte
+    Children classes must have the same name as the value of ``data-ouia-component-type`` attribute
     of the root HTML element. Besides children classes should define ``OUIA_NAMESPACE`` attribute if
     it's appicable.
 
@@ -61,7 +61,7 @@ class OUIAGenericView(OUIABase, View):
 class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
     """A base class for any OUIA compatible widget.
 
-    Children classes must have the same name as the value of ``data-ouia-component-type`` attriburte
+    Children classes must have the same name as the value of ``data-ouia-component-type`` attribute
     of the root HTML element. Besides children classes should define ``OUIA_NAMESPACE`` attribute if
     it's appicable.
 
