@@ -1,164 +1,170 @@
 <html>
+
 <head>
-    <title>Test page</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <title>Test page</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 </head>
+
 <body>
-<h1 id="hello" class="foo bar">Hello</h1>
-<h2 style="display: none;" id="invisible">This is invisible</h2>
-<div id="random_visibility">
+  <h1 id="hello" class="foo bar">Hello</h1>
+  <h2 style="display: none;" id="invisible">This is invisible</h2>
+  <div id="random_visibility">
     <p>One</p>
     <p>Two</p>
     <p style="display: none;">Three</p>
     <p>Four</p>
     <p style="display: none;">Five</p>
-</div>
-<div id="visible_invisible">
+  </div>
+  <div id="visible_invisible">
     <p style="display: none;" class="invisible">Invisible</p>
     <p class="visible">Visible</p>
-</div>
-<div id="invisible_appear">
+  </div>
+  <div id="invisible_appear">
     <p style="display: none;" id="invisible_appear_p">baf</p>
-    <button onclick="var p = document.getElementById('invisible_appear_p'); p.style.display='none'; setTimeout(function(){ var p = document.getElementById('invisible_appear_p'); p.style.display='inline'; }, 3000);" id="invisible_appear_button">Show Invisible</button>
-</div>
-<button id="a_button" onclick="this.className += ' clicked'">Button</button>
-<select id="myselect">
+    <button
+      onclick="var p = document.getElementById('invisible_appear_p'); p.style.display='none'; setTimeout(function(){ var p = document.getElementById('invisible_appear_p'); p.style.display='inline'; }, 3000);"
+      id="invisible_appear_button">
+      Show Invisible
+    </button>
+  </div>
+  <button id="a_button" onclick="this.className += ' clicked'">Button</button>
+  <select id="myselect">
     <option value="test" id="myoption">myoption</option>
-</select>
-<input type='text' id='input' />
-<input type='file' id='fileinput' />
-<input type='color' id='colourinput' />
+  </select>
+  <input type='text' id='input' />
+  <input type='file' id='fileinput' />
+  <input type='color' id='colourinput' />
 
-
-<button id="alert_button" onclick="alertFunction()">Alert</button>
-<p id="alert_out"></p>
-<script>
-function alertFunction() {
-  var txt;
-  var widget = prompt("Please enter widget name:", "TextBox");
-  if (widget == null || widget == "") {
-    txt = "User dismissed alert.";
-  } else {
-    txt = "User accepted alert:"+ widget;
+  <button id="alert_button" onclick="alertFunction()">Alert</button>
+  <p id="alert_out"></p>
+  <script>
+  function alertFunction() {
+    var txt;
+    var widget = prompt("Please enter widget name:", "TextBox");
+    if (widget == null || widget == "") {
+      txt = "User dismissed alert.";
+    } else {
+      txt = "User accepted alert:"+ widget;
+    }
+    document.getElementById("alert_out").innerHTML = txt;
   }
-  document.getElementById("alert_out").innerHTML = txt;
-}
-</script>
+  </script>
 
-<form id="testform">
+  <form id="testform">
     <h3>test test</h3>
     <input name="input1" type="text" />
-    <input name="input1_disabled" type="text" disabled/>
+    <input name="input1_disabled" type="text" disabled />
     <input id="input2" type="checkbox" />
-    <input id="input2_disabled" type="checkbox" disabled/>
-</form>
-<hr/>
-<table id="with-thead">
+    <input id="input2_disabled" type="checkbox" disabled />
+  </form>
+  <hr />
+  <table id="with-thead">
     <thead>
-        <tr>
-            <th>&nbsp;</th>
-            <th>Column 1</th>
-            <th>Column 2</th>
-            <th>Column 3</th>
-            <th>Column 4</th>
-        </tr>
+      <tr>
+        <th>&nbsp;</th>
+        <th>Column 1</th>
+        <th>Column 2</th>
+        <th>Column 3</th>
+        <th>Column 4</th>
+      </tr>
     </thead>
     <tbody>
-        <tr data-test='abc-123'>
-            <td>asdf</td>
-            <td>qwer</td>
-            <td>yxcv</td>
-            <td>uiop</td>
-            <td><input type="checkbox" id='abc-123'></td>
-        </tr>
-        <tr data-test='abc-345'>
-            <td>foo_x</td>
-            <td>bar_x</td>
-            <td>baz_x</td>
-            <td>bat_x</td>
-            <td><input type="checkbox" id='abc-345'></td>
-        </tr>
-        <tr data-test='def-345'>
-            <td>foo_y</td>
-            <td>bar_y</td>
-            <td>baz_y</td>
-            <td>bat_y</td>
-            <td><input type="checkbox" id='def-345'></td>
-        </tr>
+      <tr data-test='abc-123'>
+        <td>asdf</td>
+        <td>qwer</td>
+        <td>yxcv</td>
+        <td>uiop</td>
+        <td><input type="checkbox" id='abc-123'></td>
+      </tr>
+      <tr data-test='abc-345'>
+        <td>foo_x</td>
+        <td>bar_x</td>
+        <td>baz_x</td>
+        <td>bat_x</td>
+        <td><input type="checkbox" id='abc-345'></td>
+      </tr>
+      <tr data-test='def-345'>
+        <td>foo_y</td>
+        <td>bar_y</td>
+        <td>baz_y</td>
+        <td>bat_y</td>
+        <td><input type="checkbox" id='def-345'></td>
+      </tr>
 
     </tbody>
-</table>
-<hr/>
-<table id="without_thead">
+  </table>
+  <hr />
+  <table id="without_thead">
     <thead></thead>
     <tbody>
-    <tr>
+      <tr>
         <th>Date</th>
         <th>Event</th>
-    </tr>
-    <tr>
+      </tr>
+      <tr>
         <td>27.02.2017, 12:19:30</td>
         <td>Some Event</td>
-    </tr>
+      </tr>
     </tbody>
-</table>
-<hr/>
-<select name="testselect1">
+  </table>
+  <hr />
+  <select name="testselect1">
     <option value="foo">Foo</option>
-    <option value="bar">    Bar  </option>
-</select>
-<select name="testselect2" multiple class="xfoo xbar">
+    <option value="bar"> Bar </option>
+  </select>
+  <select name="testselect2" multiple class="xfoo xbar">
     <option value="foo">Foo</option>
-    <option value="bar">    Bar  </option>
+    <option value="bar"> Bar </option>
     <option value="baz">Baz</option>
-</select>
-<div id="bogus">
+  </select>
+  <div id="bogus">
     <span class="lookmeup">BAD</span>
-</div>
-<div id="proper">
+  </div>
+  <div id="proper">
     <div class="c1">
-        <span class="lookmeup">C1</span>
+      <span class="lookmeup">C1</span>
     </div>
     <div class="c2">
-        <span class="lookmeup">C2</span>
+      <span class="lookmeup">C2</span>
     </div>
     <div class="c3">
-        <span class="lookmeup">C3</span>
+      <span class="lookmeup">C3</span>
     </div>
-</div>
-<p>
+  </div>
+  <p>
     <input name="fill_with_1" type="text">
     <input name="fill_with_2" type="text">
     <input name="fill_with_3" type="text">
     <button id="fill_with_button_1" onclick="this.className += ' clicked'">Click 1</button>
     <button id="fill_with_button_2" onclick="this.className += ' clicked'">Click 2</button>
-</p>
-<div id="exact_dimensions" style="width: 42px; height: 69px;">Foo</div>
-<table id="withwidgets">
+  </p>
+  <div id="exact_dimensions" style="width: 42px; height: 69px;">Foo</div>
+  <table id="withwidgets">
     <thead>
-        <tr>
-            <th>&nbsp;</th>
-            <th>Column 2</th>
-            <th>Column 3</th>
-        </tr>
+      <tr>
+        <th>&nbsp;</th>
+        <th>Column 2</th>
+        <th>Column 3</th>
+      </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>foo</td>
-            <td><input name="foo_r1" name="foo_r1" type="text"></td>
-            <td>foo col 3</td>
-        </tr>
-        <tr>
-            <td>bar</td>
-            <td>bar col 2</td>
-            <td><input name="bar_r2" name="bar_r2" type="text"></td>
-        </tr>
+      <tr>
+        <td>foo</td>
+        <td><input name="foo_r1" name="foo_r1" type="text"></td>
+        <td>foo col 3</td>
+      </tr>
+      <tr>
+        <td>bar</td>
+        <td>bar col 2</td>
+        <td><input name="bar_r2" name="bar_r2" type="text"></td>
+      </tr>
     </tbody>
-</table>
-<div id="switchabletesting">
+  </table>
+  <div id="switchabletesting">
     <select id="switchabletesting-select">
-        <option>foo</option>
-        <option>bar</option>
+      <option>foo</option>
+      <option>bar</option>
     </select>
 
     <h3 id="switchabletesting-1">footest</h3>
@@ -166,94 +172,94 @@ function alertFunction() {
     <input id="switchabletesting-3" type="checkbox" />
     <input id="switchabletesting-4" type="checkbox" />
 
-</div>
+  </div>
 
-    <table border="1" cellspacing="0" id="dynamic">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-
-    <button type="button" class='addmore' id='dynamicadd'>Add More</button>
-<script>
-    var i=1;
-    $(".addmore").on('click',function(){
-        $('#dynamic').append(
-            '<tr><td>' + i + '.</td><td><input type="text"/></td><td><input type="text"/></td></tr>'
-        );
-    i++;
-    });
-</script>
-
- <table class="table table-striped table-bordered" border="1" id="rowcolspan_table">
-    <caption>Some caption</caption>
+  <table border="1" cellspacing="0" id="dynamic">
     <thead>
-    <tr>
-      <th>#</th>
-      <th>First Name</th>
-      <th>Last Name</th>
-      <th>Username</th>
-      <th>Widget</th>
-    </tr>
+      <tr>
+        <th>ID</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+      </tr>
     </thead>
     <tbody>
-    <tr data-test="abc-123">
-      <td>1</td>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-      <td><input name="widget1" type="text" value="widget1"></td>
-    </tr>
-    <tr data-test="abc-345">
-      <td>2</td>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-      <td><input name="widget2" type="text" value="widget2"></td>
-    </tr>
-    <tr data-test="def-345">
-      <td>3</td>
-      <td colspan="2">Larry the Bird</td>
-      <td>@slacker</td>
-      <td><input name="widget3" type="text" value="widget3"></td>
-    </tr>
-    <tr>
-      <td rowspan="2">4</td>
-      <td rowspan="2">Pete Savage</td>
-      <td></td>
-      <td>@psav</td>
-      <td><input name="widget41" type="text" value="widget41"></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td>@psav1</td>
-      <td><input name="widget42" type="text" value="widget42"></td>
-    </tr>
+    </tbody>
+  </table>
 
-    <tr>
-      <td rowspan="2">5</td>
-      <td rowspan="2" colspan="2">Mike Shriver</td>
-      <td>@mshriver</td>
-      <td><input name="widget51" type="text" value="widget51"></td>
-    </tr>
-    <tr>
-      <td>@iamhero</td>
-      <td><input name="widget52" type="text" value="widget52"></td>
-    </tr>
-    <tr>
-      <td>6</td>
-      <td colspan="2">
-       <input name="some_input_obj" type="text">
-      </td>
-      <td>@blabla</td>
-      <td><input name="widget6" type="text" value="widget6"></td>
-    </tr>
+  <button type="button" class='addmore' id='dynamicadd'>Add More</button>
+  <script>
+    var i = 1;
+    $(".addmore").on('click', function () {
+      $('#dynamic').append(
+        '<tr><td>' + i + '.</td><td><input type="text"/></td><td><input type="text"/></td></tr>'
+      );
+      i++;
+    });
+  </script>
+
+  <table class="table table-striped table-bordered" border="1" id="rowcolspan_table">
+    <caption>Some caption</caption>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Username</th>
+        <th>Widget</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-test="abc-123">
+        <td>1</td>
+        <td>Mark</td>
+        <td>Otto</td>
+        <td>@mdo</td>
+        <td><input name="widget1" type="text" value="widget1"></td>
+      </tr>
+      <tr data-test="abc-345">
+        <td>2</td>
+        <td>Jacob</td>
+        <td>Thornton</td>
+        <td>@fat</td>
+        <td><input name="widget2" type="text" value="widget2"></td>
+      </tr>
+      <tr data-test="def-345">
+        <td>3</td>
+        <td colspan="2">Larry the Bird</td>
+        <td>@slacker</td>
+        <td><input name="widget3" type="text" value="widget3"></td>
+      </tr>
+      <tr>
+        <td rowspan="2">4</td>
+        <td rowspan="2">Pete Savage</td>
+        <td></td>
+        <td>@psav</td>
+        <td><input name="widget41" type="text" value="widget41"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>@psav1</td>
+        <td><input name="widget42" type="text" value="widget42"></td>
+      </tr>
+
+      <tr>
+        <td rowspan="2">5</td>
+        <td rowspan="2" colspan="2">Mike Shriver</td>
+        <td>@mshriver</td>
+        <td><input name="widget51" type="text" value="widget51"></td>
+      </tr>
+      <tr>
+        <td>@iamhero</td>
+        <td><input name="widget52" type="text" value="widget52"></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td colspan="2">
+          <input name="some_input_obj" type="text">
+        </td>
+        <td>@blabla</td>
+        <td><input name="widget6" type="text" value="widget6"></td>
+      </tr>
     </tbody>
   </table>
 
@@ -278,7 +284,9 @@ function alertFunction() {
         <td><input name="widget1" type="text" value="widget1"></td>
       </tr>
       <tr hidden>
-        <td colspan="5"><p>some hidden content row 1</p></td>
+        <td colspan="5">
+          <p>some hidden content row 1</p>
+        </td>
       </tr>
     </tbody>
     <tbody data-test="abc-345">
@@ -290,7 +298,9 @@ function alertFunction() {
         <td><input name="widget2" type="text" value="widget2"></td>
       </tr>
       <tr hidden>
-        <td colspan="5"><p>some hidden content row 2</p></td>
+        <td colspan="5">
+          <p>some hidden content row 2</p>
+        </td>
       </tr>
     </tbody>
     <tbody data-test="def-345">
@@ -301,10 +311,26 @@ function alertFunction() {
         <td><input name="widget3" type="text" value="widget3"></td>
       </tr>
       <tr hidden>
-        <td colspan="5"><p>some hidden content row 3</p></td>
+        <td colspan="5">
+          <p>some hidden content row 3</p>
+        </td>
       </tr>
     </tbody>
   </table>
   <iframe src="iframe_page.html" height="600" width="800" name="some_iframe"></iframe>
+  <br />
+  <div id="ouia">
+    <p>OUIA Examples</p>
+    <select data-ouia-component-type="PF/Select" data-ouia-component-id="some_id" data-ouia-safe="true">
+      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="first option">
+        first option
+      </option>
+      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="second option">
+        second option
+      </option>
+    </select>
+    <button data-ouia-component-type="PF/Button" data-ouia-component-id="This is a button" data-ouia-safe="false">This is a button</button>
+  </div>
 </body>
+
 </html>

@@ -304,7 +304,7 @@ class Widget(object, metaclass=WidgetMetaclass):
         else:
             return WidgetDescriptor(cls, *args, **kwargs)
 
-    def __init__(self, parent, logger=None):
+    def __init__(self, parent, logger=None, **kwargs):
         self.parent = parent
         if logger is None:
             self.logger = create_child_logger(parent.logger, type(self).__name__)
@@ -894,7 +894,7 @@ class View(Widget):
     fill_strategy = None
 
     def __init__(self, parent, logger=None, **kwargs):
-        Widget.__init__(self, parent, logger=logger)
+        super().__init__(parent, logger=logger, **kwargs)
         self.context = kwargs.pop('additional_context', {})
         self.last_fill_data = None
 

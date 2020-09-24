@@ -13,6 +13,7 @@ Contents:
    advanced_usage
    internals
    guidelines
+   ouia
 
 Indices and tables
 ==================
