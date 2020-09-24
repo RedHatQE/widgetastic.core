@@ -698,6 +698,17 @@ class Browser(object):
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
         result = el.clear()
+        if (
+            el.get_attribute("value")
+            and self.browser_type == 'chrome'
+            and self.browser_version >= 83
+        ):
+            # Chrome is not able to clear input with element.clear() method, use javascript instead
+            # We need to click on element
+            el.click()
+            self.execute_script("arguments[0].value = '';", el)
+            # If clearing is not followed by send_keys, the previous text will appear again
+            el.send_keys(Keys.SPACE, Keys.BACK_SPACE)
         self.plugin.after_keyboard_input(el, None)
         return result
 
