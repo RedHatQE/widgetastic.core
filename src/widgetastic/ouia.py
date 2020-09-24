@@ -33,6 +33,9 @@ class OUIABase:
         """
         return "true" in self.browser.get_attribute("data-ouia-safe", self)
 
+    def __locator__(self):
+        return self.ROOT
+
 
 class OUIAGenericView(OUIABase, View):
     """A base class for any OUIA compatible view.
@@ -79,6 +82,3 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
             component_id=component_id,
             namespace=self.OUIA_NAMESPACE,
         )
-
-    def __locator__(self):
-        return self.ROOT
