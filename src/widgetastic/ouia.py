@@ -17,12 +17,13 @@ class OUIABase:
 
     ROOT = ParametrizedLocator(".//*[@data-ouia-component-type={@component_type}{@component_id}]")
 
-    def set_ouia_attrs(self, component_type, component_id=None, namespace=None):
+    def __init__(self, component_type, component_id=None, namespace=None, **kwargs):
         component_type = f"{namespace}/{component_type}" if namespace else component_type
         self.component_type = quote(component_type)
         component_id = f" and @data-ouia-component-id={quote(component_id)}" if component_id else ""
         self.component_id = component_id
         self.locator = self.ROOT.locator
+        super().__init__(**kwargs)
 
     @property
     def is_safe(self):
@@ -47,8 +48,14 @@ class OUIAGenericView(OUIABase, View):
     OUIA_NAMESPACE = None
 
     def __init__(self, parent, component_id=None, logger=None, **kwargs):
-        super().set_ouia_attrs(type(self).__name__, component_id, namespace=self.OUIA_NAMESPACE)
-        super().__init__(parent, logger=logger, **kwargs)
+        super().__init__(
+            parent=parent,
+            logger=logger,
+            component_type=type(self).__name__,
+            component_id=component_id,
+            namespace=self.OUIA_NAMESPACE,
+            **kwargs
+        )
 
 
 class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
@@ -65,8 +72,13 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
     OUIA_NAMESPACE = None
 
     def __init__(self, parent, component_id=None, logger=None):
-        super().set_ouia_attrs(type(self).__name__, component_id, namespace=self.OUIA_NAMESPACE)
-        super().__init__(parent, logger=logger)
+        super().__init__(
+            parent=parent,
+            logger=logger,
+            component_type=type(self).__name__,
+            component_id=component_id,
+            namespace=self.OUIA_NAMESPACE,
+        )
 
     def __locator__(self):
         return self.ROOT
