@@ -51,6 +51,7 @@ Contributing
 - Clone
 - Create a branch in your repository for your feature or fix
 - Write the code, make sure you add unit tests.
-- Run ``tox`` to ensure your change does not break other things
-- Push
-- Create a pull request
+- Use ``pre-commit`` when committing to enforce code style
+- Run ``pytest`` to run unit tests
+- Push to your fork and create a pull request
+- Observe checks in GitHub for further docs and build testing

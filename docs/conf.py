@@ -14,7 +14,7 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/2.7', None),
+    'python': ('http://docs.python.org/3.8/', None),
     'selenium': ('http://selenium-python.readthedocs.org/', None),
 }
 
@@ -46,12 +46,12 @@ htmlhelp_basename = 'deprecatedoc'
 
 
 def run_apidoc(_):
-    from sphinx.apidoc import main as apidoc_main
+    from sphinx.ext.apidoc import main as apidoc_main
     modules = ['src/widgetastic']
     for module in modules:
         cur_dir = os.path.abspath(os.path.dirname(__file__))
         output_path = os.path.join(cur_dir, module, 'doc')
-        apidoc_main(['-e', '-f', '-o', output_path, '.', '--force'])
+        apidoc_main(['-e', '-f', '-o', output_path, '.'])
 
 
 def setup(app):
