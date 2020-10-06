@@ -52,14 +52,11 @@ def selenium_url(pytestconfig, worker_id):
         localhost_for_worker = f"127.0.0.{last_octet}"
         ps = subprocess.run(
             [
-                "sudo",
-                "podman",
+                "docker",
                 "run",
                 "-d",
                 "--network",  # for the ephemeral port mapping back to ContentServer
                 "host",
-                "-p",
-                f"{localhost_for_worker}:4444:4444",
                 "--shm-size=2g",
                 "quay.io/redhatqe/selenium-standalone:latest",
             ],
@@ -68,7 +65,7 @@ def selenium_url(pytestconfig, worker_id):
 
         yield webdriver_url.format(localhost_for_worker)
         container_id = ps.stdout.decode("utf-8").strip()
-        subprocess.run(["sudo", "podman", "kill", container_id], stdout=subprocess.DEVNULL)
+        subprocess.run(["docker", "kill", container_id], stdout=subprocess.DEVNULL)
 
 
 @pytest.fixture(scope="module")
