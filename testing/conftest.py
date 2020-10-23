@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
 import os
+import socket
 import sys
 import subprocess
 from urllib.request import urlopen
@@ -34,6 +35,19 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(scope="session")
+def ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.255.255.255", 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
+@pytest.fixture(scope="session")
 def browser_name(pytestconfig):
     return os.environ.get("BROWSER") or pytestconfig.getoption("--browser-name")
 
@@ -52,11 +66,14 @@ def selenium_url(pytestconfig, worker_id):
         localhost_for_worker = f"127.0.0.{last_octet}"
         ps = subprocess.run(
             [
-                "docker",
+                "podman",
                 "run",
+                "--rm",
                 "-d",
-                "--network",  # for the ephemeral port mapping back to ContentServer
-                "host",
+                "-p",
+                f"{localhost_for_worker}:4444:4444",
+                "-p",
+                f"{localhost_for_worker}:5999:5999",
                 "--shm-size=2g",
                 "quay.io/redhatqe/selenium-standalone:latest",
             ],
@@ -65,7 +82,7 @@ def selenium_url(pytestconfig, worker_id):
 
         yield webdriver_url.format(localhost_for_worker)
         container_id = ps.stdout.decode("utf-8").strip()
-        subprocess.run(["docker", "kill", container_id], stdout=subprocess.DEVNULL)
+        subprocess.run(["podman", "kill", container_id], stdout=subprocess.DEVNULL)
 
 
 @pytest.fixture(scope="module")
@@ -130,8 +147,8 @@ class SampleContentServer(ContentServer):
 
 
 @pytest.fixture(scope='module')
-def test_server(selenium_url):
-    server = SampleContentServer()
+def test_server(ip):
+    server = SampleContentServer(host=ip)
     server.start()
     yield server
     server.stop()
