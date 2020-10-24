@@ -10,6 +10,7 @@ import pytest
 from pytest_localserver.http import ContentServer, Request, Response
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.common.exceptions import TimeoutException
 from urllib.parse import urlsplit
 from wait_for import wait_for
 
@@ -85,25 +86,20 @@ def selenium_url(pytestconfig, worker_id):
         subprocess.run(["podman", "kill", container_id], stdout=subprocess.DEVNULL)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def selenium_webdriver(browser_name, selenium_url):
     wait_for(urlopen, func_args=[selenium_url], timeout=180, handle_exception=True)
     if browser_name == "firefox":
         desired_capabilities = DesiredCapabilities.FIREFOX.copy()
     else:
         desired_capabilities = DesiredCapabilities.CHROME.copy()
-        desired_capabilities["chromeOptions"] = {
-            "args": [
-                "no-sandbox",
-                "disable-infobars"
-                "start-maximized",
-            ]
-        }
+        desired_capabilities["chromeOptions"] = {"args": ["--no-sandbox"]}
 
     driver = webdriver.Remote(
         command_executor=selenium_url,
         desired_capabilities=desired_capabilities
     )
+    driver.set_page_load_timeout(5)
     yield driver
     driver.quit()
 
@@ -146,7 +142,7 @@ class SampleContentServer(ContentServer):
         return response(environ, start_response)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="session")
 def test_server(ip):
     server = SampleContentServer(host=ip)
     server.start()
@@ -163,6 +159,21 @@ class CustomBrowser(Browser):
 @pytest.fixture(scope='function')
 def browser(selenium_webdriver, test_server):
     cb = CustomBrowser(selenium_webdriver)
-    selenium_webdriver.get(test_server.url)
+    # these nasty workarounds are mostly for Chrome. It just cannot load the page from the first
+    # attempt
+    for _ in range(3):
+        try:
+            selenium_webdriver.maximize_window()
+            selenium_webdriver.get(test_server.url)
+        except TimeoutException:
+            continue
+        else:
+            break
     yield cb
-    selenium_webdriver.refresh()
+    for _ in range(3):
+        try:
+            selenium_webdriver.refresh()
+        except TimeoutException:
+            continue
+        else:
+            break
