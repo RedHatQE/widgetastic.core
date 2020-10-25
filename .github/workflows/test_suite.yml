@@ -72,11 +72,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build Docs
-        uses: ammaraskar/sphinx-action@master
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
-          docs-folder: "docs/"
-          build-command: "sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs"
+          python-version: "3.8"
+
+      - name: Install Deps
+        run: |
+          pip install -U pip setuptools wheel
+          pip install .[docs]
+
+      - name: Build Docs
+        run: sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs
 
       - name: Archive Docs
         uses: actions/upload-artifact@v2

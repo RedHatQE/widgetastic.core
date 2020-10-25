@@ -1049,7 +1049,7 @@ class View(Widget):
 class ParametrizedView(View):
     """View that needs parameters to be run.
 
-    In order to use this class, you need to specify parameters in the :py:attribute:`PARAMETERS`
+    In order to use this class, you need to specify parameters in the :py:attr:`PARAMETERS`
     attribute.
 
     Then a parametrized view could be defined like this:

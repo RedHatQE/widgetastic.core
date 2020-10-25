@@ -353,7 +353,7 @@ class ParametrizedString(ConstructorResolvable):
 
     Supported filters:
 
-        See :py:attribute:`OPERATIONS`
+        See :py:attr:`OPERATIONS`
 
     Sample strings:
 
