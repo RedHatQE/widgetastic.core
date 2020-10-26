@@ -22,6 +22,8 @@ intersphinx_mapping = {
 
 templates_path = ['_templates']
 
+master_doc = 'index'
+
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
