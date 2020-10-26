@@ -7,11 +7,13 @@ from widgetastic.widget.base import ClickableMixin
 
 class OUIABase:
     """
-    Base class for ``OUIA`` support. According to the spec ``OUIA`` compatible components may have
-    the following attributes in the root level HTML element:
-        * data-ouia-component-type
-        * data-ouia-component-id
-        * data-ouia-safe
+    Base class for ``OUIA`` support. According to the spec ``OUIA`` compatible components may
+    have the following attributes in the root level HTML element:
+
+    * data-ouia-component-type
+    * data-ouia-component-id
+    * data-ouia-safe
+
     https://ouia.readthedocs.io/en/latest/README.html#ouia-component
     """
 

@@ -43,7 +43,7 @@ What this project does NOT do
 - UI models representation. Doing nontrivial testing usually requires some sort of representation
   of the stuff in the product in the testing system. Usually, people use classes and instances of
   these with their methods corresponding to the real actions you can do with the entities in the UI.
-  Widgetastic offers integration for such functionality (:ref:`Fillable objects`), but does not provide
+  Widgetastic offers integration for such functionality (:ref:`fillable-objects`), but does not provide
   any framework to use.
 - Test execution. We use pytest to drive our testing system. If you put the two previous bullets
   together and have a system of representing, navigating and interacting, then writing a simple

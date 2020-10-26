@@ -1,19 +1,17 @@
-
 Welcome to widgetastic.core's documentation!
 ============================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
-   modules
    intro
    basic_usage
    advanced_usage
    internals
    guidelines
    ouia
+
 
 Indices and tables
 ==================

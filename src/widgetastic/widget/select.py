@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
+from html import unescape
 
 from cached_property import cached_property
 from jsmin import jsmin
-from html.parser import HTMLParser
 
 from widgetastic.utils import normalize_space
 from .base import Widget
@@ -118,17 +118,15 @@ class Select(Widget):
         """
         # More reliable using javascript
         options = self.browser.execute_script(self.ALL_OPTIONS, self.browser.element(self))
-        parser = HTMLParser()
         return [
-            self.Option(normalize_space(parser.unescape(option[0])), option[1])
+            self.Option(normalize_space(unescape(option[0])), option[1])
             for option in options]
 
     @property
     def all_selected_options(self):
         """Returns a list of all selected options as their displayed texts."""
-        parser = HTMLParser()
         return [
-            normalize_space(parser.unescape(option))
+            normalize_space(unescape(option))
             for option
             in self.browser.execute_script(self.SELECTED_OPTIONS_TEXT, self.browser.element(self))]
 
