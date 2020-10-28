@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
 """This module contains the base classes that are used to implement the more specific behaviour."""
-
 import itertools
 import re
-from anytree import Node, RenderTree, AsciiStyle, Resolver, ResolverError, ChildResolverError
-from cached_property import cached_property
-from collections import defaultdict, deque
+from collections import defaultdict
+from collections import deque
 from copy import copy
-from jsmin import jsmin
 from operator import attrgetter
 
+from anytree import AsciiStyle
+from anytree import ChildResolverError
+from anytree import Node
+from anytree import RenderTree
+from anytree import Resolver
+from anytree import ResolverError
+from cached_property import cached_property
+from jsmin import jsmin
+
+from .base import ClickableMixin
+from .base import Widget
+from .base import Widgetable
+from .base import WidgetDescriptor
 from widgetastic.browser import Browser
 from widgetastic.exceptions import RowNotFound
-from widgetastic.log import create_child_logger, create_item_logger
-from widgetastic.utils import (ParametrizedLocator, ConstructorResolvable, attributize_string)
+from widgetastic.log import create_child_logger
+from widgetastic.log import create_item_logger
+from widgetastic.utils import attributize_string
+from widgetastic.utils import ConstructorResolvable
+from widgetastic.utils import ParametrizedLocator
 from widgetastic.xpath import quote
-from .base import Widget, ClickableMixin, WidgetDescriptor, Widgetable
 
 # Python 3.7 formalised the RE pattern type, so let's use that if we can
 try:
@@ -53,13 +65,14 @@ def resolve_table_widget(parent, wcls):
         args = wcls.args
         kwargs.update(wcls.kwargs)
         wcls = wcls.klass
-    if 'logger' not in kwargs:
-        kwargs['logger'] = create_child_logger(parent.logger, wcls.__name__)
+    if "logger" not in kwargs:
+        kwargs["logger"] = create_child_logger(parent.logger, wcls.__name__)
     return wcls(parent, *args, **kwargs)
 
 
 class TableColumn(Widget, ClickableMixin):
     """Represents a cell in the row."""
+
     def __init__(self, parent, position, absolute_position=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.position = position  # relative position
@@ -69,7 +82,7 @@ class TableColumn(Widget, ClickableMixin):
         return self.parent.table.COLUMN_AT_POSITION.format(self.position + 1)
 
     def __repr__(self):
-        return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.position)
+        return "{}({!r}, {!r})".format(type(self).__name__, self.parent, self.position)
 
     @property
     def column_name(self):
@@ -129,22 +142,25 @@ class TableColumn(Widget, ClickableMixin):
         else:
             if self.text == str(value):
                 self.logger.debug(
-                    'Not filling %d because it already has value %r even though there is no widget',
+                    "Not filling %d because it already has value %r even though there is no widget",
                     self.column_name or self.position,
-                    value)
+                    value,
+                )
                 return False
             else:
                 raise TypeError(
                     (
-                        'Cannot fill column {}, no widget and the value differs '
-                        '(wanted to fill {!r} but there is {!r}').format(
-                            self.column_name or self.position, value, self.text))
+                        "Cannot fill column {}, no widget and the value differs "
+                        "(wanted to fill {!r} but there is {!r}"
+                    ).format(self.column_name or self.position, value, self.text)
+                )
 
 
 class TableReference(Widgetable):
     """Represents rowspan/colspan column.
-      It has a reference to real objects and re-directs all method calls to real object.
+    It has a reference to real objects and re-directs all method calls to real object.
     """
+
     def __init__(self, parent, reference):
         self.parent = parent
         self.refers_to = reference
@@ -153,10 +169,10 @@ class TableReference(Widgetable):
         try:
             return getattr(self.refers_to, attr)
         except AttributeError:
-            raise AttributeError('no {} attribute in class {}'.format(attr, type(self.refers_to)))
+            raise AttributeError("no {} attribute in class {}".format(attr, type(self.refers_to)))
 
     def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.refers_to)
+        return "{}({!r})".format(type(self).__name__, self.refers_to)
 
 
 class TableRow(Widget, ClickableMixin):
@@ -168,6 +184,7 @@ class TableRow(Widget, ClickableMixin):
     Args:
         index: Position of the row in the table.
     """
+
     Column = TableColumn
 
     def __init__(self, parent, index, logger=None):
@@ -179,7 +196,7 @@ class TableRow(Widget, ClickableMixin):
         return self.parent
 
     def __repr__(self):
-        return '{}({!r}, {!r})'.format(type(self).__name__, self.parent, self.index)
+        return "{}({!r}, {!r})".format(type(self).__name__, self.parent, self.index)
 
     def __locator__(self):
         return self.parent.ROW_AT_INDEX.format(self.index + 1)
@@ -194,19 +211,16 @@ class TableRow(Widget, ClickableMixin):
         elif isinstance(item, int):
             index = item
         else:
-            raise TypeError('row[] accepts only integers and strings')
+            raise TypeError("row[] accepts only integers and strings")
 
         if self.table.table_tree:
             # We could find either a TableColumn or a TableReference node at this position...
             cols = self.table.resolver.glob(
                 self.table.table_tree,
-                '{}[{}]{}[{}]'.format(
-                    self.table.ROW_RESOLVER_PATH,
-                    self.index,
-                    self.table.COLUMN_RESOLVER_PATH,
-                    index
+                "{}[{}]{}[{}]".format(
+                    self.table.ROW_RESOLVER_PATH, self.index, self.table.COLUMN_RESOLVER_PATH, index
                 ),
-                handle_resolver_error=True
+                handle_resolver_error=True,
             )
             if not cols:
                 raise IndexError(
@@ -225,7 +239,7 @@ class TableRow(Widget, ClickableMixin):
         try:
             return self[self.table.ensure_normal(attr)]
         except KeyError:
-            raise AttributeError('Cannot find column {} in the table'.format(attr))
+            raise AttributeError("Cannot find column {} in the table".format(attr))
 
     def __dir__(self):
         parent_dir = dir(super(TableRow, self))
@@ -254,19 +268,20 @@ class TableRow(Widget, ClickableMixin):
         elif not isinstance(value, dict):
             if self.table.assoc_column_position is None:
                 raise ValueError(
-                    'For filling rows with single value you need to specify assoc_column')
+                    "For filling rows with single value you need to specify assoc_column"
+                )
             value = {self.table.assoc_column_position: value}
 
         changed = False
         for key, value in value.items():
             if value is None:
-                self.logger.info('Skipping fill of %r because the value is None', key)
+                self.logger.info("Skipping fill of %r because the value is None", key)
                 continue
             else:
-                self.logger.info('Filling column %r', key)
+                self.logger.info("Filling column %r", key)
 
             # if the row widgets aren't visible the row needs to be clicked to edit
-            if hasattr(self.parent, 'action_row') and getattr(self[key], 'widget', False):
+            if hasattr(self.parent, "action_row") and getattr(self[key], "widget", False):
                 if not self[key].widget.is_displayed:
                     self.click()
             if self[key].fill(value):
@@ -369,35 +384,44 @@ class Table(Widget):
         top_ignore_fill: Whether to also strip these top rows for fill.
         bottom_ignore_fill: Whether to also strip these top rows for fill.
     """
-    ROWS = './tbody/tr[./td]|./tr[not(./th) and ./td]'
+
+    ROWS = "./tbody/tr[./td]|./tr[not(./th) and ./td]"
 
     # Resolve path is used for self.resolver for anytree node lookups
     # where position starts at '0' for elements in the node tree
-    ROW_RESOLVER_PATH = '/table/tbody/tr'
-    COLUMN_RESOLVER_PATH = '/td'
+    ROW_RESOLVER_PATH = "/table/tbody/tr"
+    COLUMN_RESOLVER_PATH = "/td"
 
     # These path vars are used for selenium browser.element lookups,
     # where position starts at '1' for elements
-    COLUMN_AT_POSITION = './td[{0}]'
-    ROW_AT_INDEX = './tbody/tr[{0}]|./tr[not(./th)][{0}]'
+    COLUMN_AT_POSITION = "./td[{0}]"
+    ROW_AT_INDEX = "./tbody/tr[{0}]|./tr[not(./th)][{0}]"
 
     # These tags are not added as Node objects to the table tree when
     # _process_table is called.
-    IGNORE_TAGS = ['caption', 'thead', 'tfoot', 'colgroup']
+    IGNORE_TAGS = ["caption", "thead", "tfoot", "colgroup"]
 
-    ROW_TAG = 'tr'
-    COLUMN_TAG = 'td'
-    HEADER_IN_ROWS = './tbody/tr[1]/th'
-    HEADERS = './thead/tr/th|./tr/th|./thead/tr/td' + '|' + HEADER_IN_ROWS
+    ROW_TAG = "tr"
+    COLUMN_TAG = "td"
+    HEADER_IN_ROWS = "./tbody/tr[1]/th"
+    HEADERS = "./thead/tr/th|./tr/th|./thead/tr/td" + "|" + HEADER_IN_ROWS
 
-    ROOT = ParametrizedLocator('{@locator}')
+    ROOT = ParametrizedLocator("{@locator}")
 
     Row = TableRow
 
     def __init__(
-            self, parent, locator, column_widgets=None, assoc_column=None,
-            rows_ignore_top=None, rows_ignore_bottom=None, top_ignore_fill=False,
-            bottom_ignore_fill=False, logger=None):
+        self,
+        parent,
+        locator,
+        column_widgets=None,
+        assoc_column=None,
+        rows_ignore_top=None,
+        rows_ignore_bottom=None,
+        top_ignore_fill=False,
+        bottom_ignore_fill=False,
+        logger=None,
+    ):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
         self.column_widgets = column_widgets or {}
@@ -430,16 +454,22 @@ class Table(Widget):
     @cached_property
     def caption(self):
         try:
-            return self.browser.elements('./caption')[0].text
+            return self.browser.elements("./caption")[0].text
         except IndexError:
             return None
 
     def __repr__(self):
         return (
-            '{}({!r}, column_widgets={!r}, assoc_column={!r}, rows_ignore_top={!r}, '
-            'rows_ignore_bottom={!r})').format(
-                type(self).__name__, self.locator, self.column_widgets, self.assoc_column,
-                self.rows_ignore_top, self.rows_ignore_bottom)
+            "{}({!r}, column_widgets={!r}, assoc_column={!r}, rows_ignore_top={!r}, "
+            "rows_ignore_bottom={!r})"
+        ).format(
+            type(self).__name__,
+            self.locator,
+            self.column_widgets,
+            self.assoc_column,
+            self.rows_ignore_top,
+            self.rows_ignore_bottom,
+        )
 
     def _process_negative_index(self, nindex):
         """The semantics is pretty much the same like for ordinary list.
@@ -451,16 +481,22 @@ class Table(Widget):
             nindex: negative index
         """
         max_index = self.row_count
-        if (- nindex) > max_index:
-            raise IndexError('Negative index {} wanted but we only have {} rows'
-                             .format(nindex, max_index))
+        if (-nindex) > max_index:
+            raise IndexError(
+                "Negative index {} wanted but we only have {} rows".format(nindex, max_index)
+            )
         return max_index + nindex
 
     def clear_cache(self):
         """Clear all cached properties."""
         for item in [
-                'headers', 'attributized_headers', 'header_index_mapping', 'index_header_mapping',
-                'assoc_column_position', 'table_tree']:
+            "headers",
+            "attributized_headers",
+            "header_index_mapping",
+            "index_header_mapping",
+            "assoc_column_position",
+            "table_tree",
+        ]:
             try:
                 delattr(self, item)
             except AttributeError:
@@ -476,8 +512,9 @@ class Table(Widget):
 
         if len(without_none) != len(set(without_none)):
             self.logger.warning(
-                'Detected duplicate headers in %r. Correct functionality is not guaranteed',
-                without_none)
+                "Detected duplicate headers in %r. Correct functionality is not guaranteed",
+                without_none,
+            )
 
         return tuple(result)
 
@@ -516,11 +553,13 @@ class Table(Widget):
                 header = self.assoc_column
             else:
                 raise ValueError(
-                    'Could not find the assoc_value={!r} in headers'.format(self.assoc_column))
+                    "Could not find the assoc_value={!r} in headers".format(self.assoc_column)
+                )
             return self.header_index_mapping[header]
         else:
             raise TypeError(
-                'Wrong type passed for assoc_column= : {}'.format(type(self.assoc_column).__name__))
+                "Wrong type passed for assoc_column= : {}".format(type(self.assoc_column).__name__)
+            )
 
     def _create_row(self, parent, index, logger=None):
         """Override these if you wish to change row behavior in a child class."""
@@ -533,21 +572,26 @@ class Table(Widget):
     def __getitem__(self, item):
         if isinstance(item, str):
             if self.assoc_column is None:
-                raise TypeError('You cannot use string indices when no assoc_column specified!')
+                raise TypeError("You cannot use string indices when no assoc_column specified!")
             try:
                 row = self.row((self.assoc_column, item))
             except RowNotFound:
                 raise KeyError(
-                    'Row {!r} not found in table by associative column {!r}'.format(
-                        item, self.assoc_column))
+                    "Row {!r} not found in table by associative column {!r}".format(
+                        item, self.assoc_column
+                    )
+                )
             at_index = row.index
         elif isinstance(item, int):
             at_index = item
             if at_index >= self.row_count:
-                raise IndexError('Integer row index {} is greater than max index {}'
-                                 .format(at_index, self.row_count - 1))
+                raise IndexError(
+                    "Integer row index {} is greater than max index {}".format(
+                        at_index, self.row_count - 1
+                    )
+                )
         else:
-            raise TypeError('Table [] accepts only strings or integers.')
+            raise TypeError("Table [] accepts only strings or integers.")
         if at_index < 0:
             # To mimic the list handling
             at_index = self._process_negative_index(at_index)
@@ -558,7 +602,7 @@ class Table(Widget):
             try:
                 return next(n.obj for n in nodes if n.position == at_index)
             except StopIteration:
-                raise RowNotFound('Row not found by index {} via {}'.format(at_index, item))
+                raise RowNotFound("Row not found by index {} via {}".format(at_index, item))
         else:
             return self._create_row(self, at_index, logger=create_item_logger(self.logger, item))
 
@@ -567,7 +611,8 @@ class Table(Widget):
             return next(self.rows(*extra_filters, **filters))
         except StopIteration:
             raise RowNotFound(
-                'Row not found when using filters {!r}/{!r}'.format(extra_filters, filters))
+                "Row not found when using filters {!r}/{!r}".format(extra_filters, filters)
+            )
 
     def __iter__(self):
         return self.rows()
@@ -582,12 +627,17 @@ class Table(Widget):
         How simple.
         """
         return self.browser.execute_script(
-            jsmin("""
+            jsmin(
+                """
             var p = []; var e = arguments[0];
             while (e.previousElementSibling)
                 p.push(e = e.previousElementSibling);
             return p.length;
-            """), row_el, silent=True)
+            """
+            ),
+            row_el,
+            silent=True,
+        )
 
     def map_column(self, column):
         """Return column position. Can accept int, normal name, attributized name."""
@@ -600,7 +650,7 @@ class Table(Widget):
                 try:
                     return self.header_index_mapping[column]
                 except KeyError:
-                    raise NameError('Could not find column {!r} in the table'.format(column))
+                    raise NameError("Could not find column {!r} in the table".format(column))
 
     @cached_property
     def _is_header_in_body(self):
@@ -632,11 +682,11 @@ class Table(Widget):
         regexp_filters = []
         row_filters = []
         for filter_column, filter_value in filters.items():
-            if filter_column.startswith('_row__'):
-                row_filters.append((filter_column.split('__', 1)[-1], filter_value))
+            if filter_column.startswith("_row__"):
+                row_filters.append((filter_column.split("__", 1)[-1], filter_value))
                 continue
-            if '__' in filter_column:
-                column, method = filter_column.rsplit('__', 1)
+            if "__" in filter_column:
+                column, method = filter_column.rsplit("__", 1)
             else:
                 column = filter_column
                 method = None
@@ -649,7 +699,7 @@ class Table(Widget):
 
         for argfilter in extra_filters:
             if not isinstance(argfilter, (tuple, list)):
-                raise TypeError('Wrong type passed into tuplefilters (expected tuple or list)')
+                raise TypeError("Wrong type passed into tuplefilters (expected tuple or list)")
             if len(argfilter) == 2:
                 # Column / string match
                 column, value = argfilter
@@ -663,7 +713,8 @@ class Table(Widget):
                 column, method, value = argfilter
             else:
                 raise ValueError(
-                    'tuple filters can only be (column, string) or (column, method, string)')
+                    "tuple filters can only be (column, string) or (column, method, string)"
+                )
 
             processed_filters[self.map_column(column)].append((method, value))
 
@@ -677,29 +728,30 @@ class Table(Widget):
             for method, value in matchers:
                 if method is None:
                     # equals
-                    q = 'normalize-space(.)=normalize-space({})'.format(quote(value))
-                elif method == 'contains':
+                    q = "normalize-space(.)=normalize-space({})".format(quote(value))
+                elif method == "contains":
                     # in
-                    q = 'contains(normalize-space(.), normalize-space({}))'.format(quote(value))
-                elif method == 'startswith':
+                    q = "contains(normalize-space(.), normalize-space({}))".format(quote(value))
+                elif method == "startswith":
                     # starts with
-                    q = ('starts-with(normalize-space(.), '
-                         'normalize-space({}))').format(quote(value))
-                elif method == 'endswith':
+                    q = ("starts-with(normalize-space(.), " "normalize-space({}))").format(
+                        quote(value)
+                    )
+                elif method == "endswith":
                     # ends with
                     # This needs to be faked since selenium does not support this feature.
-                    q = ('substring(normalize-space(.), '
-                         'string-length(normalize-space(.)) - '
-                         'string-length({0}) + 1)={0}').format(
-                        'normalize-space({})'.format(quote(value)))
+                    q = (
+                        "substring(normalize-space(.), "
+                        "string-length(normalize-space(.)) - "
+                        "string-length({0}) + 1)={0}"
+                    ).format("normalize-space({})".format(quote(value)))
                 else:
-                    raise ValueError('Unknown method {}'.format(method))
+                    raise ValueError("Unknown method {}".format(method))
                 col_query_parts.append(q)
 
             query_parts.append(
-                '{}[{}]'.format(
-                    self.COLUMN_AT_POSITION.format(column_index + 1),
-                    ' and '.join(col_query_parts)
+                "{}[{}]".format(
+                    self.COLUMN_AT_POSITION.format(column_index + 1), " and ".join(col_query_parts)
                 )
             )
 
@@ -707,40 +759,44 @@ class Table(Widget):
         row_parts = []
         for row_action, row_value in row_filters:
             row_action = row_action.lower()
-            if row_action.startswith('attr'):
+            if row_action.startswith("attr"):
                 try:
                     attr_name, attr_value = row_value
                 except ValueError:
-                    msg = 'When passing _row__{}= into the row filter, you must pass it a 2-tuple'
+                    msg = "When passing _row__{}= into the row filter, you must pass it a 2-tuple"
                     raise ValueError(msg.format(row_action))
-                if row_action == 'attr_startswith':
-                    row_parts.append('starts-with(@{}, {})'.format(attr_name, quote(attr_value)))
-                elif row_action == 'attr':
-                    row_parts.append('@{}={}'.format(attr_name, quote(attr_value)))
-                elif row_action == 'attr_endswith':
+                if row_action == "attr_startswith":
+                    row_parts.append("starts-with(@{}, {})".format(attr_name, quote(attr_value)))
+                elif row_action == "attr":
+                    row_parts.append("@{}={}".format(attr_name, quote(attr_value)))
+                elif row_action == "attr_endswith":
                     row_parts.append(
-                        ('substring(@{attr}, '
-                         'string-length(@{attr}) - string-length({value}) + 1)={value}').format(
+                        (
+                            "substring(@{attr}, "
+                            "string-length(@{attr}) - string-length({value}) + 1)={value}"
+                        ).format(
                             attr=attr_name,
-                            value='normalize-space({value})'.format(value=quote(attr_value))))
-                elif row_action == 'attr_contains':
-                    row_parts.append('contains(@{}, {})'.format(attr_name, quote(attr_value)))
+                            value="normalize-space({value})".format(value=quote(attr_value)),
+                        )
+                    )
+                elif row_action == "attr_contains":
+                    row_parts.append("contains(@{}, {})".format(attr_name, quote(attr_value)))
                 else:
-                    raise ValueError('Unsupported action {}'.format(row_action))
+                    raise ValueError("Unsupported action {}".format(row_action))
             else:
-                raise ValueError('Unsupported action {}'.format(row_action))
+                raise ValueError("Unsupported action {}".format(row_action))
 
         if query_parts and row_parts:
-            query = '({})[{}][{}]'.format(
-                self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts), ' and '.join(query_parts)
+            query = "({})[{}][{}]".format(
+                self.ROW_AT_INDEX.format("*"), " and ".join(row_parts), " and ".join(query_parts)
             )
         elif query_parts:
-            query = '({})[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(query_parts))
+            query = "({})[{}]".format(self.ROW_AT_INDEX.format("*"), " and ".join(query_parts))
         elif row_parts:
-            query = '({})[{}]'.format(self.ROW_AT_INDEX.format('*'), ' and '.join(row_parts))
+            query = "({})[{}]".format(self.ROW_AT_INDEX.format("*"), " and ".join(row_parts))
         else:
             # When using ONLY regexps, we might see no query_parts, therefore default query
-            query = self.ROW_AT_INDEX.format('*')
+            query = self.ROW_AT_INDEX.format("*")
 
         return query
 
@@ -758,7 +814,7 @@ class Table(Widget):
                 self._create_row(
                     self,
                     row_pos - 1 if self._is_header_in_body else row_pos,
-                    logger=create_item_logger(self.logger, row_pos)
+                    logger=create_item_logger(self.logger, row_pos),
                 )
             )
         return rows
@@ -769,30 +825,32 @@ class Table(Widget):
             for row in rows:
                 for row_action, row_value in row_filters:
                     row_action = row_action.lower()
-                    if row_action.startswith('attr'):
+                    if row_action.startswith("attr"):
                         try:
                             attr_name, attr_value = row_value
-                            got_value = self.browser.element(row).get_attribute(attr_name) or ''
+                            got_value = self.browser.element(row).get_attribute(attr_name) or ""
                         except ValueError:
-                            msg = ('When passing _row__{}= into the row filter, '
-                                   'you must pass it a 2-tuple')
+                            msg = (
+                                "When passing _row__{}= into the row filter, "
+                                "you must pass it a 2-tuple"
+                            )
                             raise ValueError(msg.format(row_action))
-                        if row_action == 'attr_startswith':
+                        if row_action == "attr_startswith":
                             if not got_value.startswith(attr_value):
                                 break
-                        elif row_action == 'attr':
+                        elif row_action == "attr":
                             if got_value != attr_value:
                                 break
-                        elif row_action == 'attr_endswith':
+                        elif row_action == "attr_endswith":
                             if not got_value.endswith(attr_value):
                                 break
-                        elif row_action == 'attr_contains':
+                        elif row_action == "attr_contains":
                             if attr_value not in got_value:
                                 break
                         else:
-                            raise ValueError('Unsupported action {}'.format(row_action))
+                            raise ValueError("Unsupported action {}".format(row_action))
                     else:
-                        raise ValueError('Unsupported action {}'.format(row_action))
+                        raise ValueError("Unsupported action {}".format(row_action))
                 else:
                     remaining_rows.append(row)
             return remaining_rows
@@ -812,23 +870,23 @@ class Table(Widget):
                             if column.text != value:
                                 next_row = True
                                 break
-                        elif method == 'contains':
+                        elif method == "contains":
                             # in
                             if value not in column.text:
                                 next_row = True
                                 break
-                        elif method == 'startswith':
+                        elif method == "startswith":
                             # starts with
                             if not column.text.startswith(value):
                                 next_row = True
                                 break
-                        elif method == 'endswith':
+                        elif method == "endswith":
                             # ends with
                             if not column.text.endswith(value):
                                 next_row = True
                                 break
                         else:
-                            raise ValueError('Unknown method {}'.format(method))
+                            raise ValueError("Unknown method {}".format(method))
                     if next_row:
                         break
                 else:
@@ -838,8 +896,9 @@ class Table(Widget):
             return rows
 
     def _filtered_rows(self, *extra_filters, **filters):
-        processed_filters, regexp_filters, row_filters = self._process_filters(*extra_filters,
-                                                                               **filters)
+        processed_filters, regexp_filters, row_filters = self._process_filters(
+            *extra_filters, **filters
+        )
         if not self.table_tree:
             query = self._build_query(processed_filters, row_filters)
             rows = self._filter_rows_by_query(query)
@@ -886,16 +945,16 @@ class Table(Widget):
                 else:
                     continue
             else:
-                raise RowNotFound('Row not found by {!r}/{!r}'.format(column, value))
+                raise RowNotFound("Row not found by {!r}/{!r}".format(column, value))
 
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
         rows = list(self)
         # Cut the unwanted rows if necessary
         if self.rows_ignore_top is not None:
-            rows = rows[self.rows_ignore_top:]
+            rows = rows[self.rows_ignore_top :]
         if self.rows_ignore_bottom is not None and self.rows_ignore_bottom > 0:
-            rows = rows[:-self.rows_ignore_bottom]
+            rows = rows[: -self.rows_ignore_bottom]
         if self.assoc_column_position is None:
             return [row.read() for row in rows]
         else:
@@ -912,10 +971,12 @@ class Table(Widget):
                             key = row_read.pop(self.assoc_column)
                         except KeyError:
                             raise ValueError(
-                                'The assoc_column={!r} could not be retrieved'.format(
-                                    self.assoc_column))
+                                "The assoc_column={!r} could not be retrieved".format(
+                                    self.assoc_column
+                                )
+                            )
                 if key in result:
-                    raise ValueError('Duplicate value for {}={!r}'.format(key, result[key]))
+                    raise ValueError("Duplicate value for {}={!r}".format(key, result[key]))
                 result[key] = row_read
             return result
 
@@ -923,7 +984,7 @@ class Table(Widget):
         """Fills the table, accepts list which is dispatched to respective rows."""
         if isinstance(value, dict):
             if self.assoc_column_position is None:
-                raise TypeError('In order to support dict you need to specify assoc_column')
+                raise TypeError("In order to support dict you need to specify assoc_column")
             changed = False
             for key, fill_value in value.items():
                 try:
@@ -943,12 +1004,13 @@ class Table(Widget):
             rows = list(self)
             # Adapt the behaviour similar to read
             if self.top_ignore_fill and self.rows_ignore_top is not None:
-                rows = rows[self.rows_ignore_top:]
+                rows = rows[self.rows_ignore_top :]
             if (
-                    self.bottom_ignore_fill and
-                    self.rows_ignore_bottom is not None and
-                    self.rows_ignore_bottom > 0):
-                rows = rows[:-self.rows_ignore_bottom]
+                self.bottom_ignore_fill
+                and self.rows_ignore_bottom is not None
+                and self.rows_ignore_bottom > 0
+            ):
+                rows = rows[: -self.rows_ignore_bottom]
             row_count = len(rows)
             present_row_values = value[:row_count]
             if total_values > row_count:
@@ -977,7 +1039,8 @@ class Table(Widget):
             An index (position) of the new row. ``None`` in case of error.
         """
         raise NotImplementedError(
-            'You need to implement the row_add in order to use dynamic adding')
+            "You need to implement the row_add in order to use dynamic adding"
+        )
 
     def row_save(self, row=None):
         """To be implemented if the table has dynamic rows.
@@ -986,12 +1049,12 @@ class Table(Widget):
 
         Default implementation just writes a debug message that it is not used.
         """
-        self.logger.debug('Row saving not used.')
+        self.logger.debug("Row saving not used.")
 
     @property
     def has_rowcolspan(self):
         """Checks whether table has rowspan/colspan attributes"""
-        return bool(self.browser.elements('./tbody//td[@rowspan or @colspan]', parent=self))
+        return bool(self.browser.elements("./tbody//td[@rowspan or @colspan]", parent=self))
 
     def _filter_child(self, child):
         return child.tag_name not in self.IGNORE_TAGS
@@ -1004,7 +1067,7 @@ class Table(Widget):
         while len(queue) > 0:
             node = queue.popleft()
             # visit node
-            children = self.browser.elements('./*[descendant-or-self::node()]', parent=node.obj)
+            children = self.browser.elements("./*[descendant-or-self::node()]", parent=node.obj)
 
             for position, child in enumerate(filter(self._filter_child, children)):
                 cur_tag = child.tag_name
@@ -1012,8 +1075,7 @@ class Table(Widget):
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
                     cur_obj = self._create_row(
-                        parent=self._get_ancestor_node_obj(node),
-                        index=position
+                        parent=self._get_ancestor_node_obj(node), index=position
                     )
                     cur_node = Node(name=cur_tag, parent=node, obj=cur_obj, position=position)
                     queue.append(cur_node)
@@ -1023,12 +1085,12 @@ class Table(Widget):
                     cur_obj = self._create_column(
                         parent=self._get_ancestor_node_obj(node),
                         position=cur_position,
-                        absolute_position=cur_position
+                        absolute_position=cur_position,
                     )
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
-                    rowsteps = range(1, int(child.get_attribute('rowspan') or 0))
-                    colsteps = range(1, int(child.get_attribute('colspan') or 0))
+                    rowsteps = range(1, int(child.get_attribute("rowspan") or 0))
+                    colsteps = range(1, int(child.get_attribute("colspan") or 0))
                     coordinates = set(itertools.zip_longest(colsteps, rowsteps, fillvalue=0))
 
                     # when there are both rowspan and colspan set, we need to generate additional
@@ -1050,8 +1112,7 @@ class Table(Widget):
                             ref_parent = node
                         ref_obj = TableReference(parent=ref_parent, reference=cur_obj)
                         ref_position = cur_position if col_step == 0 else cur_position + col_step
-                        Node(name=cur_tag, parent=ref_parent, obj=ref_obj,
-                             position=ref_position)
+                        Node(name=cur_tag, parent=ref_parent, obj=ref_obj, position=ref_position)
 
                 else:
                     cur_node = Node(name=cur_tag, parent=node, obj=child, position=position)
@@ -1062,9 +1123,9 @@ class Table(Widget):
         for row in self.resolver.glob(tree, self.ROW_RESOLVER_PATH):
             modifier = 0
             # Look for column nodes
-            cols = self.resolver.glob(row, './{}'.format(self.COLUMN_RESOLVER_PATH))
-            for col in sorted(cols, key=attrgetter('position')):
-                if getattr(col.obj, 'refers_to', None):
+            cols = self.resolver.glob(row, "./{}".format(self.COLUMN_RESOLVER_PATH))
+            for col in sorted(cols, key=attrgetter("position")):
+                if getattr(col.obj, "refers_to", None):
                     modifier -= 1
                     continue
                 col.obj.position += modifier
@@ -1096,7 +1157,7 @@ class Table(Widget):
     @staticmethod
     def _get_position_respecting_spans(node):
         # looking for reference objects among columns
-        spans = [c for c in node.children if getattr(c.obj, 'refers_to', None)]
+        spans = [c for c in node.children if getattr(c.obj, "refers_to", None)]
         # checking whether we have gaps in column positions
         gaps = {c for c in range(len(node.children))} - {c.position for c in node.children}
         return min(gaps) if spans and gaps else len(node.children)
@@ -1108,7 +1169,8 @@ class TableResolver(Resolver):
     This class slightly improves that by adding ability to specify node index number.
     It will be removed when xpath support is enhanced in anytree
     """
-    index_regexp = re.compile(r'(.*?)\[(\d+)\]$')
+
+    index_regexp = re.compile(r"(.*?)\[(\d+)\]$")
 
     def get(self, node, path):
         node, parts = self._Resolver__start(node, path)
@@ -1169,7 +1231,7 @@ class TableResolver(Resolver):
                 part,
                 "{} has no child '{}' with position={}. Children are: {}".format(
                     repr(node), part, position, ", ".join(names)
-                )
+                ),
             )
 
     def __find(self, node, pat, remainder):

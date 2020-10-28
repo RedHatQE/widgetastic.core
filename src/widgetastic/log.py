@@ -6,7 +6,7 @@ import time
 from .exceptions import DoNotReadThisWidget
 
 
-null_logger = logging.getLogger('widgetastic_null')
+null_logger = logging.getLogger("widgetastic_null")
 null_logger.addHandler(logging.NullHandler())
 
 
@@ -21,20 +21,21 @@ def call_sig(args, kwargs):
         A string that contains parameters in parentheses like the call to it.
     """
     arglist = [repr(x) for x in args]
-    arglist.extend("{0}={1!r}".format(k, v) for k, v in kwargs.items())
+    arglist.extend("{}={!r}".format(k, v) for k, v in kwargs.items())
     return "({args})".format(
-        args=', '.join(arglist),
+        args=", ".join(arglist),
     )
 
 
 class PrependParentsAdapter(logging.LoggerAdapter):
     """This class ensures the path to the widget is represented in the log records."""
+
     def process(self, msg, kwargs):
         # Sanitizing %->%% for formatter working properly
-        return '[{}]: {}'.format(self.extra['widget_path'].replace('%', '%%'), msg), kwargs
+        return "[{}]: {}".format(self.extra["widget_path"].replace("%", "%%"), msg), kwargs
 
     def __repr__(self):
-        return '{}({!r}, {!r})'.format(type(self).__name__, self.logger, self.extra['widget_path'])
+        return "{}({!r}, {!r})".format(type(self).__name__, self.logger, self.extra["widget_path"])
 
 
 def create_widget_logger(widget_path, logger=None):
@@ -47,20 +48,18 @@ def create_widget_logger(widget_path, logger=None):
     Returns:
         A logger instance.
     """
-    return PrependParentsAdapter(
-        logger or null_logger,
-        {'widget_path': widget_path})
+    return PrependParentsAdapter(logger or null_logger, {"widget_path": widget_path})
 
 
 def _create_logger_appender(parent_logger, suffix):
     """Generic name-append logger creator."""
     if isinstance(parent_logger, PrependParentsAdapter):
-        widget_path = '{}{}'.format(parent_logger.extra['widget_path'], suffix)
+        widget_path = "{}{}".format(parent_logger.extra["widget_path"], suffix)
         logger = parent_logger.logger
     else:
         widget_path = suffix
         logger = parent_logger
-    return PrependParentsAdapter(logger, {'widget_path': widget_path.lstrip('/')})
+    return PrependParentsAdapter(logger, {"widget_path": widget_path.lstrip("/")})
 
 
 def create_child_logger(parent_logger, child_name):
@@ -74,7 +73,7 @@ def create_child_logger(parent_logger, child_name):
     Returns:
         A :py:class:`PrependParentsAdapter` logger instance.
     """
-    return _create_logger_appender(parent_logger, '/{}'.format(child_name))
+    return _create_logger_appender(parent_logger, "/{}".format(child_name))
 
 
 def create_item_logger(parent_logger, item):
@@ -88,7 +87,7 @@ def create_item_logger(parent_logger, item):
     Returns:
         A :py:class:`PrependParentsAdapter` logger instance.
     """
-    return _create_logger_appender(parent_logger, '[{!r}]'.format(item))
+    return _create_logger_appender(parent_logger, "[{!r}]".format(item))
 
 
 def logged(log_args=False, log_result=False):
@@ -105,33 +104,36 @@ def logged(log_args=False, log_result=False):
         log_args: Whether to log args passed to the method
         log_result: Whether to log the result value returned from the method.
     """
+
     def g(f):
         @functools.wraps(f)
         def wrapped(self, *args, **kwargs):
             start_time = time.time()
-            signature = f.__name__ + (call_sig(args, kwargs) if log_args else '')
-            self.logger.debug('%s started', signature)
+            signature = f.__name__ + (call_sig(args, kwargs) if log_args else "")
+            self.logger.debug("%s started", signature)
             try:
                 result = f(self, *args, **kwargs)
             except DoNotReadThisWidget:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 self.logger.warning(
-                    '%s - not read on widget\'s request (elapsed %.0f ms)',
-                    signature, elapsed_time)
+                    "%s - not read on widget's request (elapsed %.0f ms)", signature, elapsed_time
+                )
                 raise
             except Exception as e:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 self.logger.error(
-                    'An exception happened during %s call (elapsed %.0f ms)',
-                    signature, elapsed_time)
+                    "An exception happened during %s call (elapsed %.0f ms)",
+                    signature,
+                    elapsed_time,
+                )
                 self.logger.exception(e)
                 raise
             else:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 if log_result:
-                    self.logger.info('%s -> %r (elapsed %.0f ms)', signature, result, elapsed_time)
+                    self.logger.info("%s -> %r (elapsed %.0f ms)", signature, result, elapsed_time)
                 else:
-                    self.logger.info('%s (elapsed %.0f ms)', signature, elapsed_time)
+                    self.logger.info("%s (elapsed %.0f ms)", signature, elapsed_time)
                 return result
 
         wrapped.original_function = f

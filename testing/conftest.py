@@ -27,7 +27,8 @@ def pytest_addoption(parser):
         "--selenium-host",
         default=None,
         help="Use the given host for selenium, (hostname only, defaults to http and port 4444)"
-             "instead of running selenium container automatically")
+        "instead of running selenium container automatically",
+    )
 
 
 @pytest.fixture(scope="session")
@@ -116,8 +117,7 @@ def selenium_webdriver(browser_name, selenium_url, testing_page_url):
         desired_capabilities["chromeOptions"] = {"args": ["--no-sandbox"]}
 
     driver = webdriver.Remote(
-        command_executor=selenium_url,
-        desired_capabilities=desired_capabilities
+        command_executor=selenium_url, desired_capabilities=desired_capabilities
     )
     driver.maximize_window()
     driver.get(testing_page_url)
@@ -128,7 +128,7 @@ def selenium_webdriver(browser_name, selenium_url, testing_page_url):
 class CustomBrowser(Browser):
     @property
     def product_version(self):
-        return '1.0.0'
+        return "1.0.0"
 
 
 @pytest.fixture(scope="session")

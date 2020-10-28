@@ -1,7 +1,8 @@
 import pytest
-from widgetastic.widget import View
-from widgetastic.ouia import OUIAGenericWidget
+
 from widgetastic.ouia import OUIAGenericView
+from widgetastic.ouia import OUIAGenericWidget
+from widgetastic.widget import View
 
 
 class Button(OUIAGenericWidget):

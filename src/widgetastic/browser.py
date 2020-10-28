@@ -7,33 +7,40 @@ from cached_property import cached_property
 from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.file_detector import LocalFileDetector, UselessFileDetector
+from selenium.webdriver.remote.file_detector import LocalFileDetector
+from selenium.webdriver.remote.file_detector import UselessFileDetector
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from smartloc import Locator
-from wait_for import wait_for, TimedOutError
+from wait_for import TimedOutError
+from wait_for import wait_for
 
-from .exceptions import (
-    NoSuchElementException, UnexpectedAlertPresentException, MoveTargetOutOfBoundsException,
-    StaleElementReferenceException, NoAlertPresentException, LocatorNotImplemented,
-    WebDriverException)
-from .log import create_widget_logger, null_logger
-from .utils import crop_string_middle, retry_stale_element
+from .exceptions import LocatorNotImplemented
+from .exceptions import MoveTargetOutOfBoundsException
+from .exceptions import NoAlertPresentException
+from .exceptions import NoSuchElementException
+from .exceptions import StaleElementReferenceException
+from .exceptions import UnexpectedAlertPresentException
+from .exceptions import WebDriverException
+from .log import create_widget_logger
+from .log import null_logger
+from .utils import crop_string_middle
+from .utils import retry_stale_element
 from .xpath import normalize_space
 
-Size = namedtuple('Size', ['width', 'height'])
-Location = namedtuple('Location', ['x', 'y'])
+Size = namedtuple("Size", ["width", "height"])
+Location = namedtuple("Location", ["x", "y"])
 
 
 class DefaultPlugin(object):
-    ENSURE_PAGE_SAFE = '''\
+    ENSURE_PAGE_SAFE = """\
         return {
             jquery: (typeof jQuery === "undefined") ? true : jQuery.active < 1,
             prototype: (typeof Ajax === "undefined") ? true : Ajax.activeRequestCount < 1,
             document: document.readyState == "complete"
         }
-        '''
+        """
 
     def __init__(self, browser):
         self.browser = browser
@@ -43,7 +50,7 @@ class DefaultPlugin(object):
         """Logger with prepended plugin name."""
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
-    def ensure_page_safe(self, timeout='10s'):
+    def ensure_page_safe(self, timeout="10s"):
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
 
         def _check():
@@ -138,6 +145,7 @@ class Browser(object):
         extra_objects: If the testing system needs to know more about the environment, you can pass
             a dictionary in this parameter, where you can store all these additional objects.
     """
+
     def __init__(self, selenium, plugin_class=None, logger=None, extra_objects=None):
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
@@ -149,36 +157,36 @@ class Browser(object):
     def url(self):
         """Returns the current URL of the browser."""
         result = self.selenium.current_url
-        self.logger.debug('current_url -> %r', result)
+        self.logger.debug("current_url -> %r", result)
         return result
 
     @url.setter
     def url(self, address):
         """Opens the address in the browser."""
-        self.logger.info('Opening URL: %r', address)
+        self.logger.info("Opening URL: %r", address)
         self.selenium.get(address)
 
     @property
     def title(self):
         """Returns current title"""
         current_title = self.selenium.title
-        self.logger.info('Current title: %r', current_title)
+        self.logger.info("Current title: %r", current_title)
         return current_title
 
     @property
     def handles_alerts(self):
-        return self.selenium.capabilities.get('handlesAlerts', True)
+        return self.selenium.capabilities.get("handlesAlerts", True)
 
     @property
     def browser_type(self):
-        return self.selenium.capabilities.get('browserName')
+        return self.selenium.capabilities.get("browserName")
 
     @property
     def browser_version(self):
-        version = self.selenium.desired_capabilities.get('browserVersion')
+        version = self.selenium.desired_capabilities.get("browserVersion")
         if not version:
-            version = self.selenium.desired_capabilities.get('version')
-        return int(version.split('.')[0])
+            version = self.selenium.desired_capabilities.get("version")
+        return int(version.split(".")[0])
 
     @property
     def browser(self):
@@ -196,37 +204,45 @@ class Browser(object):
         :py:class:`widgetastic.widget.Widget` instances, you need to override this property
         that will enable this functionality.
         """
-        raise NotImplementedError('You have to implement product_version')
+        raise NotImplementedError("You have to implement product_version")
 
     @staticmethod
     def _process_locator(locator):
         """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
         if isinstance(locator, WebElement):
             return locator
-        if hasattr(locator, '__element__'):
+        if hasattr(locator, "__element__"):
             return locator.__element__()
         try:
             return Locator(locator)
         except TypeError:
-            if hasattr(locator, '__locator__'):
+            if hasattr(locator, "__locator__"):
                 # Deal with the case when __locator__ returns a webelement.
                 loc = locator.__locator__()
                 if isinstance(loc, WebElement):
                     return loc
             raise LocatorNotImplemented(
-                'You have to implement __locator__ on {!r}'.format(type(locator))) from None
+                "You have to implement __locator__ on {!r}".format(type(locator))
+            ) from None
 
     @staticmethod
     def _locator_force_visibility_check(locator):
-        if hasattr(locator, '__locator__') and hasattr(locator, 'CHECK_VISIBILITY'):
+        if hasattr(locator, "__locator__") and hasattr(locator, "CHECK_VISIBILITY"):
             return locator.CHECK_VISIBILITY
         else:
             return None
 
     @retry_stale_element
     def elements(
-            self, locator, parent=None, check_visibility=False, check_safe=True,
-            force_check_safe=False, *args, **kwargs):
+        self,
+        locator,
+        parent=None,
+        check_visibility=False,
+        check_safe=True,
+        force_check_safe=False,
+        *args,
+        **kwargs
+    ):
         """Method that resolves locators into selenium webelements.
 
         Args:
@@ -248,13 +264,17 @@ class Browser(object):
         """
         if force_check_safe:
             import warnings
-            warnings.warn("force_check_safe has been removed and left in definition "
-                          "only for backward compatibility. "
-                          "It will also be removed from definition soon.",
-                          category=DeprecationWarning)
+
+            warnings.warn(
+                "force_check_safe has been removed and left in definition "
+                "only for backward compatibility. "
+                "It will also be removed from definition soon.",
+                category=DeprecationWarning,
+            )
         if check_safe:
             self.plugin.ensure_page_safe()
         from .widget import Widget
+
         locator = self._process_locator(locator)
         # Get result
         if isinstance(locator, WebElement):
@@ -267,7 +287,7 @@ class Browser(object):
                     root_element = parent
                 elif isinstance(parent, Widget):
                     root_element = self.element(parent, parent=parent.locatable_parent)
-                elif hasattr(parent, '__locator__'):
+                elif hasattr(parent, "__locator__"):
                     root_element = self.element(parent, check_visibility=check_visibility)
                 else:
                     # TODO: handle intermediate views that do not have __locator__
@@ -282,8 +302,15 @@ class Browser(object):
         return result
 
     def wait_for_element(
-            self, locator, parent=None, visible=False, timeout=5, delay=0.2, exception=True,
-            ensure_page_safe=False):
+        self,
+        locator,
+        parent=None,
+        visible=False,
+        timeout=5,
+        delay=0.2,
+        exception=True,
+        ensure_page_safe=False,
+    ):
         """Wait for presence or visibility of elements specified by a locator.
 
         Args:
@@ -303,26 +330,30 @@ class Browser(object):
         Raises:
             :py:class:`selenium.common.exceptions.NoSuchElementException` if element not found.
         """
+
         def _element_lookup():
             try:
-                return self.elements(locator,
-                                     parent=parent,
-                                     check_visibility=visible,
-                                     check_safe=ensure_page_safe)
+                return self.elements(
+                    locator, parent=parent, check_visibility=visible, check_safe=ensure_page_safe
+                )
             # allow other exceptions through to caller on first wait
             except NoSuchElementException:
                 return False
+
         # turn the timeout into NoSuchElement
         try:
-            result = wait_for(_element_lookup,
-                              num_sec=timeout,
-                              delay=delay,
-                              fail_condition=lambda elements: not bool(elements),
-                              fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None)
+            result = wait_for(
+                _element_lookup,
+                num_sec=timeout,
+                delay=delay,
+                fail_condition=lambda elements: not bool(elements),
+                fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None,
+            )
         except TimedOutError:
             if exception:
-                raise NoSuchElementException('Failed waiting for element with {} in {}'
-                                             .format(locator, parent)) from None
+                raise NoSuchElementException(
+                    "Failed waiting for element with {} in {}".format(locator, parent)
+                ) from None
             else:
                 return None
         # wait_for returns NamedTuple, return first item from 'out', the WebElement
@@ -342,12 +373,13 @@ class Browser(object):
         try:
             vcheck = self._locator_force_visibility_check(locator)
             if vcheck is not None:
-                kwargs['check_visibility'] = vcheck
+                kwargs["check_visibility"] = vcheck
             elements = self.elements(locator, *args, **kwargs)
             return elements[0]
         except IndexError:
             raise NoSuchElementException(
-                'Could not find an element {}'.format(repr(locator))) from None
+                "Could not find an element {}".format(repr(locator))
+            ) from None
 
     def perform_click(self):
         """Clicks the left mouse button at the current mouse position."""
@@ -363,8 +395,8 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('click: %r', locator)
-        ignore_ajax = kwargs.pop('ignore_ajax', False)
+        self.logger.debug("click: %r", locator)
+        ignore_ajax = kwargs.pop("ignore_ajax", False)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el, locator)
         # and then click on current mouse position
@@ -392,8 +424,8 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('double_click: %r', locator)
-        ignore_ajax = kwargs.pop('ignore_ajax', False)
+        self.logger.debug("double_click: %r", locator)
+        ignore_ajax = kwargs.pop("ignore_ajax", False)
         el = self.move_to_element(locator, *args, **kwargs)
         self.plugin.before_click(el, locator)
         # and then click on current mouse position
@@ -421,8 +453,8 @@ class Browser(object):
 
         Args: See :py:meth:`elements`
         """
-        self.logger.debug('raw_click: %r', locator)
-        ignore_ajax = kwargs.pop('ignore_ajax', False)
+        self.logger.debug("raw_click: %r", locator)
+        ignore_ajax = kwargs.pop("ignore_ajax", False)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el, locator)
         el.click()
@@ -452,7 +484,7 @@ class Browser(object):
         Returns:
             A :py:class:`bool`
         """
-        kwargs['check_visibility'] = False
+        kwargs["check_visibility"] = False
         try:
             return self.move_to_element(locator, *args, **kwargs).is_displayed()
         except (NoSuchElementException, MoveTargetOutOfBoundsException):
@@ -471,8 +503,8 @@ class Browser(object):
             :py:class:`selenium.webdriver.remote.webelement.WebElement`
         """
         kw = kwargs.copy()
-        force_scroll = kw.pop('force_scroll', False)
-        self.logger.debug('move_to_element: %r', locator)
+        force_scroll = kw.pop("force_scroll", False)
+        self.logger.debug("move_to_element: %r", locator)
         el = self.element(locator, *args, **kw)
         if el.tag_name == "option":
             # Instead of option, let's move on its parent <select> if possible
@@ -482,7 +514,7 @@ class Browser(object):
                 return el
 
         # FF60+ doesn't raise MoveTargetOutOfBoundsException. it just silently does nothing
-        if self.browser_type == 'firefox' and self.browser_version >= 60 and force_scroll:
+        if self.browser_type == "firefox" and self.browser_version >= 60 and force_scroll:
             self.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
 
         move_to = ActionChains(self.selenium).move_to_element(el)
@@ -496,17 +528,22 @@ class Browser(object):
             except MoveTargetOutOfBoundsException:  # This has become desperate now.
                 raise MoveTargetOutOfBoundsException(
                     "Despite all the workarounds, scrolling to `{}` was unsuccessful.".format(
-                        locator)) from None
+                        locator
+                    )
+                ) from None
         except WebDriverException as e:
             # Handling Edge weirdness
-            if self.browser_type == 'MicrosoftEdge' and 'Invalid argument' in e.msg:
+            if self.browser_type == "MicrosoftEdge" and "Invalid argument" in e.msg:
                 # Moving to invisible element triggers a WebDriverException instead of the former
                 # MoveTargetOutOfBoundsException with NORMAL, SANE BROWSERS.
                 pass
             # It seems Firefox 60 or geckodriver have an issue related to moving to hidden elements
             # https://github.com/mozilla/geckodriver/issues/1269
-            if (self.browser_type == 'firefox' and self.browser_version >= 60 and
-                    ('rect is undefined' in e.msg or 'Component returned failure code' in e.msg)):
+            if (
+                self.browser_type == "firefox"
+                and self.browser_version >= 60
+                and ("rect is undefined" in e.msg or "Component returned failure code" in e.msg)
+            ):
                 pass
             elif "failed to parse value of getElementRegion" in e.msg:
                 # The element is located in Shadow DOM (at least in Chrome), so no moving
@@ -517,13 +554,21 @@ class Browser(object):
             # improved in version 78.
             # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3110
             # https://bugs.chromium.org/p/chromedriver/issues/detail?id=3087
-            elif (self.browser_type == 'chrome' and 76 <= self.browser_version < 78 and
-                    ("Cannot read property 'left' of undefined" in e.msg)):
+            elif (
+                self.browser_type == "chrome"
+                and 76 <= self.browser_version < 78
+                and ("Cannot read property 'left' of undefined" in e.msg)
+            ):
                 pass
             # Previous issue ^ wasn't fixed in Chrome 78 but throws another error
-            elif (self.browser_type == 'chrome' and self.browser_version >= 78 and
-                    ("Failed to execute 'elementsFromPoint' on 'Document': The provided double "
-                     "value is non-finite." in e.msg)):
+            elif (
+                self.browser_type == "chrome"
+                and self.browser_version >= 78
+                and (
+                    "Failed to execute 'elementsFromPoint' on 'Document': The provided double "
+                    "value is non-finite." in e.msg
+                )
+            ):
                 pass
             else:
                 # Something else, never let it sink
@@ -537,10 +582,10 @@ class Browser(object):
             source: Locator or the source element itself
             target: Locator or the target element itself.
         """
-        self.logger.debug('drag_and_drop %r to %r', source, target)
-        ActionChains(self.selenium)\
-            .drag_and_drop(self.element(source), self.element(target))\
-            .perform()
+        self.logger.debug("drag_and_drop %r to %r", source, target)
+        ActionChains(self.selenium).drag_and_drop(
+            self.element(source), self.element(target)
+        ).perform()
 
     def drag_and_drop_by_offset(self, source, by_x, by_y):
         """Drags the source element and drops it into target.
@@ -549,10 +594,10 @@ class Browser(object):
             source: Locator or the source element itself
             target: Locator or the target element itself.
         """
-        self.logger.debug('drag_and_drop_by_offset %r X:%r Y:%r', source, by_x, by_y)
-        ActionChains(self.selenium)\
-            .drag_and_drop_by_offset(self.element(source), by_x, by_y)\
-            .perform()
+        self.logger.debug("drag_and_drop_by_offset %r X:%r Y:%r", source, by_x, by_y)
+        ActionChains(self.selenium).drag_and_drop_by_offset(
+            self.element(source), by_x, by_y
+        ).perform()
 
     def drag_and_drop_to(self, source, to_x=None, to_y=None):
         """Drags an element to a target location specified by ``to_x`` and ``to_y``
@@ -564,9 +609,9 @@ class Browser(object):
             to_x: Absolute location on the X axis where to drag the element.
             to_y: Absolute location on the Y axis where to drag the element.
         """
-        self.logger.debug('drag_and_drop_to %r X:%r Y:%r', source, to_x, to_y)
+        self.logger.debug("drag_and_drop_to %r X:%r Y:%r", source, to_x, to_y)
         if to_x is None and to_y is None:
-            raise TypeError('You need to pass either to_x or to_y or both')
+            raise TypeError("You need to pass either to_x or to_y or both")
         middle = self.middle_of(source)
         if to_x is None:
             to_x = middle.x
@@ -575,15 +620,16 @@ class Browser(object):
         return self.drag_and_drop_by_offset(source, to_x - middle.x, to_y - middle.y)
 
     def move_by_offset(self, x, y):
-        self.logger.debug('move_by_offset X:%r Y:%r', x, y)
+        self.logger.debug("move_by_offset X:%r Y:%r", x, y)
         ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     @retry_stale_element
     def execute_script(self, script, *args, **kwargs):
         """Executes a script."""
         from .widget import Widget
-        if not kwargs.pop('silent', False):
-            self.logger.debug('execute_script: %r', script)
+
+        if not kwargs.pop("silent", False):
+            self.logger.debug("execute_script: %r", script)
         processed_args = []
         for arg in args:
             if isinstance(arg, Widget):
@@ -605,7 +651,8 @@ class Browser(object):
         Returns:
             A :py:class:`set` of strings with classes.
         """
-        command = jsmin('''
+        command = jsmin(
+            """
             return (
                 function(arguments){
                     var cl = arguments[0].classList;
@@ -619,11 +666,12 @@ class Browser(object):
                         return arr;
                     }
             })(arguments);
-        ''')
-        result = set(self.execute_script(
-            command, self.element(locator, *args, **kwargs),
-            silent=True))
-        self.logger.debug('css classes for %r => %r', locator, result)
+        """
+        )
+        result = set(
+            self.execute_script(command, self.element(locator, *args, **kwargs), silent=True)
+        )
+        self.logger.debug("css classes for %r => %r", locator, result)
         return result
 
     def tag(self, *args, **kwargs):
@@ -651,19 +699,20 @@ class Browser(object):
         try:
             text = self.element(locator, *args, **kwargs).text
         except MoveTargetOutOfBoundsException:
-            text = ''
+            text = ""
 
         if not text:
             # It is probably invisible
             text = self.execute_script(
-                'return arguments[0].textContent || arguments[0].innerText;',
+                "return arguments[0].textContent || arguments[0].innerText;",
                 self.element(locator, *args, **kwargs),
-                silent=True)
+                silent=True,
+            )
             if text is None:
-                text = ''
+                text = ""
 
         result = normalize_space(text)
-        self.logger.debug('text(%r) => %r', locator, crop_string_middle(result))
+        self.logger.debug("text(%r) => %r", locator, crop_string_middle(result))
         return result
 
     @retry_stale_element
@@ -674,17 +723,20 @@ class Browser(object):
     def set_attribute(self, attr, value, *args, **kwargs):
         return self.execute_script(
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
-            self.element(*args, **kwargs), attr, value)
+            self.element(*args, **kwargs),
+            attr,
+            value,
+        )
 
     def size_of(self, *args, **kwargs):
         """Returns element's size as a tuple of width/height."""
         size = self.element(*args, **kwargs).size
-        return Size(size['width'], size['height'])
+        return Size(size["width"], size["height"])
 
     def location_of(self, *args, **kwargs):
         """Returns element's location as a tuple of x/y."""
         location = self.element(*args, **kwargs).location
-        return Location(location['x'], location['y'])
+        return Location(location["x"], location["y"])
 
     def middle_of(self, *args, **kwargs):
         """Returns element's location as a tuple of x/y."""
@@ -694,13 +746,13 @@ class Browser(object):
 
     def clear(self, locator, *args, **kwargs):
         """Clears a text input with given locator."""
-        self.logger.debug('clear: %r', locator)
+        self.logger.debug("clear: %r", locator)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
         result = el.clear()
         if (
             el.get_attribute("value")
-            and self.browser_type == 'chrome'
+            and self.browser_type == "chrome"
             and self.browser_version >= 83
         ):
             # Chrome is not able to clear input with element.clear() method, use javascript instead
@@ -723,12 +775,12 @@ class Browser(object):
             *args: See :py:meth:`elements`
             **kwargs: See :py:meth:`elements`
         """
-        text = str(text) or ''
+        text = str(text) or ""
         file_intercept = False
         # If the element is input type file, we will need to use the file detector
-        if self.tag(locator, *args, **kwargs) == 'input':
-            type_attr = self.get_attribute('type', locator, *args, **kwargs)
-            if type_attr and type_attr.strip() == 'file':
+        if self.tag(locator, *args, **kwargs) == "input":
+            type_attr = self.get_attribute("type", locator, *args, **kwargs)
+            if type_attr and type_attr.strip() == "file":
                 file_intercept = True
         try:
             if file_intercept:
@@ -736,7 +788,7 @@ class Browser(object):
                 self.selenium.file_detector = LocalFileDetector()
             el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
-            self.logger.debug('send_keys %r to %r', text, locator)
+            self.logger.debug("send_keys %r to %r", text, locator)
             result = el.send_keys(text)
             if Keys.ENTER not in text:
                 try:
@@ -745,8 +797,8 @@ class Browser(object):
                     pass
             else:
                 self.logger.info(
-                    'skipped the after_keyboard_input call due to %r containing ENTER.',
-                    text)
+                    "skipped the after_keyboard_input call due to %r containing ENTER.", text
+                )
             return result
         finally:
             # Always the UselessFileDetector for all other kinds of fields, so do not leave
@@ -764,24 +816,27 @@ class Browser(object):
 
     def copy(self, locator, *args, **kwargs):
         """Select all and copy to clipboard."""
-        self.logger.debug('copy: %r', locator)
+        self.logger.debug("copy: %r", locator)
         el = self.element(locator)
         self.click(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
-        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('a').key_up(
-            Keys.CONTROL).perform()
-        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('c').key_up(
-            Keys.CONTROL).perform()
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys("a").key_up(
+            Keys.CONTROL
+        ).perform()
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys("c").key_up(
+            Keys.CONTROL
+        ).perform()
         self.plugin.after_keyboard_input(el, None)
 
     def paste(self, locator, *args, **kwargs):
         """Paste from clipboard to current element."""
-        self.logger.debug('paste: %r', locator)
+        self.logger.debug("paste: %r", locator)
         el = self.element(locator)
         self.click(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
-        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys('v').key_up(
-            Keys.CONTROL).perform()
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys("v").key_up(
+            Keys.CONTROL
+        ).perform()
         self.plugin.after_keyboard_input(el, None)
 
     def get_alert(self):
@@ -817,7 +872,7 @@ class Browser(object):
         try:
             while self.alert_present:
                 alert = self.get_alert()
-                self.logger.info('dismissing alert: %r', alert.text)
+                self.logger.info("dismissing alert: %r", alert.text)
                 alert.dismiss()
         except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
@@ -854,15 +909,15 @@ class Browser(object):
             if wait:
                 WebDriverWait(self.selenium, wait).until(expected_conditions.alert_is_present())
             popup = self.get_alert()
-            self.logger.info('handling alert: %r', popup.text)
+            self.logger.info("handling alert: %r", popup.text)
             if prompt is not None:
-                self.logger.info('  answering prompt: %r', prompt)
+                self.logger.info("  answering prompt: %r", prompt)
                 popup.send_keys(prompt)
             if cancel:
-                self.logger.info('  dismissing')
+                self.logger.info("  dismissing")
                 popup.dismiss()
             else:
-                self.logger.info('  accepting')
+                self.logger.info("  accepting")
                 popup.accept()
             # Should any problematic "double" alerts appear here, we don't care, just blow'em away.
             self.dismiss_any_alerts()
@@ -879,7 +934,7 @@ class Browser(object):
                 raise
 
     def switch_to_frame(self, *args, **kwargs):
-        parent = kwargs.pop('parent', self.browser)
+        parent = kwargs.pop("parent", self.browser)
         self.selenium.switch_to.frame(self.element(parent=parent, *args, **kwargs))
 
     def switch_to_main_frame(self):
@@ -887,7 +942,7 @@ class Browser(object):
 
     def get_current_location(self):
         # useful if it is necessary to recognize current frame
-        return self.execute_script('return self.location.toString()')
+        return self.execute_script("return self.location.toString()")
 
     @property
     def current_window_handle(self):
@@ -972,6 +1027,7 @@ class BrowserParentWrapper(object):
         o: Object which should be considered as a parent element for lookups. Must have ``.browser``
            defined.
     """
+
     def __init__(self, o, browser):
         self._o = o
         self._browser = browser
@@ -982,14 +1038,15 @@ class BrowserParentWrapper(object):
         return self._o == other._o and self._browser == other._browser
 
     def elements(
-            self, locator, parent=None, check_visibility=False, check_safe=True,
-            force_check_safe=False):
+        self, locator, parent=None, check_visibility=False, check_safe=True, force_check_safe=False
+    ):
         return self._browser.elements(
             locator,
             parent=parent or self._o,
             check_visibility=check_visibility,
             check_safe=check_safe,
-            force_check_safe=force_check_safe)
+            force_check_safe=force_check_safe,
+        )
 
     def __getattr__(self, attr):
         """Route all other attribute requests into the parent object's browser. Black magic included
@@ -1014,4 +1071,4 @@ class BrowserParentWrapper(object):
         return value
 
     def __repr__(self):
-        return '<{} for {!r}>'.format(type(self).__name__, self._o)
+        return "<{} for {!r}>".format(type(self).__name__, self._o)

@@ -4,16 +4,19 @@ import functools
 import re
 import string
 import time
-from cached_property import cached_property
-from smartloc import Locator
 from threading import Lock
-from selenium.common.exceptions import StaleElementReferenceException
 
-from . import xpath, log
+from cached_property import cached_property
+from selenium.common.exceptions import StaleElementReferenceException
+from smartloc import Locator
+
+from . import log
+from . import xpath
 
 
 class Widgetable(object):
     """A base class that should be a base class of anything that can be or act like a Widget."""
+
     #: Sequential counter that gets incremented on each Widgetable creation
     _seq_cnt = 0
     #: Lock that makes the :py:attr:`_seq_cnt` increment thread safe
@@ -45,13 +48,14 @@ class Version(object):
 
     Has improved handling of the suffixes and such things.
     """
+
     #: List of possible suffixes
-    SUFFIXES = ('nightly', 'pre', 'alpha', 'beta', 'rc')
+    SUFFIXES = ("nightly", "pre", "alpha", "beta", "rc")
     #: An autogenereted regexp from the :py:attr:`SUFFIXES`
-    SUFFIXES_STR = "|".join(r'-{}(?:\d+(?:\.\d+)?)?'.format(suff) for suff in SUFFIXES)
+    SUFFIXES_STR = "|".join(r"-{}(?:\d+(?:\.\d+)?)?".format(suff) for suff in SUFFIXES)
     #: Regular expression that parses the main components of the version (not suffixes)
-    component_re = re.compile(r'(?:\s*(\d+|[a-z]+|\.|(?:{})+$))'.format(SUFFIXES_STR))
-    suffix_item_re = re.compile(r'^([^0-9]+)(\d+(?:\.\d+)?)?$')
+    component_re = re.compile(r"(?:\s*(\d+|[a-z]+|\.|(?:{})+$))".format(SUFFIXES_STR))
+    suffix_item_re = re.compile(r"^([^0-9]+)(\d+(?:\.\d+)?)?$")
 
     def __init__(self, vstring):
         self.parse(vstring)
@@ -61,18 +65,18 @@ class Version(object):
 
     def parse(self, vstring):
         if vstring is None:
-            raise ValueError('Version string cannot be None')
+            raise ValueError("Version string cannot be None")
         elif isinstance(vstring, (list, tuple)):
             vstring = ".".join(map(str, vstring))
         elif vstring:
             vstring = str(vstring).strip()
-        if vstring in ('master', 'latest', 'upstream'):
-            vstring = 'master'
+        if vstring in ("master", "latest", "upstream"):
+            vstring = "master"
 
-        components = list(filter(lambda x: x and x != '.', self.component_re.findall(vstring)))
+        components = list(filter(lambda x: x and x != ".", self.component_re.findall(vstring)))
         # Check if we have a version suffix which denotes pre-release
-        if components and components[-1].startswith('-'):
-            self.suffix = components[-1][1:].split('-')    # Chop off the -
+        if components and components[-1].startswith("-"):
+            self.suffix = components[-1][1:].split("-")  # Chop off the -
             components = components[:-1]
         else:
             self.suffix = None
@@ -113,7 +117,7 @@ class Version(object):
         try:
             return cls._latest
         except AttributeError:
-            cls._latest = cls('latest')
+            cls._latest = cls("latest")
             return cls._latest
 
     @classmethod
@@ -126,21 +130,21 @@ class Version(object):
         try:
             return cls._lowest
         except AttributeError:
-            cls._lowest = cls('lowest')
+            cls._lowest = cls("lowest")
             return cls._lowest
 
     def __str__(self):
         return self.vstring
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self.vstring))
+        return "{}({})".format(type(self).__name__, repr(self.vstring))
 
     def __lt__(self, other):
         try:
             if not isinstance(other, Version):
                 other = Version(other)
         except Exception:
-            raise ValueError('Cannot compare Version to {}'.format(type(other).__name__))
+            raise ValueError("Cannot compare Version to {}".format(type(other).__name__))
 
         if self == other:
             return False
@@ -180,7 +184,8 @@ class Version(object):
             if not isinstance(other, type(self)):
                 other = Version(other)
             return (
-                self.version == other.version and self.normalized_suffix == other.normalized_suffix)
+                self.version == other.version and self.normalized_suffix == other.normalized_suffix
+            )
         except Exception:
             return False
 
@@ -216,7 +221,7 @@ class Version(object):
                 return True
             else:
                 return False
-        return series.version == self.version[:len(series.version)]
+        return series.version == self.version[: len(series.version)]
 
     def series(self, n=2):
         """Returns the series (first ``n`` items) of the version
@@ -235,7 +240,8 @@ class ConstructorResolvable(object):
 
     def resolve(self, parent_object):
         raise NotImplementedError(
-            'You need to implement .resolve(parent_object) on {}'.format(type(self).__name__))
+            "You need to implement .resolve(parent_object) on {}".format(type(self).__name__)
+        )
 
 
 class VersionPick(Widgetable, ConstructorResolvable):
@@ -269,11 +275,11 @@ class VersionPick(Widgetable, ConstructorResolvable):
 
     def __init__(self, version_dict):
         if not version_dict:
-            raise ValueError('Passed an empty version pick dictionary.')
+            raise ValueError("Passed an empty version pick dictionary.")
         self.version_dict = version_dict
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self.version_dict))
+        return "{}({})".format(type(self).__name__, repr(self.version_dict))
 
     @property
     def child_items(self):
@@ -298,8 +304,10 @@ class VersionPick(Widgetable, ConstructorResolvable):
             return v_dict.get(sorted_matching_versions[0])
         else:
             raise ValueError(
-                'When trying to version pick {!r} in {!r}, matching version was not found'.format(
-                    version, versions))
+                "When trying to version pick {!r} in {!r}, matching version was not found".format(
+                    version, versions
+                )
+            )
 
     def __get__(self, o, type=None):
         if o is None:
@@ -340,7 +348,7 @@ class Fillable(object):
             return o
 
     def as_fill_value(self):
-        raise NotImplementedError('Descendants of Fillable must implement .as_fill_value method!')
+        raise NotImplementedError("Descendants of Fillable must implement .as_fill_value method!")
 
 
 class ParametrizedString(ConstructorResolvable):
@@ -382,10 +390,10 @@ class ParametrizedString(ConstructorResolvable):
     """
 
     OPERATIONS = {
-        'quote': xpath.quote,
-        'lower': lambda s: s.lower(),
-        'upper': lambda s: s.upper(),
-        'title': lambda s: s.title(),
+        "quote": xpath.quote,
+        "lower": lambda s: s.lower(),
+        "upper": lambda s: s.upper(),
+        "title": lambda s: s.title(),
     }
 
     def __init__(self, template):
@@ -395,12 +403,12 @@ class ParametrizedString(ConstructorResolvable):
         for _, param_name, _, _ in formatter.parse(self.template):
             if param_name is None:
                 continue
-            param = param_name.split('|', 1)
+            param = param_name.split("|", 1)
             if len(param) == 1:
                 self.format_params[param_name] = (param[0], ())
             else:
                 context_var_name = param[0]
-                ops = param[1].split('|')
+                ops = param[1].split("|")
                 self.format_params[param_name] = (context_var_name, tuple(ops))
 
     def resolve(self, view):
@@ -411,28 +419,30 @@ class ParametrizedString(ConstructorResolvable):
                 param_value = ParametrizedString(context_name[1:-1]).resolve(view)
             else:
                 try:
-                    if context_name.startswith('@'):
+                    if context_name.startswith("@"):
                         attr_name = context_name[1:]
-                        param_value = nested_getattr(view, attr_name.split('/'))
+                        param_value = nested_getattr(view, attr_name.split("/"))
                         if isinstance(param_value, Locator):
                             # Check if it is a locator. We want to pull the string out of it
                             param_value = param_value.locator
                     else:
                         param_value = view.context[context_name]
                 except AttributeError:
-                    if context_name.startswith('@'):
+                    if context_name.startswith("@"):
                         raise AttributeError(
-                            'Parameter {} is not present in the object'.format(context_name))
+                            "Parameter {} is not present in the object".format(context_name)
+                        )
                     else:
-                        raise TypeError('Parameter class must be defined on a view!')
+                        raise TypeError("Parameter class must be defined on a view!")
                 except KeyError:
                     raise AttributeError(
-                        'Parameter {} is not present in the context'.format(context_name))
+                        "Parameter {} is not present in the context".format(context_name)
+                    )
             for op in ops:
                 try:
                     op_callable = self.OPERATIONS[op]
                 except KeyError:
-                    raise NameError('Unknown operation {} for {}'.format(op, format_key))
+                    raise NameError("Unknown operation {} for {}".format(op, format_key))
                 else:
                     param_value = op_callable(param_value)
 
@@ -448,8 +458,10 @@ class ParametrizedString(ConstructorResolvable):
 
 
 class ParametrizedLocator(ParametrizedString):
-    """:py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
     """
+    :py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
+    """
+
     def __get__(self, o, t=None):
         result = super(ParametrizedLocator, self).__get__(o, t)
         if isinstance(result, ParametrizedString):
@@ -475,14 +487,15 @@ class Parameter(ParametrizedString):
     Args:
         param: Name of the param.
     """
+
     def __init__(self, param):
-        super(Parameter, self).__init__('{' + param + '}')
+        super(Parameter, self).__init__("{" + param + "}")
 
 
 def _prenormalize_text(text):
     """Makes the text lowercase and removes all characters that are not digits, alphas, or spaces"""
     # _'s represent spaces so convert those to spaces too
-    return re.sub(r"[^a-z0-9 ]", "", text.strip().lower().replace('_', ' '))
+    return re.sub(r"[^a-z0-9 ]", "", text.strip().lower().replace("_", " "))
 
 
 def _replace_spaces_with(text, delim):
@@ -496,7 +509,7 @@ def attributize_string(text):
     Usable for eg. generating object key names.
     The underscore is always one character long if it is present.
     """
-    return _replace_spaces_with(_prenormalize_text(text), '_')
+    return _replace_spaces_with(_prenormalize_text(text), "_")
 
 
 def normalize_space(text):
@@ -508,7 +521,7 @@ def normalize_space(text):
         replaces sequences of whitespace characters by a single space, and returns the resulting
         string.*
     """
-    return _replace_spaces_with(text.strip(), ' ')
+    return _replace_spaces_with(text.strip(), " ")
 
 
 def nested_getattr(o, steps):
@@ -523,14 +536,16 @@ def nested_getattr(o, steps):
         The value of required attribute.
     """
     if isinstance(steps, str):
-        steps = steps.split('.')
+        steps = steps.split(".")
     if not isinstance(steps, (list, tuple)):
         raise TypeError(
-            'nested_getattr only accepts strings, lists, or tuples!, You passed {}'.format(
-                type(steps).__name__))
+            "nested_getattr only accepts strings, lists, or tuples!, You passed {}".format(
+                type(steps).__name__
+            )
+        )
     steps = [step.strip() for step in steps if step.strip()]
     if not steps:
-        raise ValueError('steps are empty!')
+        raise ValueError("steps are empty!")
     result = o
     for step in steps:
         result = getattr(result, step)
@@ -571,7 +586,7 @@ def deflatten_dict(d):
         if isinstance(key, tuple):
             attrs = list(key)
         else:
-            attrs = [x.strip() for x in key.split('.')]
+            attrs = [x.strip() for x in key.split(".")]
         dict_lookup = attrs[:-1]
         attr_set = attrs[-1]
         for attr_name in dict_lookup:
@@ -582,7 +597,7 @@ def deflatten_dict(d):
     return current_dict
 
 
-def crop_string_middle(s, length=32, cropper='...'):
+def crop_string_middle(s, length=32, cropper="..."):
     """Crops string by adding ... in the middle.
 
     Args:
@@ -595,7 +610,7 @@ def crop_string_middle(s, length=32, cropper='...'):
     if len(s) <= length:
         return s
     half = (length - len(cropper)) // 2
-    return s[:half] + cropper + s[-half - 1:]
+    return s[:half] + cropper + s[-half - 1 :]
 
 
 class partial_match(object):  # noqa
@@ -607,6 +622,7 @@ class partial_match(object):  # noqa
     on the wrapped object.
 
     """
+
     def __init__(self, item):
         self.item = item
 
@@ -617,13 +633,13 @@ class partial_match(object):  # noqa
         return getattr(self.item, attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'item':
+        if attr == "item":
             super(partial_match, self).__setattr__(attr, value)
         else:
             setattr(self.item, attr, value)
 
     def __repr__(self):
-        return 'partial_match({!r})'.format(self.item)
+        return "partial_match({!r})".format(self.item)
 
 
 class Ignore(object):
@@ -660,15 +676,15 @@ class Ignore(object):
         return self.wt_class
 
     def __repr__(self):
-        return 'Ignore({!r})'.format(self.wt_class)
+        return "Ignore({!r})".format(self.wt_class)
 
 
 def retry_stale_element(method):
-    """ Aim of this decorator is to invoke some method one more time
-       if it raised StaleElementReferenceException.
+    """Aim of this decorator is to invoke some method one more time
+    if it raised StaleElementReferenceException.
 
-       This is necessary because there are cases when some element get updated by JS during attempt
-       to work with it. There is no 100% robust solution to check that all JS are over on some page.
+    This is necessary because there are cases when some element get updated by JS during attempt
+    to work with it. There is no 100% robust solution to check that all JS are over on some page.
     """
 
     @functools.wraps(method)
@@ -688,15 +704,15 @@ def retry_stale_element(method):
 class FillContext(object):
     def __init__(self, parent, logger=None, **kwargs):
         self.parent = parent
-        self.logger = logger or log.create_child_logger(getattr(self.parent, 'logger',
-                                                                log.null_logger), 'fill')
+        self.logger = logger or log.create_child_logger(
+            getattr(self.parent, "logger", log.null_logger), "fill"
+        )
         self.__dict__.update(kwargs)
 
 
 class DefaultFillViewStrategy(object):
-    """Used to fill view's widgets by default. It just calls fill for every passed widget
+    """Used to fill view's widgets by default. It just calls fill for every passed widget"""
 
-    """
     def __init__(self, respect_parent=False):
         # uses parent fill strategy if set and not overridden in current view
         self.respect_parent = respect_parent
@@ -716,10 +732,14 @@ class DefaultFillViewStrategy(object):
         extra_keys = set(values.keys()) - set(widget_names)
         if extra_keys:
             self.context.logger.warning(
-                'Extra values that have no corresponding fill fields passed: %s',
-                ', '.join(extra_keys))
-        return [(n, values[n]) for n in self.context.parent.widget_names
-                if n in values and values[n] is not None]
+                "Extra values that have no corresponding fill fields passed: %s",
+                ", ".join(extra_keys),
+            )
+        return [
+            (n, values[n])
+            for n in self.context.parent.widget_names
+            if n in values and values[n] is not None
+        ]
 
     def do_fill(self, values):
         changes = []
@@ -727,8 +747,9 @@ class DefaultFillViewStrategy(object):
             widget = getattr(self.context.parent, widget_name)
             try:
                 result = widget.fill(value)
-                self.context.logger.debug("Filled %r to value %r with result %r",
-                                          widget_name, value, result)
+                self.context.logger.debug(
+                    "Filled %r to value %r with result %r", widget_name, value, result
+                )
                 changes.append(result)
             except NotImplementedError:
                 self.context.logger.warning("Widget %r doesn't have fill method", widget_name)
@@ -743,7 +764,8 @@ class WaitFillViewStrategy(DefaultFillViewStrategy):
     New widgets may appear after some delay.
     So such strategy gives next widget some time to turn up.
     """
-    def __init__(self, respect_parent=False, wait_widget='5s'):
+
+    def __init__(self, respect_parent=False, wait_widget="5s"):
         self.wait_widget = wait_widget
         super(WaitFillViewStrategy, self).__init__(respect_parent=respect_parent)
 
@@ -754,8 +776,9 @@ class WaitFillViewStrategy(DefaultFillViewStrategy):
             try:
                 widget.wait_displayed(timeout=self.wait_widget)
                 result = widget.fill(value)
-                self.context.logger.debug("Filled %r to value %r with result %r",
-                                          widget_name, value, result)
+                self.context.logger.debug(
+                    "Filled %r to value %r with result %r", widget_name, value, result
+                )
                 changes.append(result)
             except NotImplementedError:
                 self.context.logger.warning("Widget %r doesn't have fill method", widget_name)

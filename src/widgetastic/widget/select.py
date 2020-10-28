@@ -5,8 +5,8 @@ from html import unescape
 from cached_property import cached_property
 from jsmin import jsmin
 
-from widgetastic.utils import normalize_space
 from .base import Widget
+from widgetastic.utils import normalize_space
 from widgetastic.xpath import quote
 
 
@@ -48,9 +48,11 @@ class Select(Widget):
     Raises:
         :py:class:`TypeError` - if you pass more than one of the abovementioned args.
     """
+
     Option = namedtuple("Option", ["text", "value"])
 
-    ALL_OPTIONS = jsmin('''\
+    ALL_OPTIONS = jsmin(
+        """\
             var result_arr = [];
             var opt_elements = arguments[0].options;
             for(var i = 0; i < opt_elements.length; i++){
@@ -58,48 +60,53 @@ class Select(Widget):
                 result_arr.push([option.innerHTML, option.getAttribute("value")]);
             }
             return result_arr;
-        ''')
+        """
+    )
 
-    SELECTED_OPTIONS = jsmin('return arguments[0].selectedOptions;')
-    SELECTED_OPTIONS_TEXT = jsmin('''\
+    SELECTED_OPTIONS = jsmin("return arguments[0].selectedOptions;")
+    SELECTED_OPTIONS_TEXT = jsmin(
+        """\
             var result_arr = [];
             var opt_elements = arguments[0].selectedOptions;
             for(var i = 0; i < opt_elements.length; i++){
                 result_arr.push(opt_elements[i].innerHTML);
             }
             return result_arr;
-        ''')
+        """
+    )
 
-    SELECTED_OPTIONS_VALUE = jsmin('''\
+    SELECTED_OPTIONS_VALUE = jsmin(
+        """\
             var result_arr = [];
             var opt_elements = arguments[0].selectedOptions;
             for(var i = 0; i < opt_elements.length; i++){
                 result_arr.push(opt_elements[i].getAttribute("value"));
             }
             return result_arr;
-        ''')
+        """
+    )
 
     def __init__(self, parent, locator=None, id=None, name=None, logger=None):
         Widget.__init__(self, parent, logger=logger)
         if (locator and id) or (id and name) or (locator and name):
-            raise TypeError('You can only pass one of the params locator, id, name into Select')
+            raise TypeError("You can only pass one of the params locator, id, name into Select")
         if locator is not None:
             self.locator = locator
         elif id is not None:
-            self.locator = './/select[@id={}]'.format(quote(id))
+            self.locator = ".//select[@id={}]".format(quote(id))
         else:  # name
-            self.locator = './/select[@name={}]'.format(quote(name))
+            self.locator = ".//select[@name={}]".format(quote(name))
 
     def __locator__(self):
         return self.locator
 
     def __repr__(self):
-        return '{}(locator={!r})'.format(type(self).__name__, self.locator)
+        return "{}(locator={!r})".format(type(self).__name__, self.locator)
 
     @cached_property
     def is_multiple(self):
         """Detects and returns whether this ``<select>`` is multiple"""
-        return self.browser.get_attribute('multiple', self) is not None
+        return self.browser.get_attribute("multiple", self) is not None
 
     @property
     def classes(self):
@@ -118,17 +125,17 @@ class Select(Widget):
         """
         # More reliable using javascript
         options = self.browser.execute_script(self.ALL_OPTIONS, self.browser.element(self))
-        return [
-            self.Option(normalize_space(unescape(option[0])), option[1])
-            for option in options]
+        return [self.Option(normalize_space(unescape(option[0])), option[1]) for option in options]
 
     @property
     def all_selected_options(self):
         """Returns a list of all selected options as their displayed texts."""
         return [
             normalize_space(unescape(option))
-            for option
-            in self.browser.execute_script(self.SELECTED_OPTIONS_TEXT, self.browser.element(self))]
+            for option in self.browser.execute_script(
+                self.SELECTED_OPTIONS_TEXT, self.browser.element(self)
+            )
+        ]
 
     @property
     def all_selected_values(self):
@@ -137,8 +144,8 @@ class Select(Widget):
         If the value is not present, it is ignored.
         """
         values = self.browser.execute_script(
-            self.SELECTED_OPTIONS_VALUE,
-            self.browser.element(self))
+            self.SELECTED_OPTIONS_VALUE, self.browser.element(self)
+        )
         return [value for value in values if value is not None]
 
     @property
@@ -181,14 +188,13 @@ class Select(Widget):
             :py:class:`ValueError` - if the value was not found.
         """
         if len(items) > 1 and not self.is_multiple:
-            raise ValueError(
-                'The Select {!r} does not allow multiple selections'.format(self))
+            raise ValueError("The Select {!r} does not allow multiple selections".format(self))
 
         for value in items:
             matched = False
             for opt in self.browser.elements(
-                    './/option[@value={}]'.format(quote(value)),
-                    parent=self):
+                ".//option[@value={}]".format(quote(value)), parent=self
+            ):
                 if not opt.is_selected():
                     opt.click()
 
@@ -210,14 +216,13 @@ class Select(Widget):
             :py:class:`ValueError` - if the text was not found.
         """
         if len(items) > 1 and not self.is_multiple:
-            raise ValueError(
-                'The Select {!r} does not allow multiple selections'.format(self))
+            raise ValueError("The Select {!r} does not allow multiple selections".format(self))
 
         for text in items:
             matched = False
             for opt in self.browser.elements(
-                    './/option[normalize-space(.)={}]'.format(quote(normalize_space(text))),
-                    parent=self):
+                ".//option[normalize-space(.)={}]".format(quote(normalize_space(text))), parent=self
+            ):
                 if not opt.is_selected():
                     opt.click()
 
@@ -229,7 +234,9 @@ class Select(Widget):
                 available = ", ".join(repr(opt.text) for opt in self.all_options)
                 raise ValueError(
                     "Cannot locate option with visible text: {!r}. Available options: {}".format(
-                        text, available))
+                        text, available
+                    )
+                )
 
     def read(self):
         items = self.all_selected_options
@@ -259,27 +266,27 @@ class Select(Widget):
                 try:
                     mod, value = item
                     if not isinstance(mod, str):
-                        raise ValueError('The select modifier must be a string')
+                        raise ValueError("The select modifier must be a string")
                     mod = mod.lower()
                 except ValueError:
-                    raise ValueError('If passing tuples into the S.fill(), they must be 2-tuples')
+                    raise ValueError("If passing tuples into the S.fill(), they must be 2-tuples")
             else:
-                mod = 'by_text'
+                mod = "by_text"
                 value = item
 
-            if mod == 'by_text':
+            if mod == "by_text":
                 value = normalize_space(value)
                 if value in selected_options:
                     deselect = False
                     continue
                 options_to_select.append(value)
-            elif mod == 'by_value':
+            elif mod == "by_value":
                 if value in selected_values:
                     deselect = False
                     continue
                 values_to_select.append(value)
             else:
-                raise ValueError('Unknown select modifier {}'.format(mod))
+                raise ValueError("Unknown select modifier {}".format(mod))
 
         if deselect:
             try:

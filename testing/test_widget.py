@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from widgetastic.widget import View, Widget, WidgetDescriptor
+from widgetastic.widget import View
+from widgetastic.widget import Widget
+from widgetastic.widget import WidgetDescriptor
 
 
 def test_widget_correctly_collapses_to_descriptor(browser):
@@ -43,8 +45,8 @@ def test_widget_extra_data(browser):
 
     view = AView(browser)
     assert not dir(view.extra)
-    browser.extra_objects['testobject'] = 2
-    assert dir(view.extra) == ['testobject']
+    browser.extra_objects["testobject"] = 2
+    assert dir(view.extra) == ["testobject"]
     assert view.extra.testobject == 2
 
 
@@ -55,40 +57,40 @@ def test_included_widgets(browser):
             self.id = id
 
     class MyClass1(Widget):
-        ham = MyWidget('ham')
+        ham = MyWidget("ham")
 
     class MyClass2(Widget):
-        beef = MyWidget('beef')
+        beef = MyWidget("beef")
 
     class MyClass3(Widget):
-        foo = MyWidget('foo')
+        foo = MyWidget("foo")
 
         included1 = Widget.include(MyClass1)
 
-        bar = MyWidget('bar')
+        bar = MyWidget("bar")
 
         included2 = Widget.include(MyClass2)
 
     class MyClass4(Widget):
-        alice = MyWidget('alice')
+        alice = MyWidget("alice")
 
         included1 = Widget.include(MyClass3)
 
-        bob = MyWidget('bob')
+        bob = MyWidget("bob")
 
-    assert MyClass3.cls_widget_names() == ('foo', 'ham', 'bar', 'beef')
-    assert MyClass4.cls_widget_names() == ('alice', 'foo', 'ham', 'bar', 'beef', 'bob')
+    assert MyClass3.cls_widget_names() == ("foo", "ham", "bar", "beef")
+    assert MyClass4.cls_widget_names() == ("alice", "foo", "ham", "bar", "beef", "bob")
 
     testw = MyClass4(browser)
     assert isinstance(testw.alice, MyWidget)
-    assert testw.alice.id == 'alice'
+    assert testw.alice.id == "alice"
     assert isinstance(testw.foo, MyWidget)
-    assert testw.foo.id == 'foo'
+    assert testw.foo.id == "foo"
     assert isinstance(testw.ham, MyWidget)
-    assert testw.ham.id == 'ham'
+    assert testw.ham.id == "ham"
     assert isinstance(testw.bar, MyWidget)
-    assert testw.bar.id == 'bar'
+    assert testw.bar.id == "bar"
     assert isinstance(testw.beef, MyWidget)
-    assert testw.beef.id == 'beef'
+    assert testw.beef.id == "beef"
     assert isinstance(testw.bob, MyWidget)
-    assert testw.bob.id == 'bob'
+    assert testw.bob.id == "bob"

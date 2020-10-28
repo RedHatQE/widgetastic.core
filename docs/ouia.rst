@@ -2,7 +2,7 @@ Open UI Automation
 ==================
 
 Widgetastic provides a support of `OUIA <https://ouia.readthedocs.io>`_ compatible
-components. There are three base classes: :py:class:`widgetastic.ouia.OUIAMixin`, 
+components. There are three base classes: :py:class:`widgetastic.ouia.OUIAMixin`,
 :py:class:`widgetastic.ouia.OUIAGenericView` and :py:class:`widgetastic.ouia.OUIAGenericWidget`.
 
 In order to start creating an OUIA compatible widget or view just inherit a respectful class.

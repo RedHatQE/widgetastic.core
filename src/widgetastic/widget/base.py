@@ -9,22 +9,34 @@ from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
 from wait_for import wait_for
 
-from widgetastic.browser import Browser, BrowserParentWrapper
-from widgetastic.exceptions import DoNotReadThisWidget, LocatorNotImplemented
-from widgetastic.log import (create_child_logger, call_sig, logged, PrependParentsAdapter,
-                             create_widget_logger)
-from widgetastic.utils import (Fillable, ConstructorResolvable, ParametrizedString, Widgetable,
-                               ParametrizedLocator, nested_getattr, deflatten_dict,
-                               DefaultFillViewStrategy, FillContext)
+from widgetastic.browser import Browser
+from widgetastic.browser import BrowserParentWrapper
+from widgetastic.exceptions import DoNotReadThisWidget
+from widgetastic.exceptions import LocatorNotImplemented
+from widgetastic.log import call_sig
+from widgetastic.log import create_child_logger
+from widgetastic.log import create_widget_logger
+from widgetastic.log import logged
+from widgetastic.log import PrependParentsAdapter
+from widgetastic.utils import ConstructorResolvable
+from widgetastic.utils import DefaultFillViewStrategy
+from widgetastic.utils import deflatten_dict
+from widgetastic.utils import Fillable
+from widgetastic.utils import FillContext
+from widgetastic.utils import nested_getattr
+from widgetastic.utils import ParametrizedLocator
+from widgetastic.utils import ParametrizedString
+from widgetastic.utils import Widgetable
 
 
 def do_not_read_this_widget():
     """Call inside widget's read method in case you don't want it to appear in the data."""
-    raise DoNotReadThisWidget('Do not read this widget.')
+    raise DoNotReadThisWidget("Do not read this widget.")
 
 
 def wrap_fill_method(method):
     """Generates a method that automatically coerces the first argument as Fillable."""
+
     @functools.wraps(method)
     def wrapped(self, value, *args, **kwargs):
         return method(self, Fillable.coerce(value), *args, **kwargs)
@@ -34,13 +46,15 @@ def wrap_fill_method(method):
 
 def resolve_verpicks_in_method(method):
     """Generates a method that automatically resolves VersionPick attributes"""
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         def resolve_arg(parent, arg):
-            if (isinstance(arg, ConstructorResolvable) and not (
-                    method.__name__ == '__new__' or
-                    isinstance(arg, ParametrizedString) or
-                    hasattr(method, 'skip_resolve'))):
+            if isinstance(arg, ConstructorResolvable) and not (
+                method.__name__ == "__new__"
+                or isinstance(arg, ParametrizedString)
+                or hasattr(method, "skip_resolve")
+            ):
                 # 1. ParametrizedString is also ConstructorResolvable but
                 # it should be resolved later in other place
                 # 2. if method has skip_resolve attr, its arguments won't be automatically resolved
@@ -49,13 +63,13 @@ def resolve_verpicks_in_method(method):
             else:
                 return arg
 
-        if method.__name__ == '__init__':
+        if method.__name__ == "__init__":
             # __init__ doesn't have initialized self.parent.
             # So, we need to look for parent/browser in arguments
             if args and isinstance(args[0], (Widget, Browser)):
                 parent = args[0]
-            elif 'parent' in kwargs and isinstance(kwargs['parent'], (Widget, Browser)):
-                parent = kwargs['parent']
+            elif "parent" in kwargs and isinstance(kwargs["parent"], (Widget, Browser)):
+                parent = kwargs["parent"]
             else:
                 raise ValueError("parent isn't passed to init")
         else:
@@ -65,6 +79,7 @@ def resolve_verpicks_in_method(method):
         new_kwargs = {key: resolve_arg(parent, value) for key, value in kwargs.items()}
 
         return method(self, *new_args, **new_kwargs)
+
     return wrapped
 
 
@@ -96,12 +111,13 @@ class WidgetDescriptor(Widgetable):
 
     It also acts as a counter, so you can then order the widgets by their "creation" stamp.
     """
+
     def __init__(self, klass, *args, **kwargs):
         self.klass = klass
         self.args = args
         self.kwargs = kwargs
         # TODO: WE can bring it back, popping out just for compatibility sake
-        self.kwargs.pop('log_on_fill_unspecified', None)
+        self.kwargs.pop("log_on_fill_unspecified", None)
 
     def __get__(self, obj, type=None):
         if obj is None:  # class access
@@ -111,9 +127,9 @@ class WidgetDescriptor(Widgetable):
         if self not in obj._widget_cache:
             kwargs = copy(self.kwargs)
             try:
-                kwargs['logger'] = create_child_logger(obj.logger, obj._desc_name_mapping[self])
+                kwargs["logger"] = create_child_logger(obj.logger, obj._desc_name_mapping[self])
             except KeyError:
-                kwargs['logger'] = obj.logger
+                kwargs["logger"] = obj.logger
             except AttributeError:
                 pass
 
@@ -132,7 +148,7 @@ class WidgetDescriptor(Widgetable):
         return widget
 
     def __repr__(self):
-        return '{}{}'.format(self.klass.__name__, call_sig(self.args, self.kwargs))
+        return "{}{}".format(self.klass.__name__, call_sig(self.args, self.kwargs))
 
 
 class ExtraData(object):
@@ -145,6 +161,7 @@ class ExtraData(object):
         # is equivalent to
         widget.browser.extra_objects['foo']
     """
+
     # TODO: Possibly replace it with a descriptor of some sort?
     def __init__(self, widget):
         self._widget = widget
@@ -160,18 +177,22 @@ class ExtraData(object):
         try:
             return self._widget.browser.extra_objects[attr]
         except KeyError:
-            raise AttributeError('Extra object {!r} was not found ({} are available)'.format(
-                attr, ', '.join(self._extra_objects_list)))
+            raise AttributeError(
+                "Extra object {!r} was not found ({} are available)".format(
+                    attr, ", ".join(self._extra_objects_list)
+                )
+            )
 
 
 class WidgetIncluder(Widgetable):
     """Includes widgets from another widget. Useful for sharing pieces of code."""
+
     def __init__(self, widget_class, use_parent=False):
         self.widget_class = widget_class
         self.use_parent = use_parent
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, self.widget_class.__name__)
+        return "{}({})".format(type(self).__name__, self.widget_class.__name__)
 
 
 class IncludedWidget(object):
@@ -187,7 +208,7 @@ class IncludedWidget(object):
         return o._get_included_widget(self.included_id, self.widget_name, self.use_parent)
 
     def __repr__(self):
-        return '{}({}, {!r})'.format(type(self).__name__, self.included_id, self.widget_name)
+        return "{}({}, {!r})".format(type(self).__name__, self.included_id, self.widget_name)
 
 
 class WidgetMetaclass(type):
@@ -203,18 +224,20 @@ class WidgetMetaclass(type):
     Therefore, you shall not wrap any ``read`` or ``fill`` methods in
     :py:func:`widgetastic.log.logged`.
     """
+
     def __new__(cls, name, bases, attrs):
         new_attrs = {}
         desc_name_mapping = {}
         included_widgets = []
         for base in bases:
-            for key, value in getattr(base, '_desc_name_mapping', {}).items():
+            for key, value in getattr(base, "_desc_name_mapping", {}).items():
                 desc_name_mapping[key] = value
-            for widget_includer in getattr(base, '_included_widgets', ()):
+            for widget_includer in getattr(base, "_included_widgets", ()):
                 included_widgets.append(widget_includer)
                 for widget_name in widget_includer.widget_class.cls_widget_names():
-                    new_attrs[widget_name] = IncludedWidget(widget_includer._seq_id, widget_name,
-                                                            widget_includer.use_parent)
+                    new_attrs[widget_name] = IncludedWidget(
+                        widget_includer._seq_id, widget_name, widget_includer.use_parent
+                    )
 
         for key, value in attrs.items():
             if inspect.isclass(value) and issubclass(value, View):
@@ -224,8 +247,9 @@ class WidgetMetaclass(type):
                 included_widgets.append(value)
                 # Now generate accessors for each included widget
                 for widget_name in value.widget_class.cls_widget_names():
-                    new_attrs[widget_name] = IncludedWidget(value._seq_id, widget_name,
-                                                            value.use_parent)
+                    new_attrs[widget_name] = IncludedWidget(
+                        value._seq_id, widget_name, value.use_parent
+                    )
             elif isinstance(value, Widgetable):
                 new_attrs[key] = value
                 desc_name_mapping[value] = key
@@ -233,10 +257,10 @@ class WidgetMetaclass(type):
                     if not isinstance(widget, (Widgetable, Widget)):
                         continue
                     desc_name_mapping[widget] = key
-            elif key == 'fill':
+            elif key == "fill":
                 # handle fill() specifics
                 new_attrs[key] = logged(log_args=True, log_result=True)(wrap_fill_method(value))
-            elif key == 'read':
+            elif key == "read":
                 # handle read() specifics
                 new_attrs[key] = logged(log_result=True)(value)
             elif isinstance(value, types.FunctionType):
@@ -245,15 +269,15 @@ class WidgetMetaclass(type):
             else:
                 # Do nothing
                 new_attrs[key] = value
-        if 'ROOT' in new_attrs and '__locator__' not in new_attrs:
+        if "ROOT" in new_attrs and "__locator__" not in new_attrs:
             # For handling the root locator of the View
-            root = new_attrs['ROOT']
+            root = new_attrs["ROOT"]
             if isinstance(root, ParametrizedLocator):
-                new_attrs['__locator__'] = _gen_locator_root()
+                new_attrs["__locator__"] = _gen_locator_root()
             else:
-                new_attrs['__locator__'] = _gen_locator_meth(Locator(root))
-        new_attrs['_included_widgets'] = tuple(sorted(included_widgets, key=lambda w: w._seq_id))
-        new_attrs['_desc_name_mapping'] = desc_name_mapping
+                new_attrs["__locator__"] = _gen_locator_meth(Locator(root))
+        new_attrs["_included_widgets"] = tuple(sorted(included_widgets, key=lambda w: w._seq_id))
+        new_attrs["_desc_name_mapping"] = desc_name_mapping
         return super(WidgetMetaclass, cls).__new__(cls, name, bases, new_attrs)
 
 
@@ -298,8 +322,9 @@ class Widget(object, metaclass=WidgetMetaclass):
 
         This allows you a sort of Django-ish access to the defined widgets then.
         """
-        if (args and isinstance(args[0], (Widget, Browser))) \
-                or ('parent' in kwargs and isinstance(kwargs['parent'], (Widget, Browser))):
+        if (args and isinstance(args[0], (Widget, Browser))) or (
+            "parent" in kwargs and isinstance(kwargs["parent"], (Widget, Browser))
+        ):
             return super(Widget, cls).__new__(cls)
         else:
             return WidgetDescriptor(cls, *args, **kwargs)
@@ -334,11 +359,13 @@ class Widget(object, metaclass=WidgetMetaclass):
             locator = self.__locator__()
         except AttributeError:
             raise AttributeError(
-                '__locator__() is not defined on {} class'.format(type(self).__name__))
+                "__locator__() is not defined on {} class".format(type(self).__name__)
+            )
         else:
             if isinstance(locator, WebElement):
                 self.logger.warning(
-                    '__locator__ of %s class returns a WebElement!', type(self).__name__)
+                    "__locator__ of %s class returns a WebElement!", type(self).__name__
+                )
                 return locator
             else:
                 return self.parent_browser.element(locator)
@@ -348,11 +375,12 @@ class Widget(object, metaclass=WidgetMetaclass):
             for widget_includer in self._included_widgets:
                 if widget_includer._seq_id == includer_id:
                     parent = self if use_parent else self.parent
-                    self._initialized_included_widgets[widget_includer._seq_id] =\
-                        widget_includer.widget_class(parent, self.logger)
+                    self._initialized_included_widgets[
+                        widget_includer._seq_id
+                    ] = widget_includer.widget_class(parent, self.logger)
                     break
             else:
-                raise ValueError('Could not find includer #{}'.format(includer_id))
+                raise ValueError("Could not find includer #{}".format(includer_id))
         return getattr(self._initialized_included_widgets[includer_id], widget_name)
 
     def flush_widget_cache(self):
@@ -422,7 +450,7 @@ class Widget(object, metaclass=WidgetMetaclass):
     def locatable_parent(self):
         """If the widget has a parent that is locatable, returns it. Otherwise returns None"""
         for locatable in list(reversed(self.hierarchy))[1:]:
-            if hasattr(locatable, '__locator__') and not getattr(locatable, 'INDIRECT', False):
+            if hasattr(locatable, "__locator__") and not getattr(locatable, "INDIRECT", False):
                 return locatable
         else:
             return None
@@ -453,14 +481,14 @@ class Widget(object, metaclass=WidgetMetaclass):
             :py:class:`ValueError` when the browser is not defined, which is an error.
         """
         try:
-            if hasattr(self, '__locator__'):
+            if hasattr(self, "__locator__"):
                 # Wrap it so we have automatic parent injection
                 return BrowserParentWrapper(self, self.root_browser)
             else:
                 # This view has no locator, therefore just use the parent browser
                 return self.root_browser
         except AttributeError:
-            raise ValueError('Unknown value {!r} specified as parent.'.format(self.parent))
+            raise ValueError("Unknown value {!r} specified as parent.".format(self.parent))
 
     @property
     def parent_view(self):
@@ -498,7 +526,7 @@ class Widget(object, metaclass=WidgetMetaclass):
         return self.browser.element(self).is_enabled()
 
     @logged()
-    def wait_displayed(self, timeout='10s', delay=0.2):
+    def wait_displayed(self, timeout="10s", delay=0.2):
         """Wait for the element to be displayed. Uses the :py:meth:`is_displayed`
 
         Args:
@@ -539,7 +567,8 @@ class Widget(object, metaclass=WidgetMetaclass):
             A boolean whether it changed the value or not.
         """
         raise NotImplementedError(
-            'Widget {} does not implement fill()!'.format(type(self).__name__))
+            "Widget {} does not implement fill()!".format(type(self).__name__)
+        )
 
     def read(self, *args, **kwargs):
         """Each object should implement read so it is easy to get the value of such object.
@@ -547,8 +576,7 @@ class Widget(object, metaclass=WidgetMetaclass):
         When you implement this method, the exact return value is up to you but it *MUST* be
         consistent with what :py:meth:`fill` takes.
         """
-        raise DoNotReadThisWidget(
-            'Widget {} does not implement read()'.format(type(self).__name__))
+        raise DoNotReadThisWidget("Widget {} does not implement read()".format(type(self).__name__))
 
     def _process_fill_handler(self, handler):
         """Processes a given handler in the way that it is usable as a callable + its representation
@@ -570,14 +598,14 @@ class Widget(object, metaclass=WidgetMetaclass):
             try:
                 handler = getattr(self, handler)
             except AttributeError:
-                raise TypeError('{} does not exist on {!r}'.format(handler, self))
+                raise TypeError("{} does not exist on {!r}".format(handler, self))
 
         if isinstance(handler, ClickableMixin):
             return (handler.click, handler)
         elif callable(handler):
             return (handler, handler)
         else:
-            raise TypeError('Fill handler must be callable or clickable.')
+            raise TypeError("Fill handler must be callable or clickable.")
 
     def fill_with(self, value, on_change=None, no_change=None):
         """Method to fill the widget, especially usable when filling in forms.
@@ -596,12 +624,12 @@ class Widget(object, metaclass=WidgetMetaclass):
         if changed:
             if on_change is not None:
                 action, rep = self._process_fill_handler(on_change)
-                self.logger.info('invoking after fill on_change=%r', rep)
+                self.logger.info("invoking after fill on_change=%r", rep)
                 action()
         else:
             if no_change is not None:
                 action, rep = self._process_fill_handler(no_change)
-                self.logger.info('invoking after fill no_change=%r', rep)
+                self.logger.info("invoking after fill no_change=%r", rep)
                 action()
         return changed
 
@@ -625,7 +653,8 @@ class Widget(object, metaclass=WidgetMetaclass):
             getattr(self, widget_name)
             for widget_name in self.widget_names
             # Grab the descriptor
-            if getattr(type(self), widget_name) in self._widget_cache]
+            if getattr(type(self), widget_name) in self._widget_cache
+        ]
 
     @property
     def width(self):
@@ -644,17 +673,18 @@ class Widget(object, metaclass=WidgetMetaclass):
 def _gen_locator_meth(loc):
     def __locator__(self):  # noqa
         return loc
+
     return __locator__
 
 
 def _gen_locator_root():
     def __locator__(self):  # noqa
         return self.ROOT
+
     return __locator__
 
 
 class ClickableMixin(object):
-
     @logged()
     def click(self, handle_alert=None):
         """Click this widget
@@ -677,14 +707,15 @@ class GenericLocatorWidget(Widget, ClickableMixin):
     Args:
         locator: Locator of the object ob the page.
     """
-    ROOT = ParametrizedLocator('{@locator}')
+
+    ROOT = ParametrizedLocator("{@locator}")
 
     def __init__(self, parent, locator, logger=None):
         Widget.__init__(self, parent, logger=logger)
         self.locator = locator
 
     def __repr__(self):
-        return '{}({!r})'.format(type(self).__name__, self.locator)
+        return "{}({!r})".format(type(self).__name__, self.locator)
 
 
 class WTMixin(object, metaclass=WidgetMetaclass):
@@ -743,6 +774,7 @@ class ConditionalSwitchableView(Widgetable):
         ignore_bad_reference: If this is enabled, then when the widget representing the reference
             is not displayed or otherwise broken, it will then use the default view.
     """
+
     def __init__(self, reference=None, ignore_bad_reference=False):
         self.reference = reference
         self.registered_views = []
@@ -753,9 +785,9 @@ class ConditionalSwitchableView(Widgetable):
     def child_items(self):
         return [
             descriptor
-            for _, descriptor
-            in self.registered_views
-            if isinstance(descriptor, WidgetDescriptor)]
+            for _, descriptor in self.registered_views
+            if isinstance(descriptor, WidgetDescriptor)
+        ]
 
     def register(self, condition, default=False, widget=None):
         """Register a view class against given condition.
@@ -771,20 +803,25 @@ class ConditionalSwitchableView(Widgetable):
             widget: In case you do not want to use this as a decorator, you can pass the widget
                 class or instantiated widget as this parameter.
         """
+
         def view_process(cls_or_descriptor):
             if not (
-                    isinstance(cls_or_descriptor, WidgetDescriptor) or
-                    (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))):
+                isinstance(cls_or_descriptor, WidgetDescriptor)
+                or (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))
+            ):
                 raise TypeError(
-                    'Unsupported object registered into the selector ({!r})'.format(
-                        cls_or_descriptor))
+                    "Unsupported object registered into the selector ({!r})".format(
+                        cls_or_descriptor
+                    )
+                )
             self.registered_views.append((condition, cls_or_descriptor))
             if default:
                 if self.default_view is not None:
-                    raise TypeError('Multiple default views specified')
+                    raise TypeError("Multiple default views specified")
                 self.default_view = cls_or_descriptor
             # We explicitly return None
             return None
+
         if widget is None:
             return view_process
         else:
@@ -801,7 +838,8 @@ class ConditionalSwitchableView(Widgetable):
                 if self.reference is None:
                     # No reference to check against
                     raise TypeError(
-                        'reference= not set so you cannot use non-callables as conditions')
+                        "reference= not set so you cannot use non-callables as conditions"
+                    )
                 else:
                     if self.reference not in condition_arg_cache:
                         try:
@@ -813,8 +851,10 @@ class ConditionalSwitchableView(Widgetable):
                             condition_arg_cache[self.reference] = ref_value
                         except AttributeError:
                             raise TypeError(
-                                'Wrong widget name specified as reference=: {}'.format(
-                                    self.reference))
+                                "Wrong widget name specified as reference=: {}".format(
+                                    self.reference
+                                )
+                            )
                         except NoSuchElementException:
                             if self.ignore_bad_reference:
                                 # reference is not displayed? We are probably aware of this so skip.
@@ -830,7 +870,7 @@ class ConditionalSwitchableView(Widgetable):
                     condition
                 )
                 if c_varargs or c_keywords or c_defaults:
-                    raise TypeError('You can only use simple arguments in lambda conditions')
+                    raise TypeError("You can only use simple arguments in lambda conditions")
                 arg_values = []
                 for arg in c_args:
                     if arg not in condition_arg_cache:
@@ -838,7 +878,8 @@ class ConditionalSwitchableView(Widgetable):
                             condition_arg_cache[arg] = getattr(o, arg).read()
                         except AttributeError:
                             raise TypeError(
-                                'Wrong widget name specified as parameter {}'.format(arg))
+                                "Wrong widget name specified as parameter {}".format(arg)
+                            )
                     arg_values.append(condition_arg_cache[arg])
 
                 if condition(*arg_values):
@@ -848,12 +889,12 @@ class ConditionalSwitchableView(Widgetable):
             if self.default_view is not None:
                 view_object = self.default_view
             else:
-                raise ValueError('Could not find a corresponding registered view.')
+                raise ValueError("Could not find a corresponding registered view.")
         if inspect.isclass(view_object):
             view_class = view_object
         else:
             view_class = type(view_object)
-        o.logger.info('Picked %s', view_class.__name__)
+        o.logger.info("Picked %s", view_class.__name__)
         if isinstance(view_object, Widgetable):
             # We init the widget descriptor here
             return view_object.__get__(o, t)
@@ -888,6 +929,7 @@ class View(Widget):
             you shall use the ``additional_context`` to pass in required variables that will allow
             you to detect this.
     """
+
     #: Skip this view in the element lookup hierarchy
     INDIRECT = False
     FRAME = None
@@ -895,11 +937,11 @@ class View(Widget):
 
     def __init__(self, parent, logger=None, **kwargs):
         super().__init__(parent, logger=logger, **kwargs)
-        self.context = kwargs.pop('additional_context', {})
+        self.context = kwargs.pop("additional_context", {})
         self.last_fill_data = None
 
         if not self.fill_strategy:
-            if getattr(getattr(self.parent, 'fill_strategy', None), 'respect_parent', False):
+            if getattr(getattr(self.parent, "fill_strategy", None), "respect_parent", False):
                 self.fill_strategy = self.parent.fill_strategy
             else:
                 self.fill_strategy = DefaultFillViewStrategy()
@@ -1041,9 +1083,9 @@ class View(Widget):
             widget: The widget being accessed or :py:class:`ParametrizedViewRequest`.
         """
         self.browser.switch_to_main_frame()
-        parents = [p for p in self.hierarchy if getattr(p, 'FRAME', None)]
+        parents = [p for p in self.hierarchy if getattr(p, "FRAME", None)]
         for parent in parents:
-            self.browser.switch_to_frame(getattr(parent, 'FRAME'))
+            self.browser.switch_to_frame(getattr(parent, "FRAME"))
 
 
 class ParametrizedView(View):
@@ -1121,7 +1163,7 @@ class ParametrizedView(View):
             An iterable that contains tuples. Values in the tuples must map exactly to the keys in
             the PARAMETERS class attribute.
         """
-        raise NotImplementedError('You need to implement the all() classmethod')
+        raise NotImplementedError("You need to implement the all() classmethod")
 
 
 class ParametrizedViewRequest(object):
@@ -1130,6 +1172,7 @@ class ParametrizedViewRequest(object):
 
     See :py:class:`ParametrizedView` for more info.
     """
+
     def __init__(self, parent_object, view_class, *args, **kwargs):
         self.parent_object = parent_object
         self.view_class = view_class
@@ -1139,31 +1182,34 @@ class ParametrizedViewRequest(object):
     def __call__(self, *args, **kwargs):
         if len(args) > len(self.view_class.PARAMETERS):
             raise TypeError(
-                'You passed more parameters than {} accepts'.format(self.view_class.__name__))
+                "You passed more parameters than {} accepts".format(self.view_class.__name__)
+            )
         param_dict = {}
         for passed_arg, required_arg in zip(args, self.view_class.PARAMETERS):
             param_dict[required_arg] = passed_arg
         for key, value in kwargs.items():
             if key not in self.view_class.PARAMETERS:
-                raise TypeError('Unknown view parameter {}'.format(key))
+                raise TypeError("Unknown view parameter {}".format(key))
             param_dict[key] = value
 
         for param in self.view_class.PARAMETERS:
             if param not in param_dict:
                 raise TypeError(
-                    'You did not pass the required parameter {} into {}'.format(
-                        param, self.view_class.__name__))
+                    "You did not pass the required parameter {} into {}".format(
+                        param, self.view_class.__name__
+                    )
+                )
 
         new_kwargs = copy(self.kwargs)
-        if 'additional_context' not in self.kwargs:
-            new_kwargs['additional_context'] = {}
-        new_kwargs['additional_context'].update(param_dict)
+        if "additional_context" not in self.kwargs:
+            new_kwargs["additional_context"] = {}
+        new_kwargs["additional_context"].update(param_dict)
         # And finally, set up a nice logger
         parent_logger = self.parent_object.logger
         current_name = self.view_class.__name__
         # Now add the params to the name so it is class_name(args)
         current_name += call_sig((), param_dict)  # no args because we process everything into dict
-        new_kwargs['logger'] = create_child_logger(parent_logger, current_name)
+        new_kwargs["logger"] = create_child_logger(parent_logger, current_name)
         result = self.view_class(self.parent_object, *self.args, **new_kwargs)
         self.parent_object.child_widget_accessed(result)
         return result
@@ -1197,8 +1243,9 @@ class ParametrizedViewRequest(object):
 
     def __getattr__(self, attr):
         raise AttributeError(
-            'This is not an instance of {}. You need to call this object and pass the required '
-            'parameters of the view.'.format(self.view_class.__name__))
+            "This is not an instance of {}. You need to call this object and pass the required "
+            "parameters of the view.".format(self.view_class.__name__)
+        )
 
     def read(self):
         # Special handling of the parametrized views
@@ -1216,10 +1263,10 @@ class ParametrizedViewRequest(object):
     def fill(self, value):
         was_change = False
         if not isinstance(value, dict):
-            raise ValueError('When filling parametrized view a dict is required')
+            raise ValueError("When filling parametrized view a dict is required")
         for param_tuple, fill_value in value.items():
             if not isinstance(param_tuple, tuple):
-                param_tuple = (param_tuple, )
+                param_tuple = (param_tuple,)
             if self(*param_tuple).fill(fill_value):
                 was_change = True
         return was_change

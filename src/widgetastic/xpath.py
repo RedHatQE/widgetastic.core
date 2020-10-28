@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
-from xml.sax.saxutils import quoteattr, unescape
+from xml.sax.saxutils import quoteattr
+from xml.sax.saxutils import unescape
 
 
 def quote(s):
@@ -17,4 +18,4 @@ def normalize_space(text):
         replaces sequences of whitespace characters by a single space, and returns the resulting
         string.*
     """
-    return re.sub(r'\s+', ' ', text.strip(), flags=re.UNICODE)
+    return re.sub(r"\s+", " ", text.strip(), flags=re.UNICODE)
