@@ -11,9 +11,9 @@ from widgetastic.widget import View, Text
 
 
 @pytest.fixture()
-def current_and_new_handle(request, browser, test_server):
+def current_and_new_handle(request, browser, testing_page_url):
     """fixture return current and newly open window handle"""
-    handle = browser.new_window(url=test_server.url)
+    handle = browser.new_window(url=testing_page_url)
 
     @request.addfinalizer
     def _close_window():
@@ -267,13 +267,13 @@ def test_current_window_handle(browser):
 
 
 @pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
-def test_new_window(request, browser, focus, test_server):
+def test_new_window(request, browser, focus, testing_page_url):
     """Test open new window with and without focus"""
     # main window handle
     main_handle = browser.current_window_handle
 
     # open new window focus/no-focus
-    handle = browser.new_window(url=test_server.url, focus=focus)
+    handle = browser.new_window(url=testing_page_url, focus=focus)
 
     @request.addfinalizer
     def _close_window():

@@ -30,11 +30,21 @@ jobs:
         if: failure()
         run: git diff
 
+  pull-images:
+    name: Pull container images
+    runs-on: ubuntu-latest
+    needs: [ codechecks ]
+    steps:
+      - name: Pull selenium-standalone:latest
+        run: podman pull quay.io/redhatqe/selenium-standalone:latest
+      - name: Pull docker.io/library/nginx:alpine
+        run: podman pull docker.io/library/nginx:alpine
+
   unit-tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-latest
-    needs: [ codechecks ]
+    needs: [ pull-images ]
     strategy:
       matrix:
         browser: [ chrome, firefox ]
@@ -55,7 +65,7 @@ jobs:
         run: |
           pip install -U setuptools wheel
           pip install -e .[test]
-          pytest
+          pytest -n 3
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.13

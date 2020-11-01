@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-import codecs
 import os
 import socket
-import sys
 import subprocess
 from urllib.request import urlopen
 
 import pytest
-from pytest_localserver.http import ContentServer, Request, Response
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.common.exceptions import TimeoutException
-from urllib.parse import urlsplit
 from wait_for import wait_for
 
 from widgetastic.browser import Browser
@@ -70,6 +65,7 @@ def selenium_url(pytestconfig, worker_id):
                 "podman",
                 "run",
                 "--rm",
+                f"--name=selenium_{last_octet}",
                 "-d",
                 "-p",
                 f"{localhost_for_worker}:4444:4444",
@@ -87,7 +83,31 @@ def selenium_url(pytestconfig, worker_id):
 
 
 @pytest.fixture(scope="session")
-def selenium_webdriver(browser_name, selenium_url):
+def testing_page_url(worker_id, ip):
+    port_number = 8080 if worker_id == "master" else int(worker_id.lstrip("gw")) + 8080
+    nginx_address = f"{ip}:{port_number}"
+    ps = subprocess.run(
+        [
+            "podman",
+            "run",
+            "--rm",
+            "-d",
+            "-p",
+            f"{nginx_address}:80",
+            "-v",
+            f"{os.getcwd()}/testing/html:/usr/share/nginx/html:ro",
+            "docker.io/library/nginx:alpine",
+        ],
+        stdout=subprocess.PIPE,
+    )
+
+    yield f"http://{nginx_address}/testing_page.html"
+    container_id = ps.stdout.decode("utf-8").strip()
+    subprocess.run(["podman", "kill", container_id], stdout=subprocess.DEVNULL)
+
+
+@pytest.fixture(scope="session")
+def selenium_webdriver(browser_name, selenium_url, testing_page_url):
     wait_for(urlopen, func_args=[selenium_url], timeout=180, handle_exception=True)
     if browser_name == "firefox":
         desired_capabilities = DesiredCapabilities.FIREFOX.copy()
@@ -99,55 +119,10 @@ def selenium_webdriver(browser_name, selenium_url):
         command_executor=selenium_url,
         desired_capabilities=desired_capabilities
     )
-    driver.set_page_load_timeout(5)
+    driver.maximize_window()
+    driver.get(testing_page_url)
     yield driver
     driver.quit()
-
-
-class SampleContentServer(ContentServer):
-    def __init__(self, *args, **kwargs):
-        this_module = sys.modules[__name__]
-        self.path = os.path.join(os.path.dirname(this_module.__file__), 'html')
-        super(SampleContentServer, self).__init__(*args, **kwargs)
-
-    def __call__(self, environ, start_response):
-        """
-        This is the WSGI application.
-        """
-        request = Request(environ)
-        self.requests.append(request)
-
-        code = 200
-        if request.url.endswith('/'):
-            file = os.path.join(self.path, 'testing_page.html')
-        elif request.url.endswith('.html'):
-            url_path = urlsplit(request.url).path
-            filename = os.path.split(url_path)[-1]
-            file = os.path.join(self.path, filename)
-        else:
-            file = ''
-            code = 404
-
-        if os.path.exists(file):
-            content = codecs.open(file, mode='r', encoding='utf-8').read()
-        else:
-            content = f"wrong url {request.url}"
-            code = 404
-
-        response = Response(status=code)
-        response.headers.clear()
-        response.headers.extend(self.headers)
-
-        response.data = content
-        return response(environ, start_response)
-
-
-@pytest.fixture(scope="session")
-def test_server(ip):
-    server = SampleContentServer(host=ip)
-    server.start()
-    yield server
-    server.stop()
 
 
 class CustomBrowser(Browser):
@@ -156,24 +131,12 @@ class CustomBrowser(Browser):
         return '1.0.0'
 
 
-@pytest.fixture(scope='function')
-def browser(selenium_webdriver, test_server):
-    cb = CustomBrowser(selenium_webdriver)
-    # these nasty workarounds are mostly for Chrome. It just cannot load the page from the first
-    # attempt
-    for _ in range(3):
-        try:
-            selenium_webdriver.maximize_window()
-            selenium_webdriver.get(test_server.url)
-        except TimeoutException:
-            continue
-        else:
-            break
-    yield cb
-    for _ in range(3):
-        try:
-            selenium_webdriver.refresh()
-        except TimeoutException:
-            continue
-        else:
-            break
+@pytest.fixture(scope="session")
+def custom_browser(selenium_webdriver):
+    return CustomBrowser(selenium_webdriver)
+
+
+@pytest.fixture(scope="function")
+def browser(selenium_webdriver, custom_browser):
+    yield custom_browser
+    selenium_webdriver.refresh()
