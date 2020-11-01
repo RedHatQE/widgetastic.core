@@ -12,6 +12,7 @@ class Text(GenericLocatorWidget):
     Args:
         locator: Locator of the object on the page.
     """
+
     @property
     def text(self):
         return self.browser.text(self, parent=self.parent)

@@ -2,8 +2,8 @@
 from jsmin import jsmin
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 
-from widgetastic.exceptions import DoNotReadThisWidget
 from .base import Widget
+from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.xpath import quote
 
 
@@ -15,25 +15,26 @@ class BaseInput(Widget):
         id: If you want to look the input up by id, use this parameter, pass the id.
         locator: If you have specific locator, use it here.
     """
+
     def __init__(self, parent, name=None, id=None, locator=None, logger=None):
         if (locator and (name or id)) or (name and (id or locator)) or (id and (name or locator)):
-            raise TypeError('You can only pass one of name, id or locator!')
+            raise TypeError("You can only pass one of name, id or locator!")
         Widget.__init__(self, parent, logger=logger)
         self.name = None
         self.id = None
         if name or id:
             if name is not None:
-                id_attr = '@name={}'.format(quote(name))
+                id_attr = "@name={}".format(quote(name))
                 self.name = name
             elif id is not None:
-                id_attr = '@id={}'.format(quote(id))
+                id_attr = "@id={}".format(quote(id))
                 self.id = id
-            self.locator = './/*[(self::input or self::textarea) and {}]'.format(id_attr)
+            self.locator = ".//*[(self::input or self::textarea) and {}]".format(id_attr)
         else:
             self.locator = locator
 
     def __repr__(self):
-        return '{}(locator={!r})'.format(type(self).__name__, self.locator)
+        return "{}(locator={!r})".format(type(self).__name__, self.locator)
 
     def __locator__(self):
         return self.locator
@@ -47,9 +48,10 @@ class TextInput(BaseInput):
         id: If you want to look the input up by id, use this parameter, pass the id.
         locator: If you have specific locator, use it here.
     """
+
     @property
     def value(self):
-        return self.browser.get_attribute('value', self)
+        return self.browser.get_attribute("value", self)
 
     def read(self):
         return self.value
@@ -94,16 +96,22 @@ class ColourInput(BaseInput):
 
     @property
     def colour(self):
-        return self.browser.execute_script('return arguments[0].value;', self)
+        return self.browser.execute_script("return arguments[0].value;", self)
 
     @colour.setter
     def colour(self, value):
-        self.browser.execute_script(jsmin('''
+        self.browser.execute_script(
+            jsmin(
+                """
             arguments[0].value = arguments[1];
             if(arguments[0].onchange !== null) {
                 arguments[0].onchange();
             }
-        '''), self, value)
+        """
+            ),
+            self,
+            value,
+        )
 
     def read(self):
         return self.colour

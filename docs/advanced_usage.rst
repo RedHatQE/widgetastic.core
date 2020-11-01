@@ -287,7 +287,7 @@ You just need to set FRAME property for it. FRAME should point out to appropriat
 
 Since iframe is another page, all its bits consider iframe as root. This has to be taken into account during creating object structure.
 
-If regular views and iframe views are mixed, widgetastic takes care of switching between frames on widget access. 
+If regular views and iframe views are mixed, widgetastic takes care of switching between frames on widget access.
 User doesn't need to undertake any actions.
 
 Below is example of usage. More examples can be found in unit tests.
@@ -296,7 +296,7 @@ Below is example of usage. More examples can be found in unit tests.
 
     class FirstIFrameView(View):
         FRAME = '//iframe[@name="some_iframe"]'
-        
+
         h3 = Text('.//h3')
         select1 = Select(id='iframe_select1')
         select2 = Select(name='iframe_select2')
@@ -310,4 +310,3 @@ Below is example of usage. More examples can be found in unit tests.
 
                 widget1 = Widget()
                 widget2 = Widget()
- 

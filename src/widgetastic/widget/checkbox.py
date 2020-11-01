@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from widgetastic.exceptions import WidgetOperationFailed
-from .input import BaseInput
 from .base import ClickableMixin
+from .input import BaseInput
+from widgetastic.exceptions import WidgetOperationFailed
 
 
 class Checkbox(BaseInput, ClickableMixin):
@@ -29,5 +29,5 @@ class Checkbox(BaseInput, ClickableMixin):
             self.click()
             if self.selected != value:
                 # TODO: More verbose here
-                raise WidgetOperationFailed('Failed to set the checkbox to requested value.')
+                raise WidgetOperationFailed("Failed to set the checkbox to requested value.")
             return True

@@ -2,10 +2,23 @@
 import pytest
 
 from widgetastic.exceptions import NoSuchElementException
-from widgetastic.utils import ParametrizedLocator, ParametrizedString, Parameter, Ignore
-from widgetastic.widget import (
-    ParametrizedView, ParametrizedViewRequest, Text, View, Widget, do_not_read_this_widget,
-    Checkbox, Select, ConditionalSwitchableView, WidgetDescriptor, TextInput, FileInput, WTMixin)
+from widgetastic.utils import Ignore
+from widgetastic.utils import Parameter
+from widgetastic.utils import ParametrizedLocator
+from widgetastic.utils import ParametrizedString
+from widgetastic.widget import Checkbox
+from widgetastic.widget import ConditionalSwitchableView
+from widgetastic.widget import do_not_read_this_widget
+from widgetastic.widget import FileInput
+from widgetastic.widget import ParametrizedView
+from widgetastic.widget import ParametrizedViewRequest
+from widgetastic.widget import Select
+from widgetastic.widget import Text
+from widgetastic.widget import TextInput
+from widgetastic.widget import View
+from widgetastic.widget import Widget
+from widgetastic.widget import WidgetDescriptor
+from widgetastic.widget import WTMixin
 
 
 def test_can_create_view(browser):
@@ -25,10 +38,10 @@ def test_view_browser(browser):
 
 def test_view_root_locator(browser):
     class MyView(View):
-        ROOT = '#foo'
+        ROOT = "#foo"
 
     view = MyView(browser)
-    assert view.__locator__() == ('css selector', '#foo')
+    assert view.__locator__() == ("css selector", "#foo")
 
 
 def test_view_widget_names(browser):
@@ -36,7 +49,7 @@ def test_view_widget_names(browser):
         w1 = Widget()
         w2 = Widget()
 
-    assert MyView(browser).widget_names == ('w1', 'w2')
+    assert MyView(browser).widget_names == ("w1", "w2")
 
 
 def test_view_no_subviews(browser):
@@ -67,42 +80,42 @@ def test_view_with_subviews(browser):
     assert set(view.cached_sub_widgets) == {view.AnotherView, view.Foo, view.w}
     assert isinstance(view.AnotherView.another_widget, Widget)
     assert isinstance(view.Foo.bar, Widget)
-    assert {type(v).__name__ for v in view.sub_widgets} == {'AnotherView', 'Foo', 'Widget'}
+    assert {type(v).__name__ for v in view.sub_widgets} == {"AnotherView", "Foo", "Widget"}
 
 
 def test_view_fill(browser):
     class TestForm(View):
-        h3 = Text('.//h3', log_on_fill_unspecified=False)
-        input1 = TextInput(name='input1')
-        input2 = Checkbox(id='input2')
-        fileinput = FileInput(id='fileinput')
+        h3 = Text(".//h3", log_on_fill_unspecified=False)
+        input1 = TextInput(name="input1")
+        input2 = Checkbox(id="input2")
+        fileinput = FileInput(id="fileinput")
 
     view = TestForm(browser)
-    assert view.fill({'input1': 'hello world man'})
+    assert view.fill({"input1": "hello world man"})
 
 
 def test_view_fill_before_fill(browser):
     class TestForm(View):
-        input1 = TextInput(name='input1')
+        input1 = TextInput(name="input1")
 
         def before_fill(self, values):
             return True
 
     view = TestForm(browser)
-    assert view.fill({'input1': 'hello world man'})
-    assert view.fill({'input1': 'hello world man'})
+    assert view.fill({"input1": "hello world man"})
+    assert view.fill({"input1": "hello world man"})
 
 
 def test_view_fill_after_fill(browser):
     class TestForm(View):
-        input1 = TextInput(name='input1')
+        input1 = TextInput(name="input1")
 
         def after_fill(self, was_change):
             return was_change or True
 
     view = TestForm(browser)
-    assert view.fill({'input1': 'hello world man'})
-    assert view.fill({'input1': 'hello world man'})
+    assert view.fill({"input1": "hello world man"})
+    assert view.fill({"input1": "hello world man"})
 
 
 def test_view_is_displayed_without_root_locator(browser):
@@ -114,14 +127,14 @@ def test_view_is_displayed_without_root_locator(browser):
 
 def test_view_is_displayed_with_root_locator(browser):
     class MyView(View):
-        ROOT = '#hello'
+        ROOT = "#hello"
 
     assert MyView(browser).is_displayed
 
 
 def test_view_is_not_displayed_with_root_locator(browser):
     class MyView(View):
-        ROOT = '#thisdoesnotexist'
+        ROOT = "#thisdoesnotexist"
 
     view = MyView(browser)
     assert not view.is_displayed
@@ -149,7 +162,7 @@ def test_mixin_view(browser):
         widget2 = Widget()
 
     view = AView2(browser)
-    assert view.widget_names == ('a_mixin_widget', 'widget1', 'widget2')
+    assert view.widget_names == ("a_mixin_widget", "widget1", "widget2")
     view.a_mixin_widget
 
 
@@ -168,14 +181,14 @@ def test_do_not_read_widget(browser):
 
     view = AView(browser)
     data = view.read()
-    assert 'w2' not in data
+    assert "w2" not in data
 
 
 def test_view_parameter(browser):
     class MyView(View):
-        my_param = Parameter('foo')
+        my_param = Parameter("foo")
 
-    assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar'
+    assert MyView(browser, additional_context={"foo": "bar"}).my_param == "bar"
 
     with pytest.raises(AttributeError):
         MyView(browser).my_param
@@ -183,93 +196,109 @@ def test_view_parameter(browser):
 
 def test_view_parametrized_string(browser):
     class MyView(View):
-        my_param = ParametrizedString('{foo} {foo|quote}')
+        my_param = ParametrizedString("{foo} {foo|quote}")
         # This test is now disabled as it fails on py3, nothing yet uses this functionality
         # nested_thing = ParametrizedString('foo {"id-{foo}"|quote}')
 
-    assert MyView(browser, additional_context={'foo': 'bar'}).my_param == 'bar "bar"'
+    assert MyView(browser, additional_context={"foo": "bar"}).my_param == 'bar "bar"'
     # assert MyView(browser, additional_context={'foo': 'bar'}).nested_thing == 'foo "id-bar"'
 
 
 def test_parametrized_view(browser):
     class MyView(View):
         class table_row(ParametrizedView):
-            PARAMETERS = ('rowid', )
-            ROOT = ParametrizedLocator('.//tr[@data-test={rowid|quote}]')
+            PARAMETERS = ("rowid",)
+            ROOT = ParametrizedLocator(".//tr[@data-test={rowid|quote}]")
 
-            col1 = Text('./td[2]')
-            checkbox = Checkbox(locator=ParametrizedString('.//td/input[@id={rowid|quote}]'))
+            col1 = Text("./td[2]")
+            checkbox = Checkbox(locator=ParametrizedString(".//td/input[@id={rowid|quote}]"))
 
             @classmethod
             def all(cls, browser):
                 result = []
                 for e in browser.elements('.//table[@id="with-thead"]//tr[td]'):
-                    result.append((browser.get_attribute('data-test', e), ))
+                    result.append((browser.get_attribute("data-test", e),))
                 return result
 
     view = MyView(browser)
     assert isinstance(view.table_row, ParametrizedViewRequest)
-    assert view.table_row('abc-123').col1.text == 'qwer'
-    assert view.table_row(rowid='abc-345').col1.text == 'bar_x'
+    assert view.table_row("abc-123").col1.text == "qwer"
+    assert view.table_row(rowid="abc-345").col1.text == "bar_x"
 
     with pytest.raises(TypeError):
         view.table_row()
 
     with pytest.raises(TypeError):
-        view.table_row('foo', 'bar')
+        view.table_row("foo", "bar")
 
     with pytest.raises(TypeError):
-        view.table_row(foo='bar')
+        view.table_row(foo="bar")
 
-    view.fill({'table_row': {
-        'abc-123': {'checkbox': True},
-        ('abc-345', ): {'checkbox': False},
-        ('def-345', ): {'checkbox': True},
-    }})
-
-    assert view.read() == {
-        'table_row': {
-            'abc-123': {'col1': 'qwer', 'checkbox': True},
-            'abc-345': {'col1': 'bar_x', 'checkbox': False},
-            'def-345': {'col1': 'bar_y', 'checkbox': True}}}
-
-    assert view.fill({'table_row': {
-        'abc-123': {'checkbox': False},
-        ('abc-345', ): {'checkbox': False},
-        ('def-345', ): {'checkbox': False},
-    }})
+    view.fill(
+        {
+            "table_row": {
+                "abc-123": {"checkbox": True},
+                ("abc-345",): {"checkbox": False},
+                ("def-345",): {"checkbox": True},
+            }
+        }
+    )
 
     assert view.read() == {
-        'table_row': {
-            'abc-123': {'col1': 'qwer', 'checkbox': False},
-            'abc-345': {'col1': 'bar_x', 'checkbox': False},
-            'def-345': {'col1': 'bar_y', 'checkbox': False}}}
+        "table_row": {
+            "abc-123": {"col1": "qwer", "checkbox": True},
+            "abc-345": {"col1": "bar_x", "checkbox": False},
+            "def-345": {"col1": "bar_y", "checkbox": True},
+        }
+    }
 
-    assert not view.fill({'table_row': {
-        'abc-123': {'checkbox': False},
-        ('abc-345', ): {'checkbox': False},
-        ('def-345', ): {'checkbox': False},
-    }})
+    assert view.fill(
+        {
+            "table_row": {
+                "abc-123": {"checkbox": False},
+                ("abc-345",): {"checkbox": False},
+                ("def-345",): {"checkbox": False},
+            }
+        }
+    )
+
+    assert view.read() == {
+        "table_row": {
+            "abc-123": {"col1": "qwer", "checkbox": False},
+            "abc-345": {"col1": "bar_x", "checkbox": False},
+            "def-345": {"col1": "bar_y", "checkbox": False},
+        }
+    }
+
+    assert not view.fill(
+        {
+            "table_row": {
+                "abc-123": {"checkbox": False},
+                ("abc-345",): {"checkbox": False},
+                ("def-345",): {"checkbox": False},
+            }
+        }
+    )
 
     # list-like access
-    assert view.table_row[0].col1.text == 'qwer'
+    assert view.table_row[0].col1.text == "qwer"
     cx, cy = view.table_row[1:3]
-    assert cx.col1.text == 'bar_x'
-    assert cy.col1.text == 'bar_y'
+    assert cx.col1.text == "bar_x"
+    assert cy.col1.text == "bar_y"
 
     cx, cy = view.table_row[0:3:2]
-    assert cx.col1.text == 'qwer'
-    assert cy.col1.text == 'bar_y'
+    assert cx.col1.text == "qwer"
+    assert cy.col1.text == "bar_y"
 
     for i, row in enumerate(view.table_row):
         if i == 0:
-            assert row.col1.text == 'qwer'
+            assert row.col1.text == "qwer"
         elif i == 1:
-            assert row.col1.text == 'bar_x'
+            assert row.col1.text == "bar_x"
         elif i == 2:
-            assert row.col1.text == 'bar_y'
+            assert row.col1.text == "bar_y"
         else:
-            pytest.fail('iterated longer than expected')
+            pytest.fail("iterated longer than expected")
 
     assert len(view.table_row) == 3
 
@@ -277,10 +306,10 @@ def test_parametrized_view(browser):
 def test_parametrized_view_read_without_all(browser):
     class MyView(View):
         class table_row(ParametrizedView):
-            PARAMETERS = ('rowid', )
-            ROOT = ParametrizedLocator('.//tr[@data-test={rowid|quote}]')
+            PARAMETERS = ("rowid",)
+            ROOT = ParametrizedLocator(".//tr[@data-test={rowid|quote}]")
 
-            col1 = Text('./td[2]')
+            col1 = Text("./td[2]")
 
     view = MyView(browser)
     assert list(view.read().keys()) == []
@@ -289,8 +318,9 @@ def test_parametrized_view_read_without_all(browser):
 def test_view_parent_smart_works(browser):
     """This test ensures that when the functionality of a view is extended, the element lookup
     correctly handles the difference between ROOT and other locators."""
+
     class MyView(View):
-        ROOT = '#proper'
+        ROOT = "#proper"
 
         class AnotherView(View):
             ROOT = './div[@class="c1"]/span'
@@ -300,7 +330,7 @@ def test_view_parent_smart_works(browser):
 
     view = MyView(browser)
 
-    assert view.AnotherView.get_text() == 'C1'
+    assert view.AnotherView.get_text() == "C1"
 
 
 def test_cache(browser):
@@ -323,13 +353,14 @@ def test_cache(browser):
     assert len(view.nested1.nested2.nested3._widget_cache.keys()) == 0
 
     view.w
-    assert set(view._widget_cache.keys()) == {getattr(MyView, 'w'), getattr(MyView, 'nested1')}
+    assert set(view._widget_cache.keys()) == {getattr(MyView, "w"), getattr(MyView, "nested1")}
     view.flush_widget_cache()
     assert len(view._widget_cache.keys()) == 0
 
 
 def test_view_iteration(browser):
     """Test whether the widget cache does not get widgets when only views touched."""
+
     class MyView(View):
         w = Widget()
         x = Widget()
@@ -349,29 +380,29 @@ def test_view_iteration(browser):
 
 def test_indirect_positive(browser):
     class MyView(View):
-        ROOT = '//badger'
+        ROOT = "//badger"
         INDIRECT = True
 
         class nested(View):
-            ROOT = '#bogus'
+            ROOT = "#bogus"
 
-            t = Text('.lookmeup')
+            t = Text(".lookmeup")
 
     view = MyView(browser)
     assert not view.is_displayed
     assert view.nested.is_displayed
-    assert view.nested.t.text == 'BAD'
+    assert view.nested.t.text == "BAD"
 
 
 def test_indirect_negative(browser):
     class MyView(View):
-        ROOT = '//badger'
+        ROOT = "//badger"
         INDIRECT = False
 
         class nested(View):
-            ROOT = '#bogus'
+            ROOT = "#bogus"
 
-            t = Text('.lookmeup')
+            t = Text(".lookmeup")
 
     view = MyView(browser)
     assert not view.is_displayed
@@ -380,73 +411,74 @@ def test_indirect_negative(browser):
 
 def test_switchable_view_with_reference_only(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
-        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+        the_switchable_view = ConditionalSwitchableView(reference="the_reference")
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
-        @the_switchable_view.register('bar')
+        @the_switchable_view.register("bar")
         class BarView(View):
             widget = Text('//h3[@id="switchabletesting-2"]')
 
     view = MyView(browser)
-    view.the_reference.fill('foo')
-    assert view.the_switchable_view.widget.read() == 'footest'
-    view.the_reference.fill('bar')
-    assert view.the_switchable_view.widget.read() == 'bartest'
+    view.the_reference.fill("foo")
+    assert view.the_switchable_view.widget.read() == "footest"
+    view.the_reference.fill("bar")
+    assert view.the_switchable_view.widget.read() == "bartest"
 
 
 def test_switchable_view_with_nonwidget_reference_only(browser):
     class MyView(View):
-        the_reference = 'bar'
+        the_reference = "bar"
 
-        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+        the_switchable_view = ConditionalSwitchableView(reference="the_reference")
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
-        @the_switchable_view.register('bar')
+        @the_switchable_view.register("bar")
         class BarView(View):
             widget = Text('//h3[@id="switchabletesting-2"]')
 
     view = MyView(browser)
-    assert view.the_switchable_view.widget.read() == 'bartest'
+    assert view.the_switchable_view.widget.read() == "bartest"
 
 
 def test_switchable_view_with_bad_reference(browser):
     class MyView(View):
-        the_reference = Select(id='ewaopaopsdkgnjdsopjf')
+        the_reference = Select(id="ewaopaopsdkgnjdsopjf")
 
         the_switchable_view = ConditionalSwitchableView(
-            reference='the_reference', ignore_bad_reference=True)
+            reference="the_reference", ignore_bad_reference=True
+        )
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
-        @the_switchable_view.register('bar', default=True)
+        @the_switchable_view.register("bar", default=True)
         class BarView(View):
             widget = Text('//h3[@id="switchabletesting-2"]')
 
     view = MyView(browser)
-    assert view.the_switchable_view.widget.read() == 'bartest'
+    assert view.the_switchable_view.widget.read() == "bartest"
 
 
 def test_switchable_view_with_bad_reference_negative(browser):
     class MyView(View):
-        the_reference = Select(id='ewaopaopsdkgnjdsopjf')
+        the_reference = Select(id="ewaopaopsdkgnjdsopjf")
 
-        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+        the_switchable_view = ConditionalSwitchableView(reference="the_reference")
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
-        @the_switchable_view.register('bar', default=True)
+        @the_switchable_view.register("bar", default=True)
         class BarView(View):
             widget = Text('//h3[@id="switchabletesting-2"]')
 
@@ -458,145 +490,147 @@ def test_switchable_view_with_bad_reference_negative(browser):
 
 def test_switchable_view_with_nested_reference(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         class nest1(View):  # noqa
             class nest2(View):  # noqa
                 the_switchable_view = ConditionalSwitchableView(
-                    reference='parent.parent.the_reference')
+                    reference="parent.parent.the_reference"
+                )
 
-                @the_switchable_view.register('foo')
+                @the_switchable_view.register("foo")
                 class FooView(View):
                     widget = Text('//h3[@id="switchabletesting-1"]')
 
-                @the_switchable_view.register('bar')
+                @the_switchable_view.register("bar")
                 class BarView(View):
                     widget = Text('//h3[@id="switchabletesting-2"]')
 
     view = MyView(browser)
-    view.the_reference.fill('foo')
-    assert view.nest1.nest2.the_switchable_view.widget.read() == 'footest'
-    view.the_reference.fill('bar')
-    assert view.nest1.nest2.the_switchable_view.widget.read() == 'bartest'
+    view.the_reference.fill("foo")
+    assert view.nest1.nest2.the_switchable_view.widget.read() == "footest"
+    view.the_reference.fill("bar")
+    assert view.nest1.nest2.the_switchable_view.widget.read() == "bartest"
 
 
 def test_switchable_view_with_reference_only_and_widgetdescriptors(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
-        the_switchable_widget = ConditionalSwitchableView(reference='the_reference')
+        the_switchable_widget = ConditionalSwitchableView(reference="the_reference")
 
-        the_switchable_widget.register('foo', widget=Text('//h3[@id="switchabletesting-1"]'))
-        the_switchable_widget.register('bar', widget=Text('//h3[@id="switchabletesting-2"]'))
+        the_switchable_widget.register("foo", widget=Text('//h3[@id="switchabletesting-1"]'))
+        the_switchable_widget.register("bar", widget=Text('//h3[@id="switchabletesting-2"]'))
 
     view = MyView(browser)
-    view.the_reference.fill('foo')
-    assert view.the_switchable_widget.read() == 'footest'
-    view.the_reference.fill('bar')
-    assert view.the_switchable_widget.read() == 'bartest'
+    view.the_reference.fill("foo")
+    assert view.the_switchable_widget.read() == "footest"
+    view.the_reference.fill("bar")
+    assert view.the_switchable_widget.read() == "bartest"
 
 
 def test_switchable_view_with_callables(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
-        @the_switchable_view.register(lambda the_reference: the_reference == 'foo')
+        @the_switchable_view.register(lambda the_reference: the_reference == "foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
-        @the_switchable_view.register(lambda the_reference: the_reference == 'bar')
+        @the_switchable_view.register(lambda the_reference: the_reference == "bar")
         class BarView(View):
             widget = Text('//h3[@id="switchabletesting-2"]')
 
     view = MyView(browser)
-    view.the_reference.fill('foo')
-    assert view.the_switchable_view.widget.read() == 'footest'
-    view.the_reference.fill('bar')
-    assert view.the_switchable_view.widget.read() == 'bartest'
+    view.the_reference.fill("foo")
+    assert view.the_switchable_view.widget.read() == "footest"
+    view.the_reference.fill("bar")
+    assert view.the_switchable_view.widget.read() == "bartest"
 
 
 def test_switchable_view_with_default(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
-        @the_switchable_view.register(lambda the_reference: the_reference == 'foo', default=True)
+        @the_switchable_view.register(lambda the_reference: the_reference == "foo", default=True)
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
     view = MyView(browser)
-    view.the_reference.fill('bar')
-    assert view.the_reference.read() == 'bar'
+    view.the_reference.fill("bar")
+    assert view.the_reference.read() == "bar"
     # The bar is not handled but it should get to the default view anyway
-    assert view.the_switchable_view.widget.read() == 'footest'
+    assert view.the_switchable_view.widget.read() == "footest"
 
 
 def test_switchable_view_fill(browser):
     class FooView(View):
-        widget1 = Checkbox(id='switchabletesting-3')
+        widget1 = Checkbox(id="switchabletesting-3")
 
     class BarView(View):
-        widget2 = Checkbox(id='switchabletesting-4')
+        widget2 = Checkbox(id="switchabletesting-4")
 
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
-        the_switchable_view = ConditionalSwitchableView(reference='the_reference')
+        the_reference = Select(id="switchabletesting-select")
+        the_switchable_view = ConditionalSwitchableView(reference="the_reference")
 
-        the_switchable_view.register('foo', default=True, widget=FooView)
-        the_switchable_view.register('bar', widget=BarView)
+        the_switchable_view.register("foo", default=True, widget=FooView)
+        the_switchable_view.register("bar", widget=BarView)
 
     view = MyView(browser)
-    view.the_reference.fill('bar')
-    assert view.the_reference.read() == 'bar'
+    view.the_reference.fill("bar")
+    assert view.the_reference.read() == "bar"
     view.the_switchable_view.widget2.fill(True)
     assert view.the_switchable_view.widget2.read(), "non default not filled"
 
-    view.the_reference.fill('foo')
-    assert view.the_reference.read() == 'foo'
+    view.the_reference.fill("foo")
+    assert view.the_reference.read() == "foo"
     view.the_switchable_view.widget1.fill(True)
     assert view.the_switchable_view.widget1.read(), "default not filled"
 
 
 def test_switchable_view_without_default_and_unhandled_value(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
-        @the_switchable_view.register(lambda the_reference: the_reference == 'foo')
+        @the_switchable_view.register(lambda the_reference: the_reference == "foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
     view = MyView(browser)
-    view.the_reference.fill('bar')
-    assert view.the_reference.read() == 'bar'
+    view.the_reference.fill("bar")
+    assert view.the_reference.read() == "bar"
     with pytest.raises(ValueError):
-        assert view.the_switchable_view.widget.read() == 'footest'
+        assert view.the_switchable_view.widget.read() == "footest"
 
 
 def test_switchable_view_multiple_default_error():
     view = ConditionalSwitchableView()
 
-    @view.register('foo', default=True)
+    @view.register("foo", default=True)
     class SomeView(View):
         pass
 
     with pytest.raises(TypeError):
-        @view.register('foo', default=True)
+
+        @view.register("foo", default=True)
         class SomeAnotherView(View):
             pass
 
 
 def test_switchable_view_string_without_reference(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
@@ -607,11 +641,11 @@ def test_switchable_view_string_without_reference(browser):
 
 def test_switchable_view_string_bad_reference(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
-        the_switchable_view = ConditionalSwitchableView(reference='lalapapa')
+        the_switchable_view = ConditionalSwitchableView(reference="lalapapa")
 
-        @the_switchable_view.register('foo')
+        @the_switchable_view.register("foo")
         class FooView(View):
             widget = Text('//h3[@id="switchabletesting-1"]')
 
@@ -622,7 +656,7 @@ def test_switchable_view_string_bad_reference(browser):
 
 def test_switchable_view_string_nonsimple_lambda(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
@@ -637,7 +671,7 @@ def test_switchable_view_string_nonsimple_lambda(browser):
 
 def test_switchable_view_string_lambda_bad_argument_widget(browser):
     class MyView(View):
-        the_reference = Select(id='switchabletesting-select')
+        the_reference = Select(id="switchabletesting-select")
 
         the_switchable_view = ConditionalSwitchableView()
 
@@ -667,31 +701,31 @@ def test_ignore_decorator(browser):
     view = MyView(browser)
     assert view.baz is MyViewToNotNest
     assert MyView.inga is not MyViewToNotNest
-    assert 'baz' not in view.widget_names
-    assert 'inga' in view.widget_names
+    assert "baz" not in view.widget_names
+    assert "inga" in view.widget_names
     assert isinstance(view.inga, MyViewToNotNest)
 
 
 def test_iframe_view(browser):
     class MyIFrameView(View):
         FRAME = '//iframe[@name="some_iframe"]'
-        h3 = Text('.//h3')
-        select1 = Select(id='iframe_select1')
-        select2 = Select(name='iframe_select2')
+        h3 = Text(".//h3")
+        select1 = Select(id="iframe_select1")
+        select2 = Select(name="iframe_select2")
 
         class nested_iframe_view(View):
             FRAME = './/iframe[@name="another_iframe"]'
-            h3 = Text('.//h3')
-            select3 = Select(id='iframe_select3')
+            h3 = Text(".//h3")
+            select3 = Select(id="iframe_select3")
 
             class nested(View):
                 ROOT = './/div[@id="nested_view"]'
-                nested_input = TextInput(name='input222')
+                nested_input = TextInput(name="input222")
 
     class ParentView(View):
         h3 = Text('//h3[@id="switchabletesting-1"]')
-        checkbox1 = Checkbox(id='switchabletesting-3')
-        checkbox2 = Checkbox(id='switchabletesting-4')
+        checkbox1 = Checkbox(id="switchabletesting-3")
+        checkbox2 = Checkbox(id="switchabletesting-4")
 
     iframe_view = MyIFrameView(browser)
     parent_view = ParentView(browser)
@@ -705,18 +739,20 @@ def test_iframe_view(browser):
     assert iframe_view.h3.text == "IFrame Tests"
     assert parent_view.h3.text == "footest"
 
-    assert iframe_view.select1.read() == 'Foo'
-    assert iframe_view.select1.fill('Bar') and iframe_view.select1.read() == 'Bar'
+    assert iframe_view.select1.read() == "Foo"
+    assert iframe_view.select1.fill("Bar") and iframe_view.select1.read() == "Bar"
 
     assert not parent_view.checkbox1.read()
     assert parent_view.checkbox1.fill(True) and parent_view.checkbox1.read()
 
     assert iframe_view.nested_iframe_view.is_displayed
-    assert iframe_view.nested_iframe_view.h3.text == 'IFrame Tests 2'
-    assert (iframe_view.nested_iframe_view.select3.fill('Bar') and
-            iframe_view.nested_iframe_view.select3.read() == 'Bar')
+    assert iframe_view.nested_iframe_view.h3.text == "IFrame Tests 2"
+    assert (
+        iframe_view.nested_iframe_view.select3.fill("Bar")
+        and iframe_view.nested_iframe_view.select3.read() == "Bar"
+    )
 
     assert iframe_view.nested_iframe_view.nested.is_displayed
-    assert iframe_view.nested_iframe_view.nested.nested_input.read() == 'Default Value'
-    assert iframe_view.nested_iframe_view.nested.nested_input.fill('New Value')
-    assert iframe_view.nested_iframe_view.nested.nested_input.read() == 'New Value'
+    assert iframe_view.nested_iframe_view.nested.nested_input.read() == "Default Value"
+    assert iframe_view.nested_iframe_view.nested.nested_input.fill("New Value")
+    assert iframe_view.nested_iframe_view.nested.nested_input.read() == "New Value"

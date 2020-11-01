@@ -6,10 +6,10 @@ def test_can_create_descriptor():
     class MyClass(object):
         pass
 
-    desc = WidgetDescriptor(MyClass, 1, 2, foo='bar')
+    desc = WidgetDescriptor(MyClass, 1, 2, foo="bar")
     assert desc.klass is MyClass
     assert desc.args == (1, 2)
-    assert desc.kwargs == {'foo': 'bar'}
+    assert desc.kwargs == {"foo": "bar"}
 
 
 def test_descriptor_increments():

@@ -1,8 +1,8 @@
 from widgetastic.utils import ParametrizedLocator
-from widgetastic.xpath import quote
-from widgetastic.widget.base import Widget
-from widgetastic.widget.base import View
 from widgetastic.widget.base import ClickableMixin
+from widgetastic.widget.base import View
+from widgetastic.widget.base import Widget
+from widgetastic.xpath import quote
 
 
 class OUIABase:
@@ -59,7 +59,7 @@ class OUIAGenericView(OUIABase, View):
             component_type=type(self).__name__,
             component_id=component_id,
             namespace=self.OUIA_NAMESPACE,
-            **kwargs
+            **kwargs,
         )
 
 
