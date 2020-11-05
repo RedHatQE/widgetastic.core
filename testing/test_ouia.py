@@ -6,17 +6,15 @@ from widgetastic.widget import View
 
 
 class Button(OUIAGenericWidget):
-    OUIA_NAMESPACE = "PF"
-    pass
+    OUIA_COMPONENT_TYPE = "PF/Button"
 
 
 class SelectOption(OUIAGenericWidget):
-    OUIA_NAMESPACE = "PF"
-    pass
+    OUIA_COMPONENT_TYPE = "PF/SelectOption"
 
 
 class Select(OUIAGenericView):
-    OUIA_NAMESPACE = "PF"
+    OUIA_COMPONENT_TYPE = "PF/Select"
     first_option = SelectOption("first option")
     second_option = SelectOption("second option")
 
@@ -34,7 +32,7 @@ def testing_view(browser):
     return TestView(browser)
 
 
-def test_basic(browser, testing_view):
+def test_basic(testing_view):
     assert testing_view.is_displayed
     assert testing_view.button.is_displayed
     assert testing_view.select.is_displayed
