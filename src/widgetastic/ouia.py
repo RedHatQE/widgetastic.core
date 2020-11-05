@@ -19,8 +19,7 @@ class OUIABase:
 
     ROOT = ParametrizedLocator(".//*[@data-ouia-component-type={@component_type}{@component_id}]")
 
-    def __init__(self, component_type, component_id=None, namespace=None, **kwargs):
-        component_type = f"{namespace}/{component_type}" if namespace else component_type
+    def __init__(self, component_type, component_id=None, **kwargs):
         self.component_type = quote(component_type)
         component_id = f" and @data-ouia-component-id={quote(component_id)}" if component_id else ""
         self.component_id = component_id
@@ -50,15 +49,14 @@ class OUIAGenericView(OUIABase, View):
         component_id: value of data-ouia-component-id attribute.
     """
 
-    OUIA_NAMESPACE = None
+    OUIA_COMPONENT_TYPE = None
 
     def __init__(self, parent, component_id=None, logger=None, **kwargs):
         super().__init__(
             parent=parent,
             logger=logger,
-            component_type=type(self).__name__,
+            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=component_id,
-            namespace=self.OUIA_NAMESPACE,
             **kwargs,
         )
 
@@ -74,13 +72,12 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
         component_id: value of data-ouia-component-id attribute.
     """
 
-    OUIA_NAMESPACE = None
+    OUIA_COMPONENT_TYPE = None
 
     def __init__(self, parent, component_id=None, logger=None):
         super().__init__(
             parent=parent,
             logger=logger,
-            component_type=type(self).__name__,
+            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=component_id,
-            namespace=self.OUIA_NAMESPACE,
         )
