@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import inspect
 from collections import namedtuple
+from logging import Logger
 from textwrap import dedent
 from typing import Any
+from typing import cast
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
+from typing import Type
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -35,12 +37,12 @@ from .exceptions import UnexpectedAlertPresentException
 from .exceptions import WebDriverException
 from .log import create_widget_logger
 from .log import null_logger
+from .types import ElementParent
+from .types import LocatorAlias
+from .types import LocatorProtocol
 from .utils import crop_string_middle
 from .utils import retry_stale_element
 from .xpath import normalize_space
-from widgetastic.types import DefaultPluginType
-from widgetastic.types import ElementParent
-from widgetastic.types import LocatorAlias
 
 if TYPE_CHECKING:
     from .widget.base import Widget
@@ -165,9 +167,9 @@ class Browser(object):
     def __init__(
         self,
         selenium: WebDriver,
-        plugin_class: Optional[DefaultPluginType] = None,
-        logger: None = None,
-        extra_objects: Optional[Any] = None,
+        plugin_class: Optional[Type[DefaultPlugin]] = None,
+        logger: Optional[Logger] = None,
+        extra_objects: Optional[Dict[Any, Any]] = None,
     ) -> None:
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
@@ -211,13 +213,13 @@ class Browser(object):
         return int(version.split(".")[0])
 
     @property
-    def browser(self) -> Browser:
+    def browser(self) -> "Browser":
         """Implemented so :py:class:`widgetastic.widget.View` does not have to check the
         instance of its parent. This property exists there so here it just stops the chain"""
         return self
 
     @property
-    def root_browser(self) -> Browser:
+    def root_browser(self) -> "Browser":
         return self
 
     @property
@@ -234,13 +236,14 @@ class Browser(object):
         if isinstance(locator, WebElement):
             return locator
         if hasattr(locator, "__element__"):
-            return locator.__element__()
+            # https://github.com/python/mypy/issues/1424
+            return cast(Widget, locator).__element__()
         try:
             return Locator(locator)
         except TypeError:
             if hasattr(locator, "__locator__"):
                 # Deal with the case when __locator__ returns a webelement.
-                loc = locator.__locator__()
+                loc = cast(LocatorProtocol, locator).__locator__()
                 if isinstance(loc, WebElement):
                     return loc
             raise LocatorNotImplemented(
@@ -248,9 +251,9 @@ class Browser(object):
             ) from None
 
     @staticmethod
-    def _locator_force_visibility_check(locator: LocatorAlias) -> None:
+    def _locator_force_visibility_check(locator: LocatorAlias) -> Optional[bool]:
         if hasattr(locator, "__locator__") and hasattr(locator, "CHECK_VISIBILITY"):
-            return locator.CHECK_VISIBILITY
+            return cast(LocatorProtocol, locator).CHECK_VISIBILITY
         else:
             return None
 
