@@ -13,8 +13,8 @@ from typing_extensions import Protocol
 if TYPE_CHECKING:
     from .browser import Browser
     from .utils import Version
-    from .widget.base import Widget
     from .widget.base import View
+    from .widget.base import Widget
     from .widget.base import ClickableMixin
 
 

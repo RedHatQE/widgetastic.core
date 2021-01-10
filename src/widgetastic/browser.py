@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import inspect
-from collections import namedtuple
 from logging import Logger
 from textwrap import dedent
 from typing import Any
 from typing import cast
 from typing import Dict
 from typing import List
+from typing import NamedTuple
 from typing import Optional
 from typing import Set
 from typing import Type
@@ -47,8 +47,8 @@ from .xpath import normalize_space
 if TYPE_CHECKING:
     from .widget.base import Widget
 
-Size = namedtuple("Size", ["width", "height"])
-Location = namedtuple("Location", ["x", "y"])
+Size = NamedTuple("Size", [("width", int), ("height", int)])
+Location = NamedTuple("Location", [("x", int), ("y", int)])
 
 
 class DefaultPlugin(object):
@@ -769,7 +769,7 @@ class Browser(object):
         """Returns element's location as a tuple of x/y."""
         size = self.size_of(*args, **kwargs)
         location = self.location_of(*args, **kwargs)
-        return Location(location.x + size.width / 2, location.y + size.height / 2)
+        return Location(int(location.x + size.width / 2), int(location.y + size.height / 2))
 
     def clear(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clears a text input with given locator."""
