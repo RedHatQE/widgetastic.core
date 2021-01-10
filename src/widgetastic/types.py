@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .browser import Browser
     from .utils import Version
     from .widget.base import Widget
+    from .widget.base import View
     from .widget.base import ClickableMixin
 
 
@@ -28,7 +29,7 @@ LocatorAlias = Union[str, Dict[str, str], WebElement, LocatorProtocol, "Widget"]
 
 ElementParent = Union[LocatorAlias, "Browser"]
 
-ViewParent = ["Browser", "View"]
+ViewParent = Union["Browser", "View"]
 
 VString = Union[str, "Version", List[Union[int, str]], Tuple[Union[int, str]]]
 
