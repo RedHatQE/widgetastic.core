@@ -237,7 +237,7 @@ class Browser(object):
             return locator
         if hasattr(locator, "__element__"):
             # https://github.com/python/mypy/issues/1424
-            return cast(Widget, locator).__element__()
+            return cast("Widget", locator).__element__()
         try:
             return Locator(locator)
         except TypeError:
