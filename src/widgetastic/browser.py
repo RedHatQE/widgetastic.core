@@ -538,8 +538,7 @@ class Browser(object):
                 self.move_to_element(parent)
                 return el
 
-        # FF60+ doesn't raise MoveTargetOutOfBoundsException. it just silently does nothing
-        if self.browser_type == "firefox" and self.browser_version >= 60 and force_scroll:
+        if force_scroll:
             self.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
 
         move_to = ActionChains(self.selenium).move_to_element(el)
