@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 import inspect
-from collections import namedtuple
+from logging import Logger
 from textwrap import dedent
+from typing import Any
+from typing import cast
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Optional
+from typing import Set
+from typing import Type
+from typing import TYPE_CHECKING
+from typing import Union
 
 from cached_property import cached_property
 from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.remote.file_detector import UselessFileDetector
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
@@ -25,12 +37,18 @@ from .exceptions import UnexpectedAlertPresentException
 from .exceptions import WebDriverException
 from .log import create_widget_logger
 from .log import null_logger
+from .types import ElementParent
+from .types import LocatorAlias
+from .types import LocatorProtocol
 from .utils import crop_string_middle
 from .utils import retry_stale_element
 from .xpath import normalize_space
 
-Size = namedtuple("Size", ["width", "height"])
-Location = namedtuple("Location", ["x", "y"])
+if TYPE_CHECKING:
+    from .widget.base import Widget
+
+Size = NamedTuple("Size", [("width", int), ("height", int)])
+Location = NamedTuple("Location", [("x", int), ("y", int)])
 
 
 class DefaultPlugin(object):
@@ -42,7 +60,7 @@ class DefaultPlugin(object):
         }
         """
 
-    def __init__(self, browser):
+    def __init__(self, browser: "Browser") -> None:
         self.browser = browser
 
     @cached_property
@@ -50,7 +68,7 @@ class DefaultPlugin(object):
         """Logger with prepended plugin name."""
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
-    def ensure_page_safe(self, timeout="10s"):
+    def ensure_page_safe(self, timeout: str = "10s") -> None:
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
 
         def _check():
@@ -63,19 +81,19 @@ class DefaultPlugin(object):
 
         wait_for(_check, timeout=timeout, delay=0.2, very_quiet=True)
 
-    def after_click(self, element, locator):
+    def after_click(self, element: WebElement, locator: LocatorAlias) -> None:
         """Invoked after clicking on an element."""
         pass
 
-    def after_click_safe_timeout(self, element, locator):
+    def after_click_safe_timeout(self, element: WebElement, locator: LocatorAlias) -> None:
         """Invoked after clicking on an element and :py:meth:`ensure_page_safe` failing to wait."""
         pass
 
-    def before_click(self, element, locator):
+    def before_click(self, element: WebElement, locator: LocatorAlias) -> None:
         """Invoked before clicking on an element."""
         pass
 
-    def after_keyboard_input(self, element, keyboard_input):
+    def after_keyboard_input(self, element: WebElement, keyboard_input: Optional[str]) -> None:
         """Invoked after sending keys into an element.
 
         Args:
@@ -83,7 +101,7 @@ class DefaultPlugin(object):
         """
         pass
 
-    def before_keyboard_input(self, element, keyboard_input):
+    def before_keyboard_input(self, element: WebElement, keyboard_input: Optional[str]) -> None:
         """Invoked after sending keys into an element.
 
         Args:
@@ -146,7 +164,13 @@ class Browser(object):
             a dictionary in this parameter, where you can store all these additional objects.
     """
 
-    def __init__(self, selenium, plugin_class=None, logger=None, extra_objects=None):
+    def __init__(
+        self,
+        selenium: WebDriver,
+        plugin_class: Optional[Type[DefaultPlugin]] = None,
+        logger: Optional[Logger] = None,
+        extra_objects: Optional[Dict[Any, Any]] = None,
+    ) -> None:
         self.selenium = selenium
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
@@ -154,48 +178,48 @@ class Browser(object):
         self.extra_objects = extra_objects or {}
 
     @property
-    def url(self):
+    def url(self) -> str:
         """Returns the current URL of the browser."""
         result = self.selenium.current_url
         self.logger.debug("current_url -> %r", result)
         return result
 
     @url.setter
-    def url(self, address):
+    def url(self, address: str) -> None:
         """Opens the address in the browser."""
         self.logger.info("Opening URL: %r", address)
         self.selenium.get(address)
 
     @property
-    def title(self):
+    def title(self) -> str:
         """Returns current title"""
         current_title = self.selenium.title
         self.logger.info("Current title: %r", current_title)
         return current_title
 
     @property
-    def handles_alerts(self):
+    def handles_alerts(self) -> bool:
         return self.selenium.capabilities.get("handlesAlerts", True)
 
     @property
-    def browser_type(self):
+    def browser_type(self) -> str:
         return self.selenium.capabilities.get("browserName")
 
     @property
-    def browser_version(self):
+    def browser_version(self) -> int:
         version = self.selenium.desired_capabilities.get("browserVersion")
         if not version:
             version = self.selenium.desired_capabilities.get("version")
         return int(version.split(".")[0])
 
     @property
-    def browser(self):
+    def browser(self) -> "Browser":
         """Implemented so :py:class:`widgetastic.widget.View` does not have to check the
         instance of its parent. This property exists there so here it just stops the chain"""
         return self
 
     @property
-    def root_browser(self):
+    def root_browser(self) -> "Browser":
         return self
 
     @property
@@ -207,18 +231,19 @@ class Browser(object):
         raise NotImplementedError("You have to implement product_version")
 
     @staticmethod
-    def _process_locator(locator):
+    def _process_locator(locator: LocatorAlias) -> Union[WebElement, Locator]:
         """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
         if isinstance(locator, WebElement):
             return locator
         if hasattr(locator, "__element__"):
-            return locator.__element__()
+            # https://github.com/python/mypy/issues/1424
+            return cast("Widget", locator).__element__()
         try:
             return Locator(locator)
         except TypeError:
             if hasattr(locator, "__locator__"):
                 # Deal with the case when __locator__ returns a webelement.
-                loc = locator.__locator__()
+                loc = cast(LocatorProtocol, locator).__locator__()
                 if isinstance(loc, WebElement):
                     return loc
             raise LocatorNotImplemented(
@@ -226,23 +251,23 @@ class Browser(object):
             ) from None
 
     @staticmethod
-    def _locator_force_visibility_check(locator):
+    def _locator_force_visibility_check(locator: LocatorAlias) -> Optional[bool]:
         if hasattr(locator, "__locator__") and hasattr(locator, "CHECK_VISIBILITY"):
-            return locator.CHECK_VISIBILITY
+            return cast(LocatorProtocol, locator).CHECK_VISIBILITY
         else:
             return None
 
     @retry_stale_element
     def elements(
         self,
-        locator,
-        parent=None,
-        check_visibility=False,
-        check_safe=True,
-        force_check_safe=False,
+        locator: LocatorAlias,
+        parent: Optional[ElementParent] = None,
+        check_visibility: bool = False,
+        check_safe: bool = True,
+        force_check_safe: bool = False,
         *args,
         **kwargs
-    ):
+    ) -> List[WebElement]:
         """Method that resolves locators into selenium webelements.
 
         Args:
@@ -303,14 +328,14 @@ class Browser(object):
 
     def wait_for_element(
         self,
-        locator,
-        parent=None,
-        visible=False,
-        timeout=5,
-        delay=0.2,
-        exception=True,
-        ensure_page_safe=False,
-    ):
+        locator: str,
+        parent: Optional[ElementParent] = None,
+        visible: bool = False,
+        timeout: Union[float, int] = 5,
+        delay: float = 0.2,
+        exception: bool = True,
+        ensure_page_safe: bool = False,
+    ) -> Optional[WebElement]:
         """Wait for presence or visibility of elements specified by a locator.
 
         Args:
@@ -359,7 +384,7 @@ class Browser(object):
         # wait_for returns NamedTuple, return first item from 'out', the WebElement
         return result.out[0]
 
-    def element(self, locator, *args, **kwargs):
+    def element(self, locator: LocatorAlias, *args, **kwargs) -> WebElement:
         """Returns one :py:class:`selenium.webdriver.remote.webelement.WebElement`
 
         See: :py:meth:`elements`
@@ -381,16 +406,16 @@ class Browser(object):
                 "Could not find an element {}".format(repr(locator))
             ) from None
 
-    def perform_click(self):
+    def perform_click(self) -> None:
         """Clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).click().perform()
 
-    def perform_double_click(self):
+    def perform_double_click(self) -> None:
         """Double-clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).double_click().perform()
 
     @retry_stale_element
-    def click(self, locator, *args, **kwargs):
+    def click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clicks at a specific element using two separate events (mouse move, mouse click).
 
         Args: See :py:meth:`elements`
@@ -419,7 +444,7 @@ class Browser(object):
             pass
 
     @retry_stale_element
-    def double_click(self, locator, *args, **kwargs):
+    def double_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Double-clicks at a specific element using two separate events (mouse move, mouse click).
 
         Args: See :py:meth:`elements`
@@ -448,7 +473,7 @@ class Browser(object):
             pass
 
     @retry_stale_element
-    def raw_click(self, locator, *args, **kwargs):
+    def raw_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clicks at a specific element using the direct event.
 
         Args: See :py:meth:`elements`
@@ -476,7 +501,7 @@ class Browser(object):
             pass
 
     @retry_stale_element
-    def is_displayed(self, locator, *args, **kwargs):
+    def is_displayed(self, locator: LocatorAlias, *args, **kwargs) -> bool:
         """Check if the element represented by the locator is displayed.
 
         Args: See :py:meth:`elements`
@@ -491,7 +516,7 @@ class Browser(object):
             return False
 
     @retry_stale_element
-    def move_to_element(self, locator, *args, **kwargs):
+    def move_to_element(self, locator: LocatorAlias, *args, **kwargs) -> WebElement:
         """Moves the mouse cursor to the middle of the element represented by the locator.
 
         Can handle moving to the ``<option>`` tags or Firefox being pissy and thus making it utilize
@@ -575,7 +600,7 @@ class Browser(object):
                 raise
         return el
 
-    def drag_and_drop(self, source, target):
+    def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
         """Drags the source element and drops it into target.
 
         Args:
@@ -587,7 +612,7 @@ class Browser(object):
             self.element(source), self.element(target)
         ).perform()
 
-    def drag_and_drop_by_offset(self, source, by_x, by_y):
+    def drag_and_drop_by_offset(self, source: LocatorAlias, by_x: int, by_y: int) -> None:
         """Drags the source element and drops it into target.
 
         Args:
@@ -599,7 +624,9 @@ class Browser(object):
             self.element(source), by_x, by_y
         ).perform()
 
-    def drag_and_drop_to(self, source, to_x=None, to_y=None):
+    def drag_and_drop_to(
+        self, source: LocatorAlias, to_x: Optional[int] = None, to_y: Optional[int] = None
+    ) -> None:
         """Drags an element to a target location specified by ``to_x`` and ``to_y``
 
         At least one of ``to_x`` or ``to_y`` must be specified.
@@ -619,12 +646,12 @@ class Browser(object):
             to_y = middle.y
         return self.drag_and_drop_by_offset(source, to_x - middle.x, to_y - middle.y)
 
-    def move_by_offset(self, x, y):
+    def move_by_offset(self, x: int, y: int) -> None:
         self.logger.debug("move_by_offset X:%r Y:%r", x, y)
         ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     @retry_stale_element
-    def execute_script(self, script, *args, **kwargs):
+    def execute_script(self, script: str, *args, **kwargs) -> Any:
         """Executes a script."""
         from .widget import Widget
 
@@ -638,12 +665,12 @@ class Browser(object):
                 processed_args.append(arg)
         return self.selenium.execute_script(dedent(script), *processed_args, **kwargs)
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Triggers a page refresh."""
         return self.selenium.refresh()
 
     @retry_stale_element
-    def classes(self, locator, *args, **kwargs):
+    def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
         """Return a list of classes attached to the element.
 
         Args: See :py:meth:`elements`
@@ -674,7 +701,7 @@ class Browser(object):
         self.logger.debug("css classes for %r => %r", locator, result)
         return result
 
-    def tag(self, *args, **kwargs):
+    def tag(self, *args, **kwargs) -> str:
         """Returns the tag name of the element represented by the locator passed.
 
         Args: See :py:meth:`elements`
@@ -685,7 +712,7 @@ class Browser(object):
         return self.element(*args, **kwargs).tag_name
 
     @retry_stale_element
-    def text(self, locator, *args, **kwargs):
+    def text(self, locator: LocatorAlias, *args, **kwargs) -> str:
         """Returns the text inside the element represented by the locator passed.
 
         The returned text is normalized with :py:func:`widgetastic.xpath.normalize_space` as defined
@@ -716,11 +743,11 @@ class Browser(object):
         return result
 
     @retry_stale_element
-    def get_attribute(self, attr, *args, **kwargs):
+    def get_attribute(self, attr: str, *args, **kwargs) -> Optional[str]:
         return self.element(*args, **kwargs).get_attribute(attr)
 
     @retry_stale_element
-    def set_attribute(self, attr, value, *args, **kwargs):
+    def set_attribute(self, attr: str, value: str, *args, **kwargs) -> None:
         return self.execute_script(
             "arguments[0].setAttribute(arguments[1], arguments[2]);",
             self.element(*args, **kwargs),
@@ -728,23 +755,23 @@ class Browser(object):
             value,
         )
 
-    def size_of(self, *args, **kwargs):
+    def size_of(self, *args, **kwargs) -> Size:
         """Returns element's size as a tuple of width/height."""
         size = self.element(*args, **kwargs).size
         return Size(size["width"], size["height"])
 
-    def location_of(self, *args, **kwargs):
+    def location_of(self, *args, **kwargs) -> Location:
         """Returns element's location as a tuple of x/y."""
         location = self.element(*args, **kwargs).location
         return Location(location["x"], location["y"])
 
-    def middle_of(self, *args, **kwargs):
+    def middle_of(self, *args, **kwargs) -> Location:
         """Returns element's location as a tuple of x/y."""
         size = self.size_of(*args, **kwargs)
         location = self.location_of(*args, **kwargs)
-        return Location(location.x + size.width / 2, location.y + size.height / 2)
+        return Location(int(location.x + size.width / 2), int(location.y + size.height / 2))
 
-    def clear(self, locator, *args, **kwargs):
+    def clear(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clears a text input with given locator."""
         self.logger.debug("clear: %r", locator)
         el = self.element(locator, *args, **kwargs)
@@ -764,10 +791,10 @@ class Browser(object):
         self.plugin.after_keyboard_input(el, None)
         return result
 
-    def is_selected(self, *args, **kwargs):
+    def is_selected(self, *args, **kwargs) -> bool:
         return self.element(*args, **kwargs).is_selected()
 
-    def send_keys(self, text, locator, *args, **kwargs):
+    def send_keys(self, text: str, locator: LocatorAlias, *args, **kwargs) -> None:
         """Sends keys to the element. Detects the file inputs automatically.
 
         Args:
@@ -806,7 +833,7 @@ class Browser(object):
             if file_intercept:
                 self.selenium.file_detector = UselessFileDetector()
 
-    def send_keys_to_focused_element(self, *keys):
+    def send_keys_to_focused_element(self, *keys: str) -> None:
         """Sends keys to current focused element.
 
         Args:
@@ -814,7 +841,7 @@ class Browser(object):
         """
         ActionChains(self.selenium).send_keys(*keys).perform()
 
-    def copy(self, locator, *args, **kwargs):
+    def copy(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Select all and copy to clipboard."""
         self.logger.debug("copy: %r", locator)
         el = self.element(locator)
@@ -828,7 +855,7 @@ class Browser(object):
         ).perform()
         self.plugin.after_keyboard_input(el, None)
 
-    def paste(self, locator, *args, **kwargs):
+    def paste(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Paste from clipboard to current element."""
         self.logger.debug("paste: %r", locator)
         el = self.element(locator)
@@ -839,7 +866,7 @@ class Browser(object):
         ).perform()
         self.plugin.after_keyboard_input(el, None)
 
-    def get_alert(self):
+    def get_alert(self) -> Alert:
         """Returns the current alert object.
 
         Raises:
@@ -850,7 +877,7 @@ class Browser(object):
         return self.selenium.switch_to.alert
 
     @property
-    def alert_present(self):
+    def alert_present(self) -> bool:
         """Checks whether there is any alert present.
 
         Returns:
@@ -864,7 +891,7 @@ class Browser(object):
         else:
             return True
 
-    def dismiss_any_alerts(self):
+    def dismiss_any_alerts(self) -> None:
         """Loops until there are no further alerts present to dismiss.
 
         Useful for handling the cases where the alert pops up multiple times.
@@ -877,7 +904,14 @@ class Browser(object):
         except NoAlertPresentException:  # Just in case. alert_present should be reliable
             pass
 
-    def handle_alert(self, cancel=False, wait=30.0, squash=False, prompt=None, check_present=False):
+    def handle_alert(
+        self,
+        cancel: bool = False,
+        wait: float = 30.0,
+        squash: bool = False,
+        prompt: Optional[str] = None,
+        check_present: bool = False,
+    ) -> Optional[bool]:
         """Handles an alert popup.
 
         Args:
@@ -933,32 +967,32 @@ class Browser(object):
             else:
                 raise
 
-    def switch_to_frame(self, *args, **kwargs):
+    def switch_to_frame(self, *args, **kwargs) -> None:
         parent = kwargs.pop("parent", self.browser)
         self.selenium.switch_to.frame(self.element(parent=parent, *args, **kwargs))
 
-    def switch_to_main_frame(self):
+    def switch_to_main_frame(self) -> None:
         self.selenium.switch_to.default_content()
 
-    def get_current_location(self):
+    def get_current_location(self) -> str:
         # useful if it is necessary to recognize current frame
         return self.execute_script("return self.location.toString()")
 
     @property
-    def current_window_handle(self):
+    def current_window_handle(self) -> str:
         """Returns the current window handle"""
         window_handle = self.selenium.current_window_handle
         self.logger.debug("current_window_handle -> %r", window_handle)
         return window_handle
 
     @property
-    def window_handles(self):
+    def window_handles(self) -> List[str]:
         """Returns all available window handles"""
         handles = self.selenium.window_handles
         self.logger.debug("window_handles -> %r", handles)
         return handles
 
-    def switch_to_window(self, window_handle):
+    def switch_to_window(self, window_handle: str) -> None:
         """switches focus to the specified window
 
         Args:
@@ -967,7 +1001,7 @@ class Browser(object):
         self.logger.debug("switch_to_window -> %r", window_handle)
         self.selenium.switch_to.window(window_handle)
 
-    def new_window(self, url, focus=False):
+    def new_window(self, url: str, focus: bool = False) -> str:
         """Opens the url in new window of the browser.
 
         Args:
@@ -985,7 +1019,7 @@ class Browser(object):
             self.switch_to_window(new_handle)
         return new_handle
 
-    def close_window(self, window_handle=None):
+    def close_window(self, window_handle: Optional[str] = None) -> None:
         """Close window form browser
 
         Args:
@@ -1003,7 +1037,7 @@ class Browser(object):
         else:
             self.selenium.close()
 
-    def save_screenshot(self, filename):
+    def save_screenshot(self, filename: str) -> None:
         """Saves a screenshot of current browser window to a PNG image file.
 
         Args:
@@ -1028,18 +1062,23 @@ class BrowserParentWrapper(object):
            defined.
     """
 
-    def __init__(self, o, browser):
+    def __init__(self, o: "Widget", browser: Browser) -> None:
         self._o = o
         self._browser = browser
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, BrowserParentWrapper):
             return False
         return self._o == other._o and self._browser == other._browser
 
     def elements(
-        self, locator, parent=None, check_visibility=False, check_safe=True, force_check_safe=False
-    ):
+        self,
+        locator: LocatorAlias,
+        parent: Optional[ElementParent] = None,
+        check_visibility: bool = False,
+        check_safe: bool = True,
+        force_check_safe: bool = False,
+    ) -> List[WebElement]:
         return self._browser.elements(
             locator,
             parent=parent or self._o,
@@ -1048,7 +1087,7 @@ class BrowserParentWrapper(object):
             force_check_safe=force_check_safe,
         )
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """Route all other attribute requests into the parent object's browser. Black magic included
 
         Here is the explanation:
@@ -1070,5 +1109,5 @@ class BrowserParentWrapper(object):
             value = function.__get__(self, BrowserParentWrapper)
         return value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{} for {!r}>".format(type(self).__name__, self._o)

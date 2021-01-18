@@ -11,7 +11,7 @@ on:
 jobs:
   codechecks:
     name: 📃 Code quality [pre-commit]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout
@@ -20,8 +20,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
-          architecture: 'x64'
+          python-version: "3.8"
+          architecture: "x64"
 
       - name: Pre Commit Checks
         uses: pre-commit/action@v2.0.0
@@ -33,12 +33,12 @@ jobs:
   unit-tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
-    runs-on: ubuntu-latest
-    needs: [ codechecks ]
+    runs-on: ubuntu-20.04
+    needs: [codechecks]
     strategy:
       matrix:
-        browser: [ chrome, firefox ]
-        python-version: [ pypy3, 3.6, 3.7, 3.8 ]
+        browser: [chrome, firefox]
+        python-version: [pypy3, 3.6, 3.7, 3.8]
 
     steps:
       - name: Pull selenium-standalone:latest
@@ -72,7 +72,7 @@ jobs:
 
   docs:
     name: Docs Build
-    needs: [ unit-tests ]
+    needs: [unit-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -100,7 +100,7 @@ jobs:
   platform:
     # Check package properly install on different platform (dev setup)
     name: 💻 Platform-${{ matrix.os }}
-    needs: [ unit-tests ]
+    needs: [unit-tests]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -113,8 +113,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
-          architecture: 'x64'
+          python-version: "3.8"
+          architecture: "x64"
 
       - name: Development setup on ${{ matrix.os }}
         run: |
@@ -125,7 +125,7 @@ jobs:
 
   package:
     name: ⚙️ Build & Verify Package
-    needs: [ unit-tests ]
+    needs: [unit-tests]
     runs-on: ubuntu-latest
 
     steps:
@@ -135,8 +135,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
-          architecture: 'x64'
+          python-version: "3.8"
+          architecture: "x64"
 
       - name: Build and verify with twine
         run: |

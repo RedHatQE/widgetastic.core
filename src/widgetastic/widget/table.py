@@ -31,9 +31,9 @@ from widgetastic.xpath import quote
 
 # Python 3.7 formalised the RE pattern type, so let's use that if we can
 try:
-    Pattern = re.Pattern
+    Pattern = re.Pattern  # type: ignore
 except AttributeError:
-    Pattern = re._pattern_type
+    Pattern = re._pattern_type  # type: ignore
 
 
 def resolve_table_widget(parent, wcls):
