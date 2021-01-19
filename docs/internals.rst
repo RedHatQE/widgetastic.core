@@ -40,10 +40,9 @@ This library is already in the requirements, so it is not necessary to install i
 Automatic visibility precedence selection
 -----------------------------------------
 
-Under normal circumstances, Selenium's ``find_element`` always returns the first element from the query result. But what if there are multiple such elements matching the query, the first one is invisible for a reason and the second one is displayed?
+Under normal circumstances, Selenium's ``find_element`` always returns the first element from the query result. But what if there are multiple elements matching the query, the first one being for some reason invisible, and the second one displayed?
 
-Widgetastic's :py:meth:`widgetastic.browser.Browser.element` checks for visibility if there are multiple elements as a result of the query. It returns the first visible element, and if none of the elements are visible, it returns the first one as in the raw Selenium.
-
+Widgetastic's :py:meth:`widgetastic.browser.Browser.element`, :py:meth:`widgetastic.browser.Browser.elements`, and :py:meth:`widgetastic.browser.Browser.wait_for_element` browser methods allow for visibility checking in this case. If the keyword argument ``check_visiblity=True`` is passed to ``elements``, if ``visible=True`` is passed to ``wait_for_elements``, or if the locator object (e.g., a :py:class:`widgetastic.widget.Widget` object) passed to ``element`` contains a ``__locator__`` method as well as a ``CHECK_VISIBILITY=True`` attribute, then the method will return only the visible matching element(s).
 
 .. `Widget system`:
 
