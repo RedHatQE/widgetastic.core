@@ -2,6 +2,14 @@
 import functools
 import logging
 import time
+from typing import Any
+from typing import Callable
+from typing import Iterator
+from typing import MutableMapping
+from typing import Optional
+from typing import Tuple
+from typing import TypeVar
+from typing import Union
 
 from .exceptions import DoNotReadThisWidget
 
@@ -9,8 +17,10 @@ from .exceptions import DoNotReadThisWidget
 null_logger = logging.getLogger("widgetastic_null")
 null_logger.addHandler(logging.NullHandler())
 
+F = TypeVar("F", bound=Callable[..., Any])
 
-def call_sig(args, kwargs):
+
+def call_sig(args: Iterator[Any], kwargs: MutableMapping[str, Any]) -> str:
     """Generates a function-like signature of function called with certain parameters.
 
     Args:
@@ -30,15 +40,19 @@ def call_sig(args, kwargs):
 class PrependParentsAdapter(logging.LoggerAdapter):
     """This class ensures the path to the widget is represented in the log records."""
 
-    def process(self, msg, kwargs):
+    def process(
+        self, msg: str, kwargs: MutableMapping[str, Any]
+    ) -> Tuple[str, MutableMapping[str, Any]]:
         # Sanitizing %->%% for formatter working properly
         return "[{}]: {}".format(self.extra["widget_path"].replace("%", "%%"), msg), kwargs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}({!r}, {!r})".format(type(self).__name__, self.logger, self.extra["widget_path"])
 
 
-def create_widget_logger(widget_path, logger=None):
+def create_widget_logger(
+    widget_path: str, logger: Optional[logging.Logger] = None
+) -> PrependParentsAdapter:
     """Create a logger that prepends the ``widget_path`` to the log records.
 
     Args:
@@ -51,7 +65,7 @@ def create_widget_logger(widget_path, logger=None):
     return PrependParentsAdapter(logger or null_logger, {"widget_path": widget_path})
 
 
-def _create_logger_appender(parent_logger, suffix):
+def _create_logger_appender(parent_logger: logging.Logger, suffix: str) -> PrependParentsAdapter:
     """Generic name-append logger creator."""
     if isinstance(parent_logger, PrependParentsAdapter):
         widget_path = "{}{}".format(parent_logger.extra["widget_path"], suffix)
@@ -62,7 +76,7 @@ def _create_logger_appender(parent_logger, suffix):
     return PrependParentsAdapter(logger, {"widget_path": widget_path.lstrip("/")})
 
 
-def create_child_logger(parent_logger, child_name):
+def create_child_logger(parent_logger: logging.Logger, child_name: str) -> PrependParentsAdapter:
     """Creates a logger for a standard child widget.
 
     Args:
@@ -76,7 +90,9 @@ def create_child_logger(parent_logger, child_name):
     return _create_logger_appender(parent_logger, "/{}".format(child_name))
 
 
-def create_item_logger(parent_logger, item):
+def create_item_logger(
+    parent_logger: logging.Logger, item: Union[str, int]
+) -> PrependParentsAdapter:
     """Creates a logger for a widget that is inside iteration - referred to by index or key.
 
     Args:
@@ -90,7 +106,7 @@ def create_item_logger(parent_logger, item):
     return _create_logger_appender(parent_logger, "[{!r}]".format(item))
 
 
-def logged(log_args=False, log_result=False):
+def logged(log_args: bool = False, log_result: bool = False) -> Callable[[F], F]:
     """Decorator that logs entry and exit to a method and also times the execution.
 
     It assumes that the object where you decorate the methods on has a ``.logger`` attribute.
