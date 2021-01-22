@@ -1,3 +1,10 @@
+from logging import Logger
+from typing import Any
+from typing import MutableMapping
+from typing import Optional
+
+from widgetastic.browser import Browser
+from widgetastic.types import ViewParent
 from widgetastic.utils import ParametrizedLocator
 from widgetastic.widget.base import ClickableMixin
 from widgetastic.widget.base import View
@@ -18,23 +25,27 @@ class OUIABase:
     """
 
     ROOT = ParametrizedLocator(".//*[@data-ouia-component-type={@component_type}{@component_id}]")
+    browser: Browser
 
-    def __init__(self, component_type, component_id=None, **kwargs):
+    def _set_attrs(
+        self,
+        component_type: str,
+        component_id: Optional[str] = None,
+    ) -> None:
         self.component_type = quote(component_type)
         component_id = f" and @data-ouia-component-id={quote(component_id)}" if component_id else ""
         self.component_id = component_id
         self.locator = self.ROOT.locator
-        super().__init__(**kwargs)
 
     @property
-    def is_safe(self):
+    def is_safe(self) -> bool:
         """
         An attribute called data-ouia-safe, which is True only when the component is in a static
         state, i.e. no animations are occurring. At all other times, this value MUST be False.
         """
         return "true" in self.browser.get_attribute("data-ouia-safe", self)
 
-    def __locator__(self):
+    def __locator__(self) -> ParametrizedLocator:
         return self.ROOT
 
 
@@ -49,14 +60,22 @@ class OUIAGenericView(OUIABase, View):
         component_id: value of data-ouia-component-id attribute.
     """
 
-    OUIA_COMPONENT_TYPE = None
+    OUIA_COMPONENT_TYPE: str
 
-    def __init__(self, parent, component_id=None, logger=None, **kwargs):
+    def __init__(
+        self,
+        parent: ViewParent,
+        component_id: Optional[str] = None,
+        logger: Optional[Logger] = None,
+        **kwargs: MutableMapping[str, Any],
+    ) -> None:
+        self._set_attrs(
+            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
+            component_id=component_id,
+        )
         super().__init__(
             parent=parent,
             logger=logger,
-            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
-            component_id=component_id,
             **kwargs,
         )
 
@@ -72,12 +91,16 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
         component_id: value of data-ouia-component-id attribute.
     """
 
-    OUIA_COMPONENT_TYPE = None
+    OUIA_COMPONENT_TYPE: str
 
-    def __init__(self, parent, component_id=None, logger=None):
-        super().__init__(
-            parent=parent,
-            logger=logger,
+    def __init__(
+        self,
+        parent: ViewParent,
+        component_id: Optional[str] = None,
+        logger: Optional[Logger] = None,
+    ) -> None:
+        self._set_attrs(
             component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=component_id,
         )
+        super().__init__(parent=parent, logger=logger)
