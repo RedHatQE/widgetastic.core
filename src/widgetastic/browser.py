@@ -28,6 +28,7 @@ from smartloc import Locator
 from wait_for import TimedOutError
 from wait_for import wait_for
 
+from .exceptions import ElementNotInteractableException
 from .exceptions import LocatorNotImplemented
 from .exceptions import MoveTargetOutOfBoundsException
 from .exceptions import NoAlertPresentException
@@ -556,6 +557,11 @@ class Browser(object):
                         locator
                     )
                 ) from None
+        except ElementNotInteractableException:
+            # ChromeDriver 89 started throwing this exception if an element is hidden, because it
+            # has no size and location.
+            if self.browser_type == "chrome" and self.browser_version >= 89:
+                pass
         except WebDriverException as e:
             # Handling Edge weirdness
             if self.browser_type == "MicrosoftEdge" and "Invalid argument" in e.msg:

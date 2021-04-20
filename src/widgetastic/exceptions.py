@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import MoveTargetOutOfBoundsException
 from selenium.common.exceptions import NoAlertPresentException
 from selenium.common.exceptions import NoSuchElementException
@@ -28,6 +29,7 @@ class RowNotFound(IndexError, WidgetasticException):
 
 
 __all__ = [
+    "ElementNotInteractableException",
     "MoveTargetOutOfBoundsException",
     "NoAlertPresentException",
     "NoSuchElementException",
