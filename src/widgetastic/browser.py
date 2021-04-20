@@ -777,11 +777,7 @@ class Browser(object):
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
         result = el.clear()
-        if (
-            el.get_attribute("value")
-            and self.browser_type == "chrome"
-            and self.browser_version >= 83
-        ):
+        if el.get_attribute("value") and self.browser_type == "chrome":
             # Chrome is not able to clear input with element.clear() method, use javascript instead
             # We need to click on element
             el.click()
