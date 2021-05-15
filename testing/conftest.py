@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-import socket
-import subprocess
 from urllib.request import urlopen
 
 import pytest
+from podman import PodmanClient
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from wait_for import wait_for
@@ -23,25 +22,30 @@ def pytest_addoption(parser):
         choices=("firefox", "chrome"),
         default="firefox",
     )
-    parser.addoption(
-        "--selenium-host",
-        default=None,
-        help="Use the given host for selenium, (hostname only, defaults to http and port 4444)"
-        "instead of running selenium container automatically",
-    )
 
 
 @pytest.fixture(scope="session")
-def ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("10.255.255.255", 1))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
+def podman():
+    runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+    uri = f"unix://{runtime_dir}/podman/podman.sock"
+    with PodmanClient(base_url=uri) as client:
+        yield client
+
+
+@pytest.fixture(scope="session")
+def pod(podman, worker_id):
+    last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
+    localhost_for_worker = f"127.0.0.{last_oktet}"
+    pod = podman.pods.create(
+        f"widgetastic_testing_{last_oktet}",
+        portmappings=[
+            {"host_ip": localhost_for_worker, "container_port": 5999, "host_port": 5999},
+            {"host_ip": localhost_for_worker, "container_port": 4444, "host_port": 4444},
+        ],
+    )
+    pod.start()
+    yield pod
+    pod.remove(force=True)
 
 
 @pytest.fixture(scope="session")
@@ -50,61 +54,40 @@ def browser_name(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def selenium_url(pytestconfig, worker_id):
+def selenium_url(pytestconfig, worker_id, podman, pod):
     """Yields a command executor URL for selenium, and a port mapped for the test page to run on"""
-    given_host = pytestconfig.getoption("--selenium-host")
-
-    webdriver_url = "http://{}:4444/wd/hub"
-    if given_host:
-        yield webdriver_url.format(given_host)
-    else:
-        # use the worker id number from gw# to create hosts on loopback
-        last_octet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
-        localhost_for_worker = f"127.0.0.{last_octet}"
-        ps = subprocess.run(
-            [
-                "podman",
-                "run",
-                "--rm",
-                f"--name=selenium_{last_octet}",
-                "-d",
-                "-p",
-                f"{localhost_for_worker}:4444:4444",
-                "-p",
-                f"{localhost_for_worker}:5999:5999",
-                "--shm-size=2g",
-                "quay.io/redhatqe/selenium-standalone:latest",
-            ],
-            stdout=subprocess.PIPE,
-        )
-
-        yield webdriver_url.format(localhost_for_worker)
-        container_id = ps.stdout.decode("utf-8").strip()
-        subprocess.run(["podman", "kill", container_id], stdout=subprocess.DEVNULL)
+    # use the worker id number from gw# to create hosts on loopback
+    last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
+    localhost_for_worker = f"127.0.0.{last_oktet}"
+    container = podman.containers.create(
+        image="quay.io/redhatqe/selenium-standalone:latest",
+        pod=pod.id,
+        remove=True,
+        name=f"selenium_{worker_id}",
+    )
+    container.start()
+    yield f"http://{localhost_for_worker}:4444/wd/hub"
+    container.remove(force=True)
 
 
 @pytest.fixture(scope="session")
-def testing_page_url(worker_id, ip):
-    port_number = 8080 if worker_id == "master" else int(worker_id.lstrip("gw")) + 8080
-    nginx_address = f"{ip}:{port_number}"
-    ps = subprocess.run(
-        [
-            "podman",
-            "run",
-            "--rm",
-            "-d",
-            "-p",
-            f"{nginx_address}:80",
-            "-v",
-            f"{os.getcwd()}/testing/html:/usr/share/nginx/html:ro",
-            "docker.io/library/nginx:alpine",
+def testing_page_url(worker_id, podman, pod):
+    container = podman.containers.create(
+        image="docker.io/library/nginx:alpine",
+        pod=pod.id,
+        remove=True,
+        name=f"web_server_{worker_id}",
+        mounts=[
+            {
+                "source": f"{os.getcwd()}/testing/html",
+                "target": "/usr/share/nginx/html",
+                "type": "bind",
+            }
         ],
-        stdout=subprocess.PIPE,
     )
-
-    yield f"http://{nginx_address}/testing_page.html"
-    container_id = ps.stdout.decode("utf-8").strip()
-    subprocess.run(["podman", "kill", container_id], stdout=subprocess.DEVNULL)
+    container.start()
+    yield "http://127.0.0.1/testing_page.html"
+    container.remove(force=True)
 
 
 @pytest.fixture(scope="session")
@@ -115,7 +98,6 @@ def selenium_webdriver(browser_name, selenium_url, testing_page_url):
     else:
         desired_capabilities = DesiredCapabilities.CHROME.copy()
         desired_capabilities["chromeOptions"] = {"args": ["--no-sandbox"]}
-
     driver = webdriver.Remote(
         command_executor=selenium_url, desired_capabilities=desired_capabilities
     )
