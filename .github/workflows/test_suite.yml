@@ -58,12 +58,13 @@ jobs:
       - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
         env:
           BROWSER: ${{ matrix.browser }}
+          XDG_RUNTIME_DIR: ${{ github.workspace }}
         run: |
-          loginctl enable-linger $(whoami)
           pip install -U setuptools wheel
           pip install -e .[test]
-          XDG_RUNTIME_DIR=/run/user/$UID systemctl --user enable --now podman.socket
-          XDG_RUNTIME_DIR=/run/user/$UID pytest -n 3
+          mkdir -p ${XDG_RUNTIME_DIR}/podman
+          podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
+          pytest -n 3
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.13
