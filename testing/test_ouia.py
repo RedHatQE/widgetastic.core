@@ -1,25 +1,11 @@
 import pytest
+from ouia_widgets import Button
+from ouia_widgets import Select
 
-from widgetastic.ouia import OUIAGenericView
-from widgetastic.ouia import OUIAGenericWidget
+from widgetastic.ouia.checkbox import Checkbox
+from widgetastic.ouia.input import TextInput
+from widgetastic.ouia.text import Text
 from widgetastic.widget import View
-
-
-class Button(OUIAGenericWidget):
-    OUIA_COMPONENT_TYPE = "PF/Button"
-
-
-class SelectOption(OUIAGenericWidget):
-    OUIA_COMPONENT_TYPE = "PF/SelectOption"
-
-
-class Select(OUIAGenericView):
-    OUIA_COMPONENT_TYPE = "PF/Select"
-    first_option = SelectOption("first option")
-    second_option = SelectOption("second option")
-
-    def choose(self, option):
-        getattr(self, option).click()
 
 
 @pytest.fixture
@@ -28,16 +14,28 @@ def testing_view(browser):
         ROOT = ".//div[@id='ouia']"
         button = Button("This is a button")
         select = Select("some_id")
+        text = Text(component_id="unique_id", component_type="Text")
+        text_input = TextInput(component_id="unique_id", component_type="TextInput")
+        checkbox = Checkbox(component_id="unique_id", component_type="CheckBox")
 
     return TestView(browser)
 
 
-def test_basic(testing_view):
-    assert testing_view.is_displayed
-    assert testing_view.button.is_displayed
-    assert testing_view.select.is_displayed
+@pytest.mark.parametrize("widget", ["button", "select", "text", "text_input", "checkbox"])
+def test_is_displayed(testing_view, widget):
+    widget = getattr(testing_view, widget)
+    assert widget.is_displayed
+
+
+def test_button_click(testing_view):
+    testing_view.button.click()
+
+
+def test_safety(testing_view):
     assert not testing_view.button.is_safe
     assert testing_view.select.is_safe
-    testing_view.button.click()
+
+
+def test_select(testing_view):
     testing_view.select.choose("first_option")
     testing_view.select.choose("second_option")
