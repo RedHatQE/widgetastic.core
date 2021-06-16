@@ -1,6 +1,4 @@
 from logging import Logger
-from typing import Any
-from typing import MutableMapping
 from typing import Optional
 
 from widgetastic.browser import Browser
@@ -24,7 +22,9 @@ class OUIABase:
     https://ouia.readthedocs.io/en/latest/README.html#ouia-component
     """
 
-    ROOT = ParametrizedLocator(".//*[@data-ouia-component-type={@component_type}{@component_id}]")
+    ROOT = ParametrizedLocator(
+        ".//*[@data-ouia-component-type={@component_type}{@component_id_suffix}]"
+    )
     browser: Browser
 
     def _set_attrs(
@@ -33,8 +33,9 @@ class OUIABase:
         component_id: Optional[str] = None,
     ) -> None:
         self.component_type = quote(component_type)
+        self.component_id = quote(component_id)
         component_id = f" and @data-ouia-component-id={quote(component_id)}" if component_id else ""
-        self.component_id = component_id
+        self.component_id_suffix = component_id
         self.locator = self.ROOT.locator
 
     @property
@@ -48,16 +49,21 @@ class OUIABase:
     def __locator__(self) -> ParametrizedLocator:
         return self.ROOT
 
+    def __repr__(self):
+        component_id_suffix = f"; ouia id: {self.component_id}" if self.component_id else ""
+        desc = f"ouia type: {self.component_type}{component_id_suffix}"
+        return f"<{type(self).__name__}; {desc}>"
+
 
 class OUIAGenericView(OUIABase, View):
     """A base class for any OUIA compatible view.
 
     Children classes must have the same name as the value of ``data-ouia-component-type`` attribute
-    of the root HTML element. Besides children classes should define ``OUIA_NAMESPACE`` attribute if
-    it's appicable.
+    of the root HTML element.
 
     Args:
         component_id: value of data-ouia-component-id attribute.
+        component_type: value of data-ouia-component-type attribute.
     """
 
     OUIA_COMPONENT_TYPE: str
@@ -67,10 +73,11 @@ class OUIAGenericView(OUIABase, View):
         parent: ViewParent,
         component_id: Optional[str] = None,
         logger: Optional[Logger] = None,
-        **kwargs: MutableMapping[str, Any],
+        **kwargs,
     ) -> None:
+        component_type: Optional[str] = kwargs.pop("component_type", None)
         self._set_attrs(
-            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
+            component_type=component_type or self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=component_id,
         )
         super().__init__(
@@ -84,11 +91,11 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
     """A base class for any OUIA compatible widget.
 
     Children classes must have the same name as the value of ``data-ouia-component-type`` attribute
-    of the root HTML element. Besides children classes should define ``OUIA_NAMESPACE`` attribute if
-    it's appicable.
+    of the root HTML element.
 
     Args:
         component_id: value of data-ouia-component-id attribute.
+        component_type: value of data-ouia-component-type attribute.
     """
 
     OUIA_COMPONENT_TYPE: str
@@ -98,9 +105,10 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
         parent: ViewParent,
         component_id: Optional[str] = None,
         logger: Optional[Logger] = None,
+        component_type: Optional[str] = None,
     ) -> None:
         self._set_attrs(
-            component_type=self.OUIA_COMPONENT_TYPE or type(self).__name__,
+            component_type=component_type or self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=component_id,
         )
         super().__init__(parent=parent, logger=logger)

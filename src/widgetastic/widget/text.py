@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
 from .base import GenericLocatorWidget
-
-if __name__ == "__main__":
-    pass
 
 
 class Text(GenericLocatorWidget):
