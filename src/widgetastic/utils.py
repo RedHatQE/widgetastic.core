@@ -4,7 +4,18 @@ import functools
 import re
 import string
 import time
+from logging import Logger
 from threading import Lock
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import TYPE_CHECKING
+from typing import Union
+from typing import ValuesView
 
 from cached_property import cached_property
 from selenium.common.exceptions import StaleElementReferenceException
@@ -13,8 +24,12 @@ from smartloc import Locator
 from . import log
 from . import xpath
 
+if TYPE_CHECKING:
+    from .widget.base import View
+    from .widget.base import Widget
 
-class Widgetable(object):
+
+class Widgetable:
     """A base class that should be a base class of anything that can be or act like a Widget."""
 
     #: Sequential counter that gets incremented on each Widgetable creation
@@ -43,7 +58,7 @@ class Widgetable(object):
         return []
 
 
-class Version(object):
+class Version:
     """Version class based on :py:class:`distutils.version.LooseVersion`
 
     Has improved handling of the suffixes and such things.
@@ -56,14 +71,16 @@ class Version(object):
     #: Regular expression that parses the main components of the version (not suffixes)
     component_re = re.compile(r"(?:\s*(\d+|[a-z]+|\.|(?:{})+$))".format(SUFFIXES_STR))
     suffix_item_re = re.compile(r"^([^0-9]+)(\d+(?:\.\d+)?)?$")
+    _latest: "Version"
+    _lowest: "Version"
 
-    def __init__(self, vstring):
+    def __init__(self, vstring: str) -> None:
         self.parse(vstring)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.vstring)
 
-    def parse(self, vstring):
+    def parse(self, vstring: str) -> None:
         if vstring is None:
             raise ValueError("Version string cannot be None")
         elif isinstance(vstring, (list, tuple)):
@@ -90,7 +107,7 @@ class Version(object):
         self.version = components
 
     @cached_property
-    def normalized_suffix(self):
+    def normalized_suffix(self) -> List[Tuple[int, float]]:
         """Turns the string suffixes to numbers. Creates a list of tuples.
 
         The list of tuples is consisting of 2-tuples, the first value says the position of the
@@ -98,21 +115,25 @@ class Version(object):
 
         If the numeric suffix is not present in a field, then the value is 0
         """
-        numberized = []
+        numberized: List[Tuple[int, float]] = []
         if self.suffix is None:
             return numberized
         for item in self.suffix:
-            suff_t, suff_ver = self.suffix_item_re.match(item).groups()
-            if suff_ver is None or len(suff_ver) == 0:
-                suff_ver = 0.0
-            else:
-                suff_ver = float(suff_ver)
-            suff_t = self.SUFFIXES.index(suff_t)
-            numberized.append((suff_t, suff_ver))
+            match = self.suffix_item_re.match(item)
+            suff_t: Union[str, int]
+            suff_ver: Union[str, float]
+            if match:
+                suff_t, suff_ver = match.groups()
+                if suff_ver is None or len(suff_ver) == 0:
+                    suff_ver = 0.0
+                else:
+                    suff_ver = float(suff_ver)
+                suff_t = self.SUFFIXES.index(suff_t)
+                numberized.append((suff_t, suff_ver))
         return numberized
 
     @classmethod
-    def latest(cls):
+    def latest(cls) -> "Version":
         """Returns a specific ``latest`` version which always evaluates as newer."""
         try:
             return cls._latest
@@ -121,7 +142,7 @@ class Version(object):
             return cls._latest
 
     @classmethod
-    def lowest(cls):
+    def lowest(cls) -> "Version":
         """Returns a specific ``lowest`` version which always evaluates as older.
 
         You shall use this value in your :py:class:`VersionPick` dictionaries to match the oldest
@@ -133,13 +154,13 @@ class Version(object):
             cls._lowest = cls("lowest")
             return cls._lowest
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.vstring
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}({})".format(type(self).__name__, repr(self.vstring))
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Version") -> bool:
         try:
             if not isinstance(other, Version):
                 other = Version(other)
@@ -170,16 +191,16 @@ class Version(object):
                 # Both have suffixes, so do some math
                 return self.normalized_suffix < other.normalized_suffix
 
-    def __le__(self, other):
+    def __le__(self, other: "Version") -> bool:
         return self < other or self == other
 
-    def __gt__(self, other):
+    def __gt__(self, other: "Version") -> bool:
         return not self <= other
 
-    def __ge__(self, other):
+    def __ge__(self, other: "Version") -> bool:
         return not self < other
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         try:
             if not isinstance(other, type(self)):
                 other = Version(other)
@@ -189,7 +210,7 @@ class Version(object):
         except Exception:
             return False
 
-    def __contains__(self, ver):
+    def __contains__(self, ver: str) -> bool:
         """Enables to use ``in`` expression for :py:meth:`Version.is_in_series`.
 
         Example:
@@ -204,7 +225,7 @@ class Version(object):
         except Exception:
             return False
 
-    def is_in_series(self, series):
+    def is_in_series(self, series: Union[str, "Version"]) -> bool:
         """This method checks whether the version belongs to another version's series.
 
         Eg.: ``Version("5.5.5.2").is_in_series("5.5")`` returns ``True``
@@ -223,7 +244,7 @@ class Version(object):
                 return False
         return series.version == self.version[: len(series.version)]
 
-    def series(self, n=2):
+    def series(self, n=2) -> str:
         """Returns the series (first ``n`` items) of the version
 
         Args:
@@ -235,7 +256,7 @@ class Version(object):
         return ".".join(self.vstring.split(".")[:n])
 
 
-class ConstructorResolvable(object):
+class ConstructorResolvable:
     """Base class for objects that should be resolvable inside constructors of Widgets etc."""
 
     def resolve(self, parent_object):
@@ -273,19 +294,19 @@ class VersionPick(Widgetable, ConstructorResolvable):
     #: with your own if the new class can be used in </> comparison.
     VERSION_CLASS = Version
 
-    def __init__(self, version_dict):
+    def __init__(self, version_dict: Dict[str, "Widget"]) -> None:
         if not version_dict:
             raise ValueError("Passed an empty version pick dictionary.")
         self.version_dict = version_dict
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}({})".format(type(self).__name__, repr(self.version_dict))
 
     @property
-    def child_items(self):
+    def child_items(self) -> ValuesView["Widget"]:
         return self.version_dict.values()
 
-    def pick(self, version):
+    def pick(self, version: Union[str, Version]) -> Optional["Widget"]:
         """Selects the appropriate value for given version.
 
         Args:
@@ -309,7 +330,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
                 )
             )
 
-    def __get__(self, o, type=None):
+    def __get__(self, o: Optional["Widget"], type=None) -> Optional[Union["VersionPick", "Widget"]]:
         if o is None:
             # On a class, therefore not resolving
             return self
@@ -317,15 +338,17 @@ class VersionPick(Widgetable, ConstructorResolvable):
         result = self.pick(o.browser.product_version)
         if isinstance(result, Widgetable):
             # Resolve it instead of the class
-            return result.__get__(o)
+            return result.__get__(o)  # type: ignore
         else:
             return result
 
-    def resolve(self, parent_object):
+    def resolve(
+        self, parent_object: Optional["Widget"]
+    ) -> Optional[Union["VersionPick", "Widget"]]:
         return self.__get__(parent_object)
 
 
-class Fillable(object):
+class Fillable:
     @classmethod
     def coerce(cls, o):
         """This method serves as a processor for filling values.
@@ -369,11 +392,11 @@ class ParametrizedString(ConstructorResolvable):
 
         "foo"           # No resolution, returns a string
         "foo-{xyz}"     # if xyz=bar in the view context data, then the result is foo-bar
-        "foo-{@xyz}"    # Same as the preceeding string, just the xyz is looked up as view attribute
-        "//a[@id={@boo|quote}]"  # Same as preceeding, but quote the value per XPath specifications
+        "foo-{@xyz}"    # Same as the preceding string, just the xyz is looked up as view attribute
+        "//a[@id={@boo|quote}]"  # Same as preceding, but quote the value per XPath specifications
         '//a[@id={"vm-{@boo}"|quote}]'  # Same as preceding, use double quotes to use maximum of
                                         # single level nesting if you need to use the value in
-                                        # conjuntion with a constant or another value
+                                        # conjunction with a constant or another value
 
     The last example demonstrated is a sort of workaround for the fact there is no suitable XPath
     processing and manipulating library in Python. It is not recommended to exploit that use case
@@ -396,10 +419,10 @@ class ParametrizedString(ConstructorResolvable):
         "title": lambda s: s.title(),
     }
 
-    def __init__(self, template):
+    def __init__(self, template: str) -> None:
         self.template = template
         formatter = string.Formatter()
-        self.format_params = {}
+        self.format_params: Dict[str, Tuple[str, Tuple[str, ...]]] = {}
         for _, param_name, _, _ in formatter.parse(self.template):
             if param_name is None:
                 continue
@@ -411,7 +434,7 @@ class ParametrizedString(ConstructorResolvable):
                 ops = param[1].split("|")
                 self.format_params[param_name] = (context_var_name, tuple(ops))
 
-    def resolve(self, view):
+    def resolve(self, view: "View") -> str:
         """Resolve the parametrized string like on a view."""
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
@@ -438,6 +461,7 @@ class ParametrizedString(ConstructorResolvable):
                     raise AttributeError(
                         "Parameter {} is not present in the context".format(context_name)
                     )
+            op: str
             for op in ops:
                 try:
                     op_callable = self.OPERATIONS[op]
@@ -450,7 +474,7 @@ class ParametrizedString(ConstructorResolvable):
 
         return self.template.format(**format_dict)
 
-    def __get__(self, o, t=None):
+    def __get__(self, o: Any, t=None) -> Union["ParametrizedString", str]:
         if o is None:
             return self
 
@@ -462,7 +486,7 @@ class ParametrizedLocator(ParametrizedString):
     :py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
     """
 
-    def __get__(self, o, t=None):
+    def __get__(self, o: Any, t=None) -> Union["ParametrizedString", Locator]:
         result = super(ParametrizedLocator, self).__get__(o, t)
         if isinstance(result, ParametrizedString):
             return result
@@ -488,22 +512,22 @@ class Parameter(ParametrizedString):
         param: Name of the param.
     """
 
-    def __init__(self, param):
+    def __init__(self, param: str) -> None:
         super(Parameter, self).__init__("{" + param + "}")
 
 
-def _prenormalize_text(text):
+def _prenormalize_text(text: str) -> str:
     """Makes the text lowercase and removes all characters that are not digits, alphas, or spaces"""
     # _'s represent spaces so convert those to spaces too
     return re.sub(r"[^a-z0-9 ]", "", text.strip().lower().replace("_", " "))
 
 
-def _replace_spaces_with(text, delim):
+def _replace_spaces_with(text, delim: str) -> str:
     """Contracts spaces into one character and replaces it with a custom character."""
     return re.sub(r"\s+", delim, text)
 
 
-def attributize_string(text):
+def attributize_string(text: str) -> str:
     """Converts a string to a lowercase string containing only letters, digits and underscores.
 
     Usable for eg. generating object key names.
@@ -512,7 +536,7 @@ def attributize_string(text):
     return _replace_spaces_with(_prenormalize_text(text), "_")
 
 
-def normalize_space(text):
+def normalize_space(text: str) -> str:
     """Works in accordance with the XPath's normalize-space() operator.
 
     `Description <https://developer.mozilla.org/en-US/docs/Web/XPath/Functions/normalize-space>`_:
@@ -524,7 +548,7 @@ def normalize_space(text):
     return _replace_spaces_with(text.strip(), " ")
 
 
-def nested_getattr(o, steps):
+def nested_getattr(o: Any, steps: Union[str, Iterable[str]]) -> Any:
     """Works exactly like :py:func:`getattr`, however it treats ``.`` as the resolution steps,
     therefore allowing you to grab an attribute across objects.
 
@@ -537,9 +561,9 @@ def nested_getattr(o, steps):
     """
     if isinstance(steps, str):
         steps = steps.split(".")
-    if not isinstance(steps, (list, tuple)):
+    if not isinstance(steps, Iterable):
         raise TypeError(
-            "nested_getattr only accepts strings, lists, or tuples!, You passed {}".format(
+            "nested_getattr only accepts strings or Iterable[str], You passed {}".format(
                 type(steps).__name__
             )
         )
@@ -569,7 +593,7 @@ def deflatten_dict(d):
 
         {'a': {'b': 1}}
 
-    The conversion does not recusively follow dictionaries as values.
+    The conversion does not recursively follow dictionaries as values.
 
     Args:
         d: Dictionary
@@ -597,7 +621,7 @@ def deflatten_dict(d):
     return current_dict
 
 
-def crop_string_middle(s, length=32, cropper="..."):
+def crop_string_middle(s: str, length: int = 32, cropper: str = "...") -> str:
     """Crops string by adding ... in the middle.
 
     Args:
@@ -613,7 +637,7 @@ def crop_string_middle(s, length=32, cropper="..."):
     return s[:half] + cropper + s[-half - 1 :]
 
 
-class partial_match(object):  # noqa
+class partial_match:  # noqa
     """Use this to wrap values to be selected using partial matching in various objects.
 
     It proxies all ``get`` operations to the underlying ``item``.
@@ -623,30 +647,30 @@ class partial_match(object):  # noqa
 
     """
 
-    def __init__(self, item):
+    def __init__(self, item: Any) -> None:
         self.item = item
 
-    def __dir__(self):
+    def __dir__(self) -> List[str]:
         return dir(self.item)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         return getattr(self.item, attr)
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr: str, value: Any) -> None:
         if attr == "item":
             super(partial_match, self).__setattr__(attr, value)
         else:
             setattr(self.item, attr, value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "partial_match({!r})".format(self.item)
 
 
-class Ignore(object):
+class Ignore:
     """Descriptor which allows you to place Widget classes on another classes without touching.
 
     Usable eg. when you want to place a class as an attribute on another widgetastic class.
-    Under normal circumstances, it would get instantiated. This decorator ensures the behaviour is
+    Under normal circumstances, it would get instantiated. This decorator ensures the behavior is
     ignored
 
     .. code-block:: python
@@ -669,13 +693,13 @@ class Ignore(object):
         wt_class: The class to be placed on another class
     """
 
-    def __init__(self, wt_class):
+    def __init__(self, wt_class: Type["Widget"]) -> None:
         self.wt_class = wt_class
 
-    def __get__(self, o, t):
+    def __get__(self, o, t) -> Type["Widget"]:
         return self.wt_class
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Ignore({!r})".format(self.wt_class)
 
 
@@ -701,8 +725,10 @@ def retry_stale_element(method):
     return wrap
 
 
-class FillContext(object):
-    def __init__(self, parent, logger=None, **kwargs):
+class FillContext:
+    def __init__(
+        self, parent: Optional["Widget"], logger: Optional[Logger] = None, **kwargs
+    ) -> None:
         self.parent = parent
         self.logger = logger or log.create_child_logger(
             getattr(self.parent, "logger", log.null_logger), "fill"
@@ -710,25 +736,25 @@ class FillContext(object):
         self.__dict__.update(kwargs)
 
 
-class DefaultFillViewStrategy(object):
+class DefaultFillViewStrategy:
     """Used to fill view's widgets by default. It just calls fill for every passed widget"""
 
-    def __init__(self, respect_parent=False):
+    def __init__(self, respect_parent: bool = False) -> None:
         # uses parent fill strategy if set and not overridden in current view
         self.respect_parent = respect_parent
         self._context = FillContext(parent=None)
 
     @property
-    def context(self):
+    def context(self) -> FillContext:
         return self._context
 
     @context.setter
-    def context(self, context):
+    def context(self, context: FillContext) -> None:
         self._context = context
 
-    def fill_order(self, values):
+    def fill_order(self, values) -> List[Tuple[str, Dict]]:
         values = deflatten_dict(values)
-        widget_names = self.context.parent.widget_names
+        widget_names = self.context.parent.widget_names  # type: ignore
         extra_keys = set(values.keys()) - set(widget_names)
         if extra_keys:
             self.context.logger.warning(
@@ -737,11 +763,11 @@ class DefaultFillViewStrategy(object):
             )
         return [
             (n, values[n])
-            for n in self.context.parent.widget_names
+            for n in self.context.parent.widget_names  # type: ignore
             if n in values and values[n] is not None
         ]
 
-    def do_fill(self, values):
+    def do_fill(self, values) -> bool:
         changes = []
         for widget_name, value in self.fill_order(values):
             widget = getattr(self.context.parent, widget_name)
@@ -765,11 +791,13 @@ class WaitFillViewStrategy(DefaultFillViewStrategy):
     So such strategy gives next widget some time to turn up.
     """
 
-    def __init__(self, respect_parent=False, wait_widget="5s"):
+    def __init__(
+        self, respect_parent: bool = False, wait_widget: Union[str, int, float] = "5s"
+    ) -> None:
         self.wait_widget = wait_widget
         super(WaitFillViewStrategy, self).__init__(respect_parent=respect_parent)
 
-    def do_fill(self, values):
+    def do_fill(self, values) -> bool:
         changes = []
         for widget_name, value in self.fill_order(values):
             widget = getattr(self.context.parent, widget_name)
