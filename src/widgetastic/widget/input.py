@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from jsmin import jsmin
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 
@@ -24,17 +23,17 @@ class BaseInput(Widget):
         self.id = None
         if name or id:
             if name is not None:
-                id_attr = "@name={}".format(quote(name))
+                id_attr = f"@name={quote(name)}"
                 self.name = name
             elif id is not None:
-                id_attr = "@id={}".format(quote(id))
+                id_attr = f"@id={quote(id)}"
                 self.id = id
-            self.locator = ".//*[(self::input or self::textarea) and {}]".format(id_attr)
+            self.locator = f".//*[(self::input or self::textarea) and {id_attr}]"
         else:
             self.locator = locator
 
     def __repr__(self):
-        return "{}(locator={!r})".format(type(self).__name__, self.locator)
+        return f"{type(self).__name__}(locator={self.locator!r})"
 
     def __locator__(self):
         return self.locator

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .base import ClickableMixin
 from .input import BaseInput
 from widgetastic.exceptions import WidgetOperationFailed

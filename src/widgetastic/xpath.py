@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 from xml.sax.saxutils import quoteattr
 from xml.sax.saxutils import unescape

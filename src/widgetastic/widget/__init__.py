@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module contains the base classes that are used to implement the more specific behaviour."""
 from .base import *  # noqa: F403 F401
 from .checkbox import Checkbox

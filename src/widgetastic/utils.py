@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module contains some supporting classes."""
 import functools
 import re
@@ -14,7 +13,7 @@ from . import log
 from . import xpath
 
 
-class Widgetable(object):
+class Widgetable:
     """A base class that should be a base class of anything that can be or act like a Widget."""
 
     #: Sequential counter that gets incremented on each Widgetable creation
@@ -23,7 +22,7 @@ class Widgetable(object):
     _seq_cnt_lock = Lock()
 
     def __new__(cls, *args, **kwargs):
-        o = super(Widgetable, cls).__new__(cls)
+        o = super().__new__(cls)
         with Widgetable._seq_cnt_lock:
             o._seq_id = Widgetable._seq_cnt
             Widgetable._seq_cnt += 1
@@ -43,7 +42,7 @@ class Widgetable(object):
         return []
 
 
-class Version(object):
+class Version:
     """Version class based on :py:class:`distutils.version.LooseVersion`
 
     Has improved handling of the suffixes and such things.
@@ -52,9 +51,9 @@ class Version(object):
     #: List of possible suffixes
     SUFFIXES = ("nightly", "pre", "alpha", "beta", "rc")
     #: An autogenereted regexp from the :py:attr:`SUFFIXES`
-    SUFFIXES_STR = "|".join(r"-{}(?:\d+(?:\.\d+)?)?".format(suff) for suff in SUFFIXES)
+    SUFFIXES_STR = "|".join(fr"-{suff}(?:\d+(?:\.\d+)?)?" for suff in SUFFIXES)
     #: Regular expression that parses the main components of the version (not suffixes)
-    component_re = re.compile(r"(?:\s*(\d+|[a-z]+|\.|(?:{})+$))".format(SUFFIXES_STR))
+    component_re = re.compile(fr"(?:\s*(\d+|[a-z]+|\.|(?:{SUFFIXES_STR})+$))")
     suffix_item_re = re.compile(r"^([^0-9]+)(\d+(?:\.\d+)?)?$")
 
     def __init__(self, vstring):
@@ -137,14 +136,14 @@ class Version(object):
         return self.vstring
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, repr(self.vstring))
+        return f"{type(self).__name__}({repr(self.vstring)})"
 
     def __lt__(self, other):
         try:
             if not isinstance(other, Version):
                 other = Version(other)
         except Exception:
-            raise ValueError("Cannot compare Version to {}".format(type(other).__name__))
+            raise ValueError(f"Cannot compare Version to {type(other).__name__}")
 
         if self == other:
             return False
@@ -235,12 +234,12 @@ class Version(object):
         return ".".join(self.vstring.split(".")[:n])
 
 
-class ConstructorResolvable(object):
+class ConstructorResolvable:
     """Base class for objects that should be resolvable inside constructors of Widgets etc."""
 
     def resolve(self, parent_object):
         raise NotImplementedError(
-            "You need to implement .resolve(parent_object) on {}".format(type(self).__name__)
+            f"You need to implement .resolve(parent_object) on {type(self).__name__}"
         )
 
 
@@ -279,7 +278,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
         self.version_dict = version_dict
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, repr(self.version_dict))
+        return f"{type(self).__name__}({repr(self.version_dict)})"
 
     @property
     def child_items(self):
@@ -325,7 +324,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
         return self.__get__(parent_object)
 
 
-class Fillable(object):
+class Fillable:
     @classmethod
     def coerce(cls, o):
         """This method serves as a processor for filling values.
@@ -430,19 +429,17 @@ class ParametrizedString(ConstructorResolvable):
                 except AttributeError:
                     if context_name.startswith("@"):
                         raise AttributeError(
-                            "Parameter {} is not present in the object".format(context_name)
+                            f"Parameter {context_name} is not present in the object"
                         )
                     else:
                         raise TypeError("Parameter class must be defined on a view!")
                 except KeyError:
-                    raise AttributeError(
-                        "Parameter {} is not present in the context".format(context_name)
-                    )
+                    raise AttributeError(f"Parameter {context_name} is not present in the context")
             for op in ops:
                 try:
                     op_callable = self.OPERATIONS[op]
                 except KeyError:
-                    raise NameError("Unknown operation {} for {}".format(op, format_key))
+                    raise NameError(f"Unknown operation {op} for {format_key}")
                 else:
                     param_value = op_callable(param_value)
 
@@ -463,7 +460,7 @@ class ParametrizedLocator(ParametrizedString):
     """
 
     def __get__(self, o, t=None):
-        result = super(ParametrizedLocator, self).__get__(o, t)
+        result = super().__get__(o, t)
         if isinstance(result, ParametrizedString):
             return result
         else:
@@ -489,7 +486,7 @@ class Parameter(ParametrizedString):
     """
 
     def __init__(self, param):
-        super(Parameter, self).__init__("{" + param + "}")
+        super().__init__("{" + param + "}")
 
 
 def _prenormalize_text(text):
@@ -613,7 +610,7 @@ def crop_string_middle(s, length=32, cropper="..."):
     return s[:half] + cropper + s[-half - 1 :]
 
 
-class partial_match(object):  # noqa
+class partial_match:  # noqa
     """Use this to wrap values to be selected using partial matching in various objects.
 
     It proxies all ``get`` operations to the underlying ``item``.
@@ -634,15 +631,15 @@ class partial_match(object):  # noqa
 
     def __setattr__(self, attr, value):
         if attr == "item":
-            super(partial_match, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
         else:
             setattr(self.item, attr, value)
 
     def __repr__(self):
-        return "partial_match({!r})".format(self.item)
+        return f"partial_match({self.item!r})"
 
 
-class Ignore(object):
+class Ignore:
     """Descriptor which allows you to place Widget classes on another classes without touching.
 
     Usable eg. when you want to place a class as an attribute on another widgetastic class.
@@ -676,7 +673,7 @@ class Ignore(object):
         return self.wt_class
 
     def __repr__(self):
-        return "Ignore({!r})".format(self.wt_class)
+        return f"Ignore({self.wt_class!r})"
 
 
 def retry_stale_element(method):
@@ -701,7 +698,7 @@ def retry_stale_element(method):
     return wrap
 
 
-class FillContext(object):
+class FillContext:
     def __init__(self, parent, logger=None, **kwargs):
         self.parent = parent
         self.logger = logger or log.create_child_logger(
@@ -710,7 +707,7 @@ class FillContext(object):
         self.__dict__.update(kwargs)
 
 
-class DefaultFillViewStrategy(object):
+class DefaultFillViewStrategy:
     """Used to fill view's widgets by default. It just calls fill for every passed widget"""
 
     def __init__(self, respect_parent=False):
@@ -767,7 +764,7 @@ class WaitFillViewStrategy(DefaultFillViewStrategy):
 
     def __init__(self, respect_parent=False, wait_widget="5s"):
         self.wait_widget = wait_widget
-        super(WaitFillViewStrategy, self).__init__(respect_parent=respect_parent)
+        super().__init__(respect_parent=respect_parent)
 
     def do_fill(self, values):
         changes = []
