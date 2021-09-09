@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from widgetastic.xpath import normalize_space

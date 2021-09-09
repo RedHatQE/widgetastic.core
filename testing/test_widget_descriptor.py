@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 from widgetastic.widget import WidgetDescriptor
 
 
 def test_can_create_descriptor():
-    class MyClass(object):
+    class MyClass:
         pass
 
     desc = WidgetDescriptor(MyClass, 1, 2, foo="bar")
@@ -13,7 +12,7 @@ def test_can_create_descriptor():
 
 
 def test_descriptor_increments():
-    class MyClass(object):
+    class MyClass:
         pass
 
     desc1 = WidgetDescriptor(MyClass)
@@ -23,11 +22,11 @@ def test_descriptor_increments():
 
 
 def test_descriptor_on_class():
-    class MyClass(object):
+    class MyClass:
         def __init__(self, parent):
             self.parent = parent
 
-    class HostClass(object):
+    class HostClass:
         _desc_name_mapping = {}
 
         def __init__(self):

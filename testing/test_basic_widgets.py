@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 import pytest
@@ -322,20 +321,20 @@ def test_table(browser):
     assert row.first_name.text == "Larry the Bird"
 
     assert row.read() == {
-        u"#": u"3",
-        u"First Name": u"Larry the Bird",
-        u"Last Name": u"Larry the Bird",
-        u"Username": u"@slacker",
-        u"Widget": u"widget3",
+        "#": "3",
+        "First Name": "Larry the Bird",
+        "Last Name": "Larry the Bird",
+        "Username": "@slacker",
+        "Widget": "widget3",
     }
 
     unpacking_fake_read = [(header, column.text) for header, column in row]
     assert unpacking_fake_read == [
-        (u"#", u"3"),
-        (u"First Name", u"Larry the Bird"),
-        (u"Last Name", u"Larry the Bird"),
-        (u"Username", u"@slacker"),
-        (u"Widget", u""),
+        ("#", "3"),
+        ("First Name", "Larry the Bird"),
+        ("Last Name", "Larry the Bird"),
+        ("Username", "@slacker"),
+        ("Widget", ""),
     ]
 
     assert view.table1[1].last_name.text == "Thornton"
@@ -357,60 +356,60 @@ def test_table(browser):
 
     assert view.table1.read() == [
         {
-            u"#": u"1",
-            u"First Name": u"Mark",
-            u"Last Name": u"Otto",
-            u"Username": u"@mdo",
-            u"Widget": u"widget1",
+            "#": "1",
+            "First Name": "Mark",
+            "Last Name": "Otto",
+            "Username": "@mdo",
+            "Widget": "widget1",
         },
         {
-            u"#": u"2",
-            u"First Name": u"Jacob",
-            u"Last Name": u"Thornton",
-            u"Username": u"@fat",
-            u"Widget": u"widget2",
+            "#": "2",
+            "First Name": "Jacob",
+            "Last Name": "Thornton",
+            "Username": "@fat",
+            "Widget": "widget2",
         },
         {
-            u"#": u"3",
-            u"First Name": u"Larry the Bird",
-            u"Last Name": u"Larry the Bird",
-            u"Username": u"@slacker",
-            u"Widget": u"widget3",
+            "#": "3",
+            "First Name": "Larry the Bird",
+            "Last Name": "Larry the Bird",
+            "Username": "@slacker",
+            "Widget": "widget3",
         },
         {
-            u"#": u"4",
-            u"First Name": u"Pete Savage",
-            u"Last Name": u"",
-            u"Username": u"@psav",
-            u"Widget": u"widget41",
+            "#": "4",
+            "First Name": "Pete Savage",
+            "Last Name": "",
+            "Username": "@psav",
+            "Widget": "widget41",
         },
         {
-            u"#": u"4",
-            u"First Name": u"Pete Savage",
-            u"Last Name": u"",
-            u"Username": u"@psav1",
-            u"Widget": u"widget42",
+            "#": "4",
+            "First Name": "Pete Savage",
+            "Last Name": "",
+            "Username": "@psav1",
+            "Widget": "widget42",
         },
         {
-            u"#": u"5",
-            u"First Name": u"Mike Shriver",
-            u"Last Name": u"Mike Shriver",
-            u"Username": u"@mshriver",
-            u"Widget": u"widget51",
+            "#": "5",
+            "First Name": "Mike Shriver",
+            "Last Name": "Mike Shriver",
+            "Username": "@mshriver",
+            "Widget": "widget51",
         },
         {
-            u"#": u"5",
-            u"First Name": u"Mike Shriver",
-            u"Last Name": u"Mike Shriver",
-            u"Username": u"@iamhero",
-            u"Widget": u"widget52",
+            "#": "5",
+            "First Name": "Mike Shriver",
+            "Last Name": "Mike Shriver",
+            "Username": "@iamhero",
+            "Widget": "widget52",
         },
         {
-            u"#": u"6",
-            u"First Name": u"",
-            u"Last Name": u"",
-            u"Username": u"@blabla",
-            u"Widget": u"widget6",
+            "#": "6",
+            "First Name": "",
+            "Last Name": "",
+            "Username": "@blabla",
+            "Widget": "widget6",
         },
     ]
 
@@ -421,7 +420,7 @@ def test_table_multiple_tbody(browser):
         HIDDEN_CONTENT = "./tr[2]/td[1]"
 
         def __init__(self, parent, index, logger=None):
-            super(TBodyRow, self).__init__(parent, index, logger=logger)
+            super().__init__(parent, index, logger=logger)
             self.hidden_content = Text(parent=self, locator=self.HIDDEN_CONTENT)
 
         @property
@@ -500,20 +499,20 @@ def test_table_multiple_tbody(browser):
     assert row.first_name.text == "Larry the Bird"
 
     assert row.read() == {
-        u"#": u"3",
-        u"First Name": u"Larry the Bird",
-        u"Last Name": u"Larry the Bird",
-        u"Username": u"@slacker",
-        u"Widget": u"widget3",
+        "#": "3",
+        "First Name": "Larry the Bird",
+        "Last Name": "Larry the Bird",
+        "Username": "@slacker",
+        "Widget": "widget3",
     }
 
     unpacking_fake_read = [(header, column.text) for header, column in row]
     assert unpacking_fake_read == [
-        (u"#", u"3"),
-        (u"First Name", u"Larry the Bird"),
-        (u"Last Name", u"Larry the Bird"),
-        (u"Username", u"@slacker"),
-        (u"Widget", u""),
+        ("#", "3"),
+        ("First Name", "Larry the Bird"),
+        ("Last Name", "Larry the Bird"),
+        ("Username", "@slacker"),
+        ("Widget", ""),
     ]
 
     assert view.table1[1].last_name.text == "Thornton"
@@ -532,25 +531,25 @@ def test_table_multiple_tbody(browser):
 
     assert view.table1.read() == [
         {
-            u"#": u"1",
-            u"First Name": u"Mark",
-            u"Last Name": u"Otto",
-            u"Username": u"@mdo",
-            u"Widget": u"widget1",
+            "#": "1",
+            "First Name": "Mark",
+            "Last Name": "Otto",
+            "Username": "@mdo",
+            "Widget": "widget1",
         },
         {
-            u"#": u"2",
-            u"First Name": u"Jacob",
-            u"Last Name": u"Thornton",
-            u"Username": u"@fat",
-            u"Widget": u"widget2",
+            "#": "2",
+            "First Name": "Jacob",
+            "Last Name": "Thornton",
+            "Username": "@fat",
+            "Widget": "widget2",
         },
         {
-            u"#": u"3",
-            u"First Name": u"Larry the Bird",
-            u"Last Name": u"Larry the Bird",
-            u"Username": u"@slacker",
-            u"Widget": u"widget3",
+            "#": "3",
+            "First Name": "Larry the Bird",
+            "Last Name": "Larry the Bird",
+            "Username": "@slacker",
+            "Widget": "widget3",
         },
     ]
 
@@ -1030,7 +1029,7 @@ def test_fill_with(browser, style):
         assert "clicked" not in browser.classes(view.b1)
         assert "clicked" in browser.classes(view.b2)
     else:
-        pytest.fail("bad param {}".format(style))
+        pytest.fail(f"bad param {style}")
 
 
 def test_with_including(browser):

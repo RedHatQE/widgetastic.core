@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import inspect
 from logging import Logger
 from textwrap import dedent
@@ -48,11 +47,18 @@ from .xpath import normalize_space
 if TYPE_CHECKING:
     from .widget.base import Widget
 
-Size = NamedTuple("Size", [("width", int), ("height", int)])
-Location = NamedTuple("Location", [("x", int), ("y", int)])
+
+class Size(NamedTuple):
+    width: int
+    height: int
 
 
-class DefaultPlugin(object):
+class Location(NamedTuple):
+    x: int
+    y: int
+
+
+class DefaultPlugin:
     ENSURE_PAGE_SAFE = """\
         return {
             jquery: (typeof jQuery === "undefined") ? true : jQuery.active < 1,
@@ -111,7 +117,7 @@ class DefaultPlugin(object):
         pass
 
 
-class Browser(object):
+class Browser:
     """Wrapper of the selenium "browser"
 
     This class contains methods that wrap the Standard Selenium functionality in a convenient way,
@@ -248,7 +254,7 @@ class Browser(object):
                 if isinstance(loc, WebElement):
                     return loc
             raise LocatorNotImplemented(
-                "You have to implement __locator__ on {!r}".format(type(locator))
+                f"You have to implement __locator__ on {type(locator)!r}"
             ) from None
 
     @staticmethod
@@ -267,7 +273,7 @@ class Browser(object):
         check_safe: bool = True,
         force_check_safe: bool = False,
         *args,
-        **kwargs
+        **kwargs,
     ) -> List[WebElement]:
         """Method that resolves locators into selenium webelements.
 
@@ -378,7 +384,7 @@ class Browser(object):
         except TimedOutError:
             if exception:
                 raise NoSuchElementException(
-                    "Failed waiting for element with {} in {}".format(locator, parent)
+                    f"Failed waiting for element with {locator} in {parent}"
                 ) from None
             else:
                 return None
@@ -403,9 +409,7 @@ class Browser(object):
             elements = self.elements(locator, *args, **kwargs)
             return elements[0]
         except IndexError:
-            raise NoSuchElementException(
-                "Could not find an element {}".format(repr(locator))
-            ) from None
+            raise NoSuchElementException(f"Could not find an element {repr(locator)}") from None
 
     def perform_click(self) -> None:
         """Clicks the left mouse button at the current mouse position."""
@@ -1014,7 +1018,7 @@ class Browser(object):
         """
         handles = set(self.window_handles)
         self.logger.info("Opening URL %r in new window", url)
-        self.selenium.execute_script("window.open('{url}', '_blank')".format(url=url))
+        self.selenium.execute_script(f"window.open('{url}', '_blank')")
         new_handle = (set(self.window_handles) - handles).pop()
 
         if focus:
@@ -1052,7 +1056,7 @@ class Browser(object):
         self.selenium.save_screenshot(filename=filename)
 
 
-class BrowserParentWrapper(object):
+class BrowserParentWrapper:
     """A wrapper/proxy class that ensures passing of correct parent locator on elements lookup.
 
     Required for the proper operation of nesting.
@@ -1112,4 +1116,4 @@ class BrowserParentWrapper(object):
         return value
 
     def __repr__(self) -> str:
-        return "<{} for {!r}>".format(type(self).__name__, self._o)
+        return f"<{type(self).__name__} for {self._o!r}>"

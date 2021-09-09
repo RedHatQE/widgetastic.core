@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from collections import namedtuple
 from html import unescape
 
@@ -93,15 +92,15 @@ class Select(Widget):
         if locator is not None:
             self.locator = locator
         elif id is not None:
-            self.locator = ".//select[@id={}]".format(quote(id))
+            self.locator = f".//select[@id={quote(id)}]"
         else:  # name
-            self.locator = ".//select[@name={}]".format(quote(name))
+            self.locator = f".//select[@name={quote(name)}]"
 
     def __locator__(self):
         return self.locator
 
     def __repr__(self):
-        return "{}(locator={!r})".format(type(self).__name__, self.locator)
+        return f"{type(self).__name__}(locator={self.locator!r})"
 
     @cached_property
     def is_multiple(self):
@@ -174,7 +173,7 @@ class Select(Widget):
 
     def get_value_by_text(self, text):
         """Given the visible text, retrieve the underlying value."""
-        locator = ".//option[normalize-space(.)={}]".format(quote(normalize_space(text)))
+        locator = f".//option[normalize-space(.)={quote(normalize_space(text))}]"
         return self.browser.get_attribute("value", locator=locator, parent=self)
 
     def select_by_value(self, *items):
@@ -188,13 +187,11 @@ class Select(Widget):
             :py:class:`ValueError` - if the value was not found.
         """
         if len(items) > 1 and not self.is_multiple:
-            raise ValueError("The Select {!r} does not allow multiple selections".format(self))
+            raise ValueError(f"The Select {self!r} does not allow multiple selections")
 
         for value in items:
             matched = False
-            for opt in self.browser.elements(
-                ".//option[@value={}]".format(quote(value)), parent=self
-            ):
+            for opt in self.browser.elements(f".//option[@value={quote(value)}]", parent=self):
                 if not opt.is_selected():
                     opt.click()
 
@@ -203,7 +200,7 @@ class Select(Widget):
                 matched = True
 
             if not matched:
-                raise ValueError("Cannot locate option with value: {!r}".format(value))
+                raise ValueError(f"Cannot locate option with value: {value!r}")
 
     def select_by_visible_text(self, *items):
         """Selects item(s) by their respective displayed text in the select.
@@ -216,12 +213,12 @@ class Select(Widget):
             :py:class:`ValueError` - if the text was not found.
         """
         if len(items) > 1 and not self.is_multiple:
-            raise ValueError("The Select {!r} does not allow multiple selections".format(self))
+            raise ValueError(f"The Select {self!r} does not allow multiple selections")
 
         for text in items:
             matched = False
             for opt in self.browser.elements(
-                ".//option[normalize-space(.)={}]".format(quote(normalize_space(text))), parent=self
+                f".//option[normalize-space(.)={quote(normalize_space(text))}]", parent=self
             ):
                 if not opt.is_selected():
                     opt.click()
@@ -286,7 +283,7 @@ class Select(Widget):
                     continue
                 values_to_select.append(value)
             else:
-                raise ValueError("Unknown select modifier {}".format(mod))
+                raise ValueError(f"Unknown select modifier {mod}")
 
         if deselect:
             try:

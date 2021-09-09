@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from widgetastic.utils import Version
@@ -31,8 +30,8 @@ def basic_verpick():
 
 @pytest.fixture(scope="function")
 def descriptor_verpick():
-    class MyClass(object):
-        class browser(object):  # NOQA
+    class MyClass:
+        class browser:  # NOQA
             product_version = None
 
         verpicked = VersionPick(

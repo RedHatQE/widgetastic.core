@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from widgetastic.log import call_sig
@@ -10,7 +9,7 @@ from widgetastic.widget import View
 def test_override(browser):
     class MyText(Text):
         def read(self):
-            return call_unlogged(super(MyText, self).read)
+            return call_unlogged(super().read)
 
     class TestForm(View):
         h3 = MyText(".//h3")
@@ -20,13 +19,13 @@ def test_override(browser):
 
 
 def test_normal_method():
-    class MyClass(object):
+    class MyClass:
         def method(self):
             return True
 
     class AnotherClass(MyClass):
         def method(self):
-            return call_unlogged(super(AnotherClass, self).method)
+            return call_unlogged(super().method)
 
     assert AnotherClass().method()
 

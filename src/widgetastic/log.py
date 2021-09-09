@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import functools
 import logging
 import time
@@ -31,7 +30,7 @@ def call_sig(args: Iterator[Any], kwargs: MutableMapping[str, Any]) -> str:
         A string that contains parameters in parentheses like the call to it.
     """
     arglist = [repr(x) for x in args]
-    arglist.extend("{}={!r}".format(k, v) for k, v in kwargs.items())
+    arglist.extend(f"{k}={v!r}" for k, v in kwargs.items())
     return "({args})".format(
         args=", ".join(arglist),
     )
@@ -87,7 +86,7 @@ def create_child_logger(parent_logger: logging.Logger, child_name: str) -> Prepe
     Returns:
         A :py:class:`PrependParentsAdapter` logger instance.
     """
-    return _create_logger_appender(parent_logger, "/{}".format(child_name))
+    return _create_logger_appender(parent_logger, f"/{child_name}")
 
 
 def create_item_logger(
@@ -103,7 +102,7 @@ def create_item_logger(
     Returns:
         A :py:class:`PrependParentsAdapter` logger instance.
     """
-    return _create_logger_appender(parent_logger, "[{!r}]".format(item))
+    return _create_logger_appender(parent_logger, f"[{item!r}]")
 
 
 def logged(log_args: bool = False, log_result: bool = False) -> Callable[[F], F]:

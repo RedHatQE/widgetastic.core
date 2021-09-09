@@ -3,7 +3,7 @@ from datetime import datetime
 # -- Project information -----------------------------------------------------
 
 project = "widgetastic.core"
-copyright = "2016-{}, Milan Falešník (Apache license 2)".format(datetime.now().year)
+copyright = f"2016-{datetime.now().year}, Milan Falešník (Apache license 2)"
 author = "Milan Falešník"
 
 # -- General configuration ---------------------------------------------------

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -75,7 +74,7 @@ def test_elements_webelement(browser):
 
 
 def test_elements_locatable_locator(browser):
-    class Object(object):
+    class Object:
         def __locator__(self):
             return "#hello"
 
@@ -233,7 +232,7 @@ def test_nested_views_parent_injection(browser):
 
 
 def test_element_force_visibility_check_by_locator(browser):
-    class MyLocator(object):
+    class MyLocator:
         CHECK_VISIBILITY = True  # Always check visibility no matter what
 
         def __locator__(self):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from widgetastic.utils import nested_getattr
@@ -19,7 +18,7 @@ def test_nested_getattr_empty():
 
 
 def test_nested_getattr_single_level():
-    class Obj(object):
+    class Obj:
         x = 1
 
     assert nested_getattr(Obj, "x") == 1
@@ -27,9 +26,9 @@ def test_nested_getattr_single_level():
 
 
 def test_nested_getattr_multi_level():
-    class Obj(object):
-        class foo(object):  # noqa
-            class bar(object):  # noqa
+    class Obj:
+        class foo:  # noqa
+            class bar:  # noqa
                 lol = "heh"
 
     assert nested_getattr(Obj, "foo.bar.lol") == "heh"
@@ -61,7 +60,7 @@ def test_parametrized_string_param_locator(browser):
 
 def test_parametrized_string_nested(browser):
     class MyView(View):
-        class child_item(object):  # noqa
+        class child_item:  # noqa
             foo = "bar"
 
         class owner(View):  # noqa
