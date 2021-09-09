@@ -299,7 +299,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
         versions = v_dict.keys()
         if not isinstance(version, self.VERSION_CLASS):
             version = self.VERSION_CLASS(version)
-        sorted_matching_versions = sorted([v for v in versions if v <= version], reverse=True)
+        sorted_matching_versions = sorted((v for v in versions if v <= version), reverse=True)
         if sorted_matching_versions:
             return v_dict.get(sorted_matching_versions[0])
         else:
