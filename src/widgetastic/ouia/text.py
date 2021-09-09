@@ -13,5 +13,5 @@ class Text(OUIAGenericWidget):
     def text(self) -> str:
         return self.browser.text(self, parent=self.parent)
 
-    def read(self) -> str:
+    def read(self) -> str:  # type: ignore
         return self.text
