@@ -2,7 +2,6 @@ from collections import namedtuple
 from html import unescape
 
 from cached_property import cached_property
-from jsmin import jsmin
 
 from .base import Widget
 from widgetastic.utils import normalize_space
@@ -50,8 +49,7 @@ class Select(Widget):
 
     Option = namedtuple("Option", ["text", "value"])
 
-    ALL_OPTIONS = jsmin(
-        """\
+    ALL_OPTIONS = """\
             var result_arr = [];
             var opt_elements = arguments[0].options;
             for(var i = 0; i < opt_elements.length; i++){
@@ -60,11 +58,9 @@ class Select(Widget):
             }
             return result_arr;
         """
-    )
 
-    SELECTED_OPTIONS = jsmin("return arguments[0].selectedOptions;")
-    SELECTED_OPTIONS_TEXT = jsmin(
-        """\
+    SELECTED_OPTIONS = "return arguments[0].selectedOptions;"
+    SELECTED_OPTIONS_TEXT = """\
             var result_arr = [];
             var opt_elements = arguments[0].selectedOptions;
             for(var i = 0; i < opt_elements.length; i++){
@@ -72,10 +68,8 @@ class Select(Widget):
             }
             return result_arr;
         """
-    )
 
-    SELECTED_OPTIONS_VALUE = jsmin(
-        """\
+    SELECTED_OPTIONS_VALUE = """\
             var result_arr = [];
             var opt_elements = arguments[0].selectedOptions;
             for(var i = 0; i < opt_elements.length; i++){
@@ -83,7 +77,6 @@ class Select(Widget):
             }
             return result_arr;
         """
-    )
 
     def __init__(self, parent, locator=None, id=None, name=None, logger=None):
         Widget.__init__(self, parent, logger=logger)

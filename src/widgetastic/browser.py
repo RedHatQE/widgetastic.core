@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 from cached_property import cached_property
-from jsmin import jsmin
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.keys import Keys
@@ -43,6 +42,22 @@ from .types import LocatorProtocol
 from .utils import crop_string_middle
 from .utils import retry_stale_element
 from .xpath import normalize_space
+
+EXTRACT_CLASSES_OF_ELEMENT = """
+return (
+    function(arguments){
+        var cl = arguments[0].classList;
+        if(typeof cl.value === "undefined") {
+            return cl;
+        } else {
+            var arr=[];
+            for (i=0; i < cl.length; i++){
+                arr.push(cl[i]);
+            };
+            return arr;
+        }
+})(arguments);
+"""
 
 if TYPE_CHECKING:
     from .widget.base import Widget
@@ -661,11 +676,11 @@ class Browser:
         ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     @retry_stale_element
-    def execute_script(self, script: str, *args, **kwargs) -> Any:
+    def execute_script(self, script: str, *args, silent=False, **kwargs) -> Any:
         """Executes a script."""
         from .widget import Widget
 
-        if not kwargs.pop("silent", False):
+        if not silent:
             self.logger.debug("execute_script: %r", script)
         processed_args = []
         for arg in args:
@@ -688,25 +703,10 @@ class Browser:
         Returns:
             A :py:class:`set` of strings with classes.
         """
-        command = jsmin(
-            """
-            return (
-                function(arguments){
-                    var cl = arguments[0].classList;
-                    if(typeof cl.value === "undefined") {
-                        return cl;
-                    } else {
-                        var arr=[];
-                        for (i=0; i < cl.length; i++){
-                            arr.push(cl[i]);
-                        };
-                        return arr;
-                    }
-            })(arguments);
-        """
-        )
         result = set(
-            self.execute_script(command, self.element(locator, *args, **kwargs), silent=True)
+            self.execute_script(
+                EXTRACT_CLASSES_OF_ELEMENT, self.element(locator, *args, **kwargs), silent=True
+            )
         )
         self.logger.debug("css classes for %r => %r", locator, result)
         return result

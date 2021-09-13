@@ -13,7 +13,6 @@ from anytree import RenderTree
 from anytree import Resolver
 from anytree import ResolverError
 from cached_property import cached_property
-from jsmin import jsmin
 
 from .base import ClickableMixin
 from .base import Widget
@@ -620,14 +619,12 @@ class Table(Widget):
         How simple.
         """
         return self.browser.execute_script(
-            jsmin(
-                """
+            """
             var p = []; var e = arguments[0];
             while (e.previousElementSibling)
                 p.push(e = e.previousElementSibling);
             return p.length;
-            """
-            ),
+            """,
             row_el,
             silent=True,
         )
