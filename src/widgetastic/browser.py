@@ -676,11 +676,11 @@ class Browser:
         ActionChains(self.selenium).move_by_offset(x, y).perform()
 
     @retry_stale_element
-    def execute_script(self, script: str, *args, **kwargs) -> Any:
+    def execute_script(self, script: str, *args, silent=False, **kwargs) -> Any:
         """Executes a script."""
         from .widget import Widget
 
-        if not kwargs.pop("silent", False):
+        if not silent:
             self.logger.debug("execute_script: %r", script)
         processed_args = []
         for arg in args:
