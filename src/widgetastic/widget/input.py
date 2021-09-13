@@ -1,4 +1,3 @@
-from jsmin import jsmin
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 
 from .base import Widget
@@ -100,14 +99,12 @@ class ColourInput(BaseInput):
     @colour.setter
     def colour(self, value):
         self.browser.execute_script(
-            jsmin(
-                """
+            """
             arguments[0].value = arguments[1];
             if(arguments[0].onchange !== null) {
                 arguments[0].onchange();
             }
-        """
-            ),
+        """,
             self,
             value,
         )
