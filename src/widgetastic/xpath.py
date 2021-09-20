@@ -5,7 +5,7 @@ from xml.sax.saxutils import unescape
 
 def quote(s):
     """Quotes a string in such a way that it is usable inside XPath expressions."""
-    if not s:
+    if s is None:
         return ""
     return unescape(quoteattr(s))
 
