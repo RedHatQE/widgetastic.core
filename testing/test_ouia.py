@@ -2,16 +2,17 @@ import pytest
 from ouia_widgets import Button
 from ouia_widgets import Select
 
+from widgetastic.ouia import OUIAGenericView
 from widgetastic.ouia.checkbox import Checkbox
 from widgetastic.ouia.input import TextInput
 from widgetastic.ouia.text import Text
-from widgetastic.widget import View
 
 
 @pytest.fixture
 def testing_view(browser):
-    class TestView(View):
-        ROOT = ".//div[@id='ouia']"
+    class TestView(OUIAGenericView):
+        OUIA_COMPONENT_TYPE = "TestView"
+        OUIA_ID = "ouia"
         button = Button("This is a button")
         select = Select("some_id")
         text = Text(component_id="unique_id", component_type="Text")
@@ -19,6 +20,23 @@ def testing_view(browser):
         checkbox = Checkbox(component_id="unique_id", component_type="CheckBox")
 
     return TestView(browser)
+
+
+def test_ouia_view_without_id(browser):
+    class TestView(OUIAGenericView):
+        OUIA_COMPONENT_TYPE = "TestView"
+
+    view = TestView(browser)
+    assert view.is_displayed
+    assert view.locator == './/*[@data-ouia-component-type="TestView"]'
+
+
+def test_ouia_view(testing_view):
+    assert (
+        testing_view.locator
+        == './/*[@data-ouia-component-type="TestView" and @data-ouia-component-id="ouia"]'
+    )
+    assert testing_view.is_displayed
 
 
 @pytest.mark.parametrize("widget", ["button", "select", "text", "text_input", "checkbox"])
