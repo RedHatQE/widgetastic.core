@@ -67,18 +67,19 @@ class OUIAGenericView(OUIABase, View):
     """
 
     OUIA_COMPONENT_TYPE: str
+    OUIA_ID: Optional[str]
 
     def __init__(
         self,
         parent: ViewParent,
-        component_id: Optional[str] = None,
+        component_id: str = "",
         logger: Optional[Logger] = None,
         **kwargs,
     ) -> None:
         component_type: Optional[str] = kwargs.pop("component_type", None)
         self._set_attrs(
             component_type=component_type or self.OUIA_COMPONENT_TYPE or type(self).__name__,
-            component_id=component_id,
+            component_id=getattr(self, "OUIA_ID", component_id),
         )
         super().__init__(
             parent=parent,
