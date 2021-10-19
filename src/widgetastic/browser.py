@@ -1,4 +1,5 @@
 import inspect
+import time
 from logging import Logger
 from textwrap import dedent
 from typing import Any
@@ -434,6 +435,28 @@ class Browser:
         """Double-clicks the left mouse button at the current mouse position."""
         ActionChains(self.selenium).double_click().perform()
 
+    def highlight_element(self, element, style="border: 2px solid red;", visible_for=0.3):
+        """
+        Highlight the passed element.
+        """
+
+        def _apply_style(el, s):
+            self.selenium.execute_script("arguments[0].setAttribute('style', arguments[1]);", el, s)
+
+        def _remove_highlight(element, original_style, visible_for=0.75):
+            # allow the highlight to show up for 'visible_for' s
+            time.sleep(visible_for)
+            try:
+                _apply_style(element, original_style)
+            except Exception:
+                # if we've navigated away or the element is no longer visible, just ignore it
+                pass
+
+        original_style = element.get_attribute("style")
+
+        _apply_style(element, style)
+        _remove_highlight(element, original_style, visible_for)
+
     @retry_stale_element
     def click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clicks at a specific element using two separate events (mouse move, mouse click).
@@ -623,6 +646,7 @@ class Browser:
             else:
                 # Something else, never let it sink
                 raise
+        self.highlight_element(el, visible_for=0.2)
         return el
 
     def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
