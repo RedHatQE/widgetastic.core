@@ -1,5 +1,4 @@
 import inspect
-import time
 from logging import Logger
 from textwrap import dedent
 from typing import Any
@@ -437,25 +436,26 @@ class Browser:
 
     def highlight_element(self, element, style="border: 2px solid red;", visible_for=0.3):
         """
-        Highlight the passed element.
+        Highlight the passed element by directly changing it's style to the 'style' argument.
+
+        The new style will be visible for 'visible_for' [s] before reverting to the original style.
+
+        Generally, visible_for should not be > 0.5 s. If the timeout is too high and we check
+        an element multiple times in quick succession, the modified style will "stick".
         """
-
-        def _apply_style(el, s):
-            self.selenium.execute_script("arguments[0].setAttribute('style', arguments[1]);", el, s)
-
-        def _remove_highlight(element, original_style, visible_for=0.75):
-            # allow the highlight to show up for 'visible_for' s
-            time.sleep(visible_for)
-            try:
-                _apply_style(element, original_style)
-            except Exception:
-                # if we've navigated away or the element is no longer visible, just ignore it
-                pass
-
-        original_style = element.get_attribute("style")
-
-        _apply_style(element, style)
-        _remove_highlight(element, original_style, visible_for)
+        self.selenium.execute_script(
+            """
+            element = arguments[0];
+            original_style = element.getAttribute('style');
+            element.setAttribute('style', arguments[1]);
+            setTimeout(function(){
+                element.setAttribute('style', original_style);
+            }, arguments[2]);
+        """,
+            element,
+            style,
+            int(visible_for * 1000),
+        )  # convert visible_for to milliseconds
 
     @retry_stale_element
     def click(self, locator: LocatorAlias, *args, **kwargs) -> None:
@@ -646,7 +646,7 @@ class Browser:
             else:
                 # Something else, never let it sink
                 raise
-        self.highlight_element(el, visible_for=0.2)
+        self.highlight_element(el)
         return el
 
     def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
