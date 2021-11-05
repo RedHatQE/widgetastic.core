@@ -131,6 +131,34 @@ class DefaultPlugin:
         """
         pass
 
+    def highlight_element(
+        self,
+        element: WebElement,
+        style: str = "border: 2px solid red;",
+        visible_for: float = 0.3,
+    ) -> None:
+        """
+        Highlight the passed element by directly changing it's style to the 'style' argument.
+
+        The new style will be visible for 'visible_for' [s] before reverting to the original style.
+
+        Generally, visible_for should not be > 0.5 s. If the timeout is too high and we check
+        an element multiple times in quick succession, the modified style will "stick".
+        """
+        self.browser.selenium.execute_script(
+            """
+            element = arguments[0];
+            original_style = element.getAttribute('style');
+            element.setAttribute('style', arguments[1]);
+            setTimeout(function(){
+                element.setAttribute('style', original_style);
+            }, arguments[2]);
+        """,
+            element,
+            style,
+            int(visible_for * 1000),
+        )  # convert visible_for to milliseconds
+
 
 class Browser:
     """Wrapper of the selenium "browser"
@@ -549,6 +577,7 @@ class Browser:
         """
         kw = kwargs.copy()
         force_scroll = kw.pop("force_scroll", False)
+        highlight_element = kw.pop("highlight_element", False)
         self.logger.debug("move_to_element: %r", locator)
         el = self.element(locator, *args, **kw)
         if el.tag_name == "option":
@@ -623,6 +652,8 @@ class Browser:
             else:
                 # Something else, never let it sink
                 raise
+        if highlight_element:
+            self.plugin.highlight_element(el)
         return el
 
     def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
