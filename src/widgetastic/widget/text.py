@@ -13,5 +13,12 @@ class Text(GenericLocatorWidget):
     def text(self):
         return self.browser.text(self, parent=self.parent)
 
+    @property
+    def value(self):
+        return self.browser.element(self).get_attribute("value")
+
     def read(self):
         return self.text
+
+    def read_value(self):
+        return self.value
