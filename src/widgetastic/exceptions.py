@@ -5,6 +5,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import UnexpectedAlertPresentException
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import InvalidElementStateException
 
 
 class WidgetasticException(Exception):
@@ -29,6 +30,7 @@ class RowNotFound(IndexError, WidgetasticException):
 
 __all__ = [
     "ElementNotInteractableException",
+    "InvalidElementStateException",
     "MoveTargetOutOfBoundsException",
     "NoAlertPresentException",
     "NoSuchElementException",
