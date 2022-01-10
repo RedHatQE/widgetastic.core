@@ -592,11 +592,10 @@ class Browser:
                 self.move_to_element(parent)
                 return el
 
-        # FF60+ doesn't raise MoveTargetOutOfBoundsException. it just silently does nothing
-        if (
-            (self.browser_type == "firefox" and self.browser_version >= 60)
-            or self.browser_type == "chrome"
-        ) and force_scroll:
+        # element can be obscured by e.g. sticky header,
+        # selenium doesn't recognize this case as MoveTargetOutOfBoundsException,
+        # thus we have to forcefully scroll the page to have the element in the center
+        if force_scroll:
             self.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
 
         move_to = ActionChains(self.selenium).move_to_element(el)
