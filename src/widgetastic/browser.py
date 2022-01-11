@@ -409,7 +409,10 @@ class Browser:
         def _element_lookup():
             try:
                 return self.elements(
-                    locator, parent=parent, check_visibility=visible, check_safe=ensure_page_safe
+                    locator,
+                    parent=parent,
+                    check_visibility=visible,
+                    check_safe=ensure_page_safe,
                 )
             # allow other exceptions through to caller on first wait
             except NoSuchElementException:
@@ -470,7 +473,8 @@ class Browser:
         """
         self.logger.debug("click: %r", locator)
         ignore_ajax = kwargs.pop("ignore_ajax", False)
-        el = self.move_to_element(locator, *args, **kwargs)
+        force_scroll = self.browser_type == "firefox"
+        el = self.move_to_element(locator, force_scroll=force_scroll, *args, **kwargs)
         self.plugin.before_click(el, locator)
         # and then click on current mouse position
         self.perform_click()
@@ -499,7 +503,8 @@ class Browser:
         """
         self.logger.debug("double_click: %r", locator)
         ignore_ajax = kwargs.pop("ignore_ajax", False)
-        el = self.move_to_element(locator, *args, **kwargs)
+        force_scroll = self.browser_type == "firefox"
+        el = self.move_to_element(locator, force_scroll=force_scroll, *args, **kwargs)
         self.plugin.before_click(el, locator)
         # and then click on current mouse position
         self.perform_double_click()
@@ -681,7 +686,10 @@ class Browser:
         ).perform()
 
     def drag_and_drop_to(
-        self, source: LocatorAlias, to_x: Optional[int] = None, to_y: Optional[int] = None
+        self,
+        source: LocatorAlias,
+        to_x: Optional[int] = None,
+        to_y: Optional[int] = None,
     ) -> None:
         """Drags an element to a target location specified by ``to_x`` and ``to_y``
 
@@ -736,7 +744,9 @@ class Browser:
         """
         result = set(
             self.execute_script(
-                EXTRACT_CLASSES_OF_ELEMENT, self.element(locator, *args, **kwargs), silent=True
+                EXTRACT_CLASSES_OF_ELEMENT,
+                self.element(locator, *args, **kwargs),
+                silent=True,
             )
         )
         self.logger.debug("css classes for %r => %r", locator, result)
@@ -861,7 +871,8 @@ class Browser:
                     pass
             else:
                 self.logger.info(
-                    "skipped the after_keyboard_input call due to %r containing ENTER.", text
+                    "skipped the after_keyboard_input call due to %r containing ENTER.",
+                    text,
                 )
             return result
         finally:
