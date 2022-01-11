@@ -260,7 +260,9 @@ def test_table(browser):
         len(
             list(
                 view.table.rows(
-                    (0, re.compile(r"^foo_")), (1, "contains", "_"), column_3__endswith="_x"
+                    (0, re.compile(r"^foo_")),
+                    (1, "contains", "_"),
+                    column_3__endswith="_x",
                 )
             )
         )
@@ -275,7 +277,9 @@ def test_table(browser):
         len(
             list(
                 view.table1.rows(
-                    (0, re.compile(r"^4")), (1, "contains", " "), username__endswith="psav"
+                    (0, re.compile(r"^4")),
+                    (1, "contains", " "),
+                    username__endswith="psav",
                 )
             )
         )
@@ -788,7 +792,8 @@ def test_table_row_ignore_bottom_and_top(browser):
 def test_table_dynamic_add_not_assoc(browser):
     class MyTable(Table):
         def row_add(self):
-            self.browser.click('//button[@id="dynamicadd"]')
+            el = self.browser.element('//button[@id="dynamicadd"]')
+            self.browser.click(el)
             return -1
 
     class MyView(View):

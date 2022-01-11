@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Any
 from typing import Callable
+from typing import cast
 from typing import Iterator
 from typing import MutableMapping
 from typing import Optional
@@ -42,8 +43,12 @@ class PrependParentsAdapter(logging.LoggerAdapter):
     def process(
         self, msg: str, kwargs: MutableMapping[str, Any]
     ) -> Tuple[str, MutableMapping[str, Any]]:
+        widget_path = cast(str, self.extra["widget_path"])
         # Sanitizing %->%% for formatter working properly
-        return "[{}]: {}".format(self.extra["widget_path"].replace("%", "%%"), msg), kwargs
+        return (
+            "[{}]: {}".format(widget_path.replace("%", "%%"), msg),
+            kwargs,
+        )
 
     def __repr__(self) -> str:
         return "{}({!r}, {!r})".format(type(self).__name__, self.logger, self.extra["widget_path"])
@@ -131,7 +136,9 @@ def logged(log_args: bool = False, log_result: bool = False) -> Callable[[F], F]
             except DoNotReadThisWidget:
                 elapsed_time = (time.time() - start_time) * 1000.0
                 self.logger.warning(
-                    "%s - not read on widget's request (elapsed %.0f ms)", signature, elapsed_time
+                    "%s - not read on widget's request (elapsed %.0f ms)",
+                    signature,
+                    elapsed_time,
                 )
                 raise
             except Exception as e:
