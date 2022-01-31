@@ -491,12 +491,12 @@ class Table(Widget):
             "header_index_mapping",
             "index_header_mapping",
             "assoc_column_position",
-            "table_tree",
         ]:
             try:
                 delattr(self, item)
             except AttributeError:
                 pass
+            self._table_tree = None
 
     @cached_property
     def headers(self):
