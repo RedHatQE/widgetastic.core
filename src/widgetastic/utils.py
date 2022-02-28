@@ -51,9 +51,9 @@ class Version:
     #: List of possible suffixes
     SUFFIXES = ("nightly", "pre", "alpha", "beta", "rc")
     #: An autogenereted regexp from the :py:attr:`SUFFIXES`
-    SUFFIXES_STR = "|".join(fr"-{suff}(?:\d+(?:\.\d+)?)?" for suff in SUFFIXES)
+    SUFFIXES_STR = "|".join(rf"-{suff}(?:\d+(?:\.\d+)?)?" for suff in SUFFIXES)
     #: Regular expression that parses the main components of the version (not suffixes)
-    component_re = re.compile(fr"(?:\s*(\d+|[a-z]+|\.|(?:{SUFFIXES_STR})+$))")
+    component_re = re.compile(rf"(?:\s*(\d+|[a-z]+|\.|(?:{SUFFIXES_STR})+$))")
     suffix_item_re = re.compile(r"^([^0-9]+)(\d+(?:\.\d+)?)?$")
 
     def __init__(self, vstring):
