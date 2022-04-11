@@ -22,7 +22,7 @@ repos:
           - --max-line-length=100
           - --ignore=W503,E203
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.2.0
     hooks:
       - id: trailing-whitespace
         language_version: python3
@@ -31,7 +31,7 @@ repos:
       - id: debug-statements
         language_version: python3
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.1
+    rev: v2.32.0
     hooks:
       - id: pyupgrade
         language_version: python3
