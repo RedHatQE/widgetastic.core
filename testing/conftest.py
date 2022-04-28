@@ -65,7 +65,7 @@ def selenium_url(pytestconfig, worker_id, podman, pod):
         name=f"selenium_{worker_id}",
     )
     container.start()
-    yield f"http://{localhost_for_worker}:4444/wd/hub"
+    yield f"http://{localhost_for_worker}:4444"
     container.remove(force=True)
 
 

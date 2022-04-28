@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
           architecture: "x64"
@@ -30,15 +30,14 @@ jobs:
         if: failure()
         run: git diff
 
-  unit-tests:
+  tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-20.04
-    needs: [codechecks]
     strategy:
       matrix:
         browser: [chrome, firefox]
-        python-version: [3.8, 3.9]
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
       - name: Pull selenium-standalone:latest
@@ -48,10 +47,10 @@ jobs:
         run: podman pull docker.io/library/nginx:alpine
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python-${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -75,14 +74,13 @@ jobs:
 
   docs:
     name: Docs Build
-    needs: [unit-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
 
@@ -103,7 +101,6 @@ jobs:
   platform:
     # Check package properly install on different platform (dev setup)
     name: 💻 Platform-${{ matrix.os }}
-    needs: [unit-tests]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -111,10 +108,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
           architecture: "x64"
@@ -128,15 +125,14 @@ jobs:
 
   package:
     name: ⚙️ Build & Verify Package
-    needs: [unit-tests]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
           architecture: "x64"
