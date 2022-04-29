@@ -4,14 +4,12 @@ from urllib.request import urlopen
 import pytest
 from podman import PodmanClient
 from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from wait_for import wait_for
 
 from widgetastic.browser import Browser
 
 
-# Begging, borrowing, and stealing from @quarkster
-# https://github.com/RedHatQE/widgetastic.patternfly4/blob/master/testing/conftest.py#L21
+OPTIONS = {"firefox": webdriver.FirefoxOptions(), "chrome": webdriver.ChromeOptions()}
 
 
 def pytest_addoption(parser):
@@ -53,13 +51,13 @@ def browser_name(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def selenium_url(pytestconfig, worker_id, podman, pod):
+def selenium_url(worker_id, podman, pod):
     """Yields a command executor URL for selenium, and a port mapped for the test page to run on"""
     # use the worker id number from gw# to create hosts on loopback
     last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
     localhost_for_worker = f"127.0.0.{last_oktet}"
     container = podman.containers.create(
-        image="quay.io/redhatqe/selenium-standalone:latest",
+        image="quay.io/redhatqe/selenium-standalone:ff_91.8.0esr_chrome_101.0.4951.41",
         pod=pod.id,
         remove=True,
         name=f"selenium_{worker_id}",
@@ -92,14 +90,7 @@ def testing_page_url(worker_id, podman, pod):
 @pytest.fixture(scope="session")
 def selenium_webdriver(browser_name, selenium_url, testing_page_url):
     wait_for(urlopen, func_args=[selenium_url], timeout=180, handle_exception=True)
-    if browser_name == "firefox":
-        desired_capabilities = DesiredCapabilities.FIREFOX.copy()
-    else:
-        desired_capabilities = DesiredCapabilities.CHROME.copy()
-        desired_capabilities["chromeOptions"] = {"args": ["--no-sandbox"]}
-    driver = webdriver.Remote(
-        command_executor=selenium_url, desired_capabilities=desired_capabilities
-    )
+    driver = webdriver.Remote(command_executor=selenium_url, options=OPTIONS[browser_name.lower()])
     driver.maximize_window()
     driver.get(testing_page_url)
     yield driver
