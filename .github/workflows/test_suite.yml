@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Pull selenium-standalone:latest
-        run: podman pull quay.io/redhatqe/selenium-standalone:latest
+        run: podman pull quay.io/redhatqe/selenium-standalone:ff_91.8.0esr_chrome_101.0.4951.41
 
       - name: Pull docker.io/library/nginx:alpine
         run: podman pull docker.io/library/nginx:alpine

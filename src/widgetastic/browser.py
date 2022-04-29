@@ -257,9 +257,9 @@ class Browser:
 
     @property
     def browser_version(self) -> int:
-        version = self.selenium.desired_capabilities.get("browserVersion")
-        if not version:
-            version = self.selenium.desired_capabilities.get("version")
+        version = self.selenium.capabilities.get(
+            "browserVersion"
+        ) or self.selenium.capabilities.get("version")
         return int(version.split(".")[0])
 
     @property
