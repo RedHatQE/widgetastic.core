@@ -57,7 +57,7 @@ def selenium_url(worker_id, podman, pod):
     last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
     localhost_for_worker = f"127.0.0.{last_oktet}"
     container = podman.containers.create(
-        image="quay.io/redhatqe/selenium-standalone:ff_91.8.0esr_chrome_101.0.4951.41",
+        image="quay.io/redhatqe/selenium-standalone:latest",
         pod=pod.id,
         remove=True,
         name=f"selenium_{worker_id}",

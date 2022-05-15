@@ -9,26 +9,6 @@ on:
     - cron: 59 23 * * 5
 
 jobs:
-  codechecks:
-    name: 📃 Code quality [pre-commit]
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.8"
-          architecture: "x64"
-
-      - name: Pre Commit Checks
-        uses: pre-commit/action@v2.0.0
-
-      - name: Analysis (git diff)
-        if: failure()
-        run: git diff
 
   tests:
     # Run unit tests on different version of python and browser
@@ -41,7 +21,7 @@ jobs:
 
     steps:
       - name: Pull selenium-standalone:latest
-        run: podman pull quay.io/redhatqe/selenium-standalone:ff_91.8.0esr_chrome_101.0.4951.41
+        run: podman pull quay.io/redhatqe/selenium-standalone:latest
 
       - name: Pull docker.io/library/nginx:alpine
         run: podman pull docker.io/library/nginx:alpine
@@ -59,7 +39,6 @@ jobs:
           BROWSER: ${{ matrix.browser }}
           XDG_RUNTIME_DIR: ${{ github.workspace }}
         run: |
-          pip install -U setuptools wheel
           pip install -e .[test]
           mkdir -p ${XDG_RUNTIME_DIR}/podman
           podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
@@ -86,7 +65,7 @@ jobs:
 
       - name: Install Deps
         run: |
-          pip install -U pip setuptools wheel
+          pip install -U pip wheel
           pip install .[docs]
 
       - name: Build Docs
@@ -118,9 +97,7 @@ jobs:
 
       - name: Development setup on ${{ matrix.os }}
         run: |
-          python -m pip install pip --upgrade
           pip install -e .[dev]
-          python -c "import pkg_resources; print(pkg_resources.get_distribution('widgetastic.core').version)"
           python -c "from widgetastic.widget import Widget, Browser"
 
   package:
@@ -139,8 +116,7 @@ jobs:
 
       - name: Build and verify with twine
         run: |
-          python -m pip install pip --upgrade
-          pip install twine setuptools wheel --upgrade
-          python setup.py sdist bdist_wheel
+          pip install wheel twine
+          pip wheel --no-deps -w dist .
           ls -l dist
-          python -m twine check dist/*
+          twine check dist/*
