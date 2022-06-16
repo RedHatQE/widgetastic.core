@@ -30,7 +30,7 @@ class OUIABase:
     def _set_attrs(
         self,
         component_type: str,
-        component_id: Optional[str] = None,
+        component_id: str = "",
     ) -> None:
         self.component_type = quote(component_type)
         self.component_id = quote(component_id)
@@ -104,7 +104,7 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
     def __init__(
         self,
         parent: ViewParent,
-        component_id: Optional[str] = None,
+        component_id: str = "",
         logger: Optional[Logger] = None,
         component_type: Optional[str] = None,
     ) -> None:
