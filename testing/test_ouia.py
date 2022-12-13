@@ -57,3 +57,13 @@ def test_safety(testing_view):
 def test_select(testing_view):
     testing_view.select.choose("first_option")
     testing_view.select.choose("second_option")
+
+
+def test_widget_without_id(browser):
+    class TestView(OUIAGenericView):
+        OUIA_COMPONENT_TYPE = "TestView"
+        button = Button()
+
+    view = TestView(browser)
+    assert view.is_displayed
+    assert view.button.locator == './/*[@data-ouia-component-type="PF/Button"]'

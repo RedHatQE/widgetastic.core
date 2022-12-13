@@ -24,9 +24,9 @@ jobs:
 
       - name: Build Package and Check
         run: |
-          python -m pip install --upgrade setuptools wheel twine
-          python setup.py sdist bdist_wheel
-          python -m twine check dist/*
+          pip install -U wheel twine
+          pip wheel --no-deps -w dist .
+          twine check dist/*
 
       - name: Deploy to PyPi
         uses: pypa/gh-action-pypi-publish@v1.4.1

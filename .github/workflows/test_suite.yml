@@ -9,36 +9,15 @@ on:
     - cron: 59 23 * * 5
 
 jobs:
-  codechecks:
-    name: 📃 Code quality [pre-commit]
-    runs-on: ubuntu-20.04
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
-          architecture: "x64"
-
-      - name: Pre Commit Checks
-        uses: pre-commit/action@v2.0.0
-
-      - name: Analysis (git diff)
-        if: failure()
-        run: git diff
-
-  unit-tests:
+  tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-20.04
-    needs: [codechecks]
     strategy:
       matrix:
         browser: [chrome, firefox]
-        python-version: [pypy3, 3.6, 3.7, 3.8]
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
       - name: Pull selenium-standalone:latest
@@ -48,10 +27,10 @@ jobs:
         run: podman pull docker.io/library/nginx:alpine
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python-${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -60,7 +39,6 @@ jobs:
           BROWSER: ${{ matrix.browser }}
           XDG_RUNTIME_DIR: ${{ github.workspace }}
         run: |
-          pip install -U setuptools wheel
           pip install -e .[test]
           mkdir -p ${XDG_RUNTIME_DIR}/podman
           podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
@@ -75,20 +53,19 @@ jobs:
 
   docs:
     name: Docs Build
-    needs: [unit-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
 
       - name: Install Deps
         run: |
-          pip install -U pip setuptools wheel
+          pip install -U pip wheel
           pip install .[docs]
 
       - name: Build Docs
@@ -103,7 +80,6 @@ jobs:
   platform:
     # Check package properly install on different platform (dev setup)
     name: 💻 Platform-${{ matrix.os }}
-    needs: [unit-tests]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -111,40 +87,36 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
           architecture: "x64"
 
       - name: Development setup on ${{ matrix.os }}
         run: |
-          python -m pip install pip --upgrade
           pip install -e .[dev]
-          python -c "import pkg_resources; print(pkg_resources.get_distribution('widgetastic.core').version)"
           python -c "from widgetastic.widget import Widget, Browser"
 
   package:
     name: ⚙️ Build & Verify Package
-    needs: [unit-tests]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.8"
           architecture: "x64"
 
       - name: Build and verify with twine
         run: |
-          python -m pip install pip --upgrade
-          pip install twine setuptools wheel --upgrade
-          python setup.py sdist bdist_wheel
+          pip install wheel twine
+          pip wheel --no-deps -w dist .
           ls -l dist
-          python -m twine check dist/*
+          twine check dist/*
