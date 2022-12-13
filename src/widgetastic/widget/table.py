@@ -414,6 +414,7 @@ class Table(Widget):
         "header_index_mapping",
         "index_header_mapping",
         "assoc_column_position",
+        "table_tree",
     ]
 
     def __init__(
@@ -452,6 +453,10 @@ class Table(Widget):
     def table_tree(self):
         if self.has_rowcolspan:
             return self._get_table_tree()
+
+    @table_tree.deleter
+    def table_tree(self):
+        self._table_tree = None
 
     @cached_property
     def resolver(self):
@@ -498,7 +503,6 @@ class Table(Widget):
                 delattr(self, item)
             except AttributeError:
                 pass
-        self._table_tree = None
 
     @cached_property
     def headers(self):
