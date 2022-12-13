@@ -408,6 +408,14 @@ class Table(Widget):
 
     Row = TableRow
 
+    _CACHED_PROPERTIES = [
+        "headers",
+        "attributized_headers",
+        "header_index_mapping",
+        "index_header_mapping",
+        "assoc_column_position",
+    ]
+
     def __init__(
         self,
         parent,
@@ -485,18 +493,12 @@ class Table(Widget):
 
     def clear_cache(self):
         """Clear all cached properties."""
-        for item in [
-            "headers",
-            "attributized_headers",
-            "header_index_mapping",
-            "index_header_mapping",
-            "assoc_column_position",
-        ]:
+        for item in self._CACHED_PROPERTIES:
             try:
                 delattr(self, item)
             except AttributeError:
                 pass
-            self._table_tree = None
+        self._table_tree = None
 
     @cached_property
     def headers(self):
