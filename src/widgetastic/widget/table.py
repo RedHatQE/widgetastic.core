@@ -414,7 +414,6 @@ class Table(Widget):
         "header_index_mapping",
         "index_header_mapping",
         "assoc_column_position",
-        "table_tree",
     ]
 
     def __init__(
@@ -503,6 +502,7 @@ class Table(Widget):
                 delattr(self, item)
             except AttributeError:
                 pass
+        del self.table_tree
 
     @cached_property
     def headers(self):
