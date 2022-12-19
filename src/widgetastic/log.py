@@ -43,7 +43,7 @@ class PrependParentsAdapter(logging.LoggerAdapter):
     def process(
         self, msg: str, kwargs: MutableMapping[str, Any]
     ) -> Tuple[str, MutableMapping[str, Any]]:
-        widget_path = cast(str, self.extra["widget_path"])
+        widget_path = cast(str, self.extra["widget_path"])  # type: ignore[index]
         # Sanitizing %->%% for formatter working properly
         return (
             "[{}]: {}".format(widget_path.replace("%", "%%"), msg),
@@ -51,7 +51,9 @@ class PrependParentsAdapter(logging.LoggerAdapter):
         )
 
     def __repr__(self) -> str:
-        return "{}({!r}, {!r})".format(type(self).__name__, self.logger, self.extra["widget_path"])
+        return "{}({!r}, {!r})".format(
+            type(self).__name__, self.logger, self.extra["widget_path"]  # type: ignore[index]
+        )
 
 
 def create_widget_logger(
