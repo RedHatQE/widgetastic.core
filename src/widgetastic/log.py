@@ -43,6 +43,7 @@ class PrependParentsAdapter(logging.LoggerAdapter):
     def process(
         self, msg: str, kwargs: MutableMapping[str, Any]
     ) -> Tuple[str, MutableMapping[str, Any]]:
+        assert self.extra is not None  # python 3.10+ type check
         widget_path = cast(str, self.extra["widget_path"])
         # Sanitizing %->%% for formatter working properly
         return (
@@ -51,6 +52,7 @@ class PrependParentsAdapter(logging.LoggerAdapter):
         )
 
     def __repr__(self) -> str:
+        assert self.extra is not None  # python 3.10+ type check
         return "{}({!r}, {!r})".format(type(self).__name__, self.logger, self.extra["widget_path"])
 
 

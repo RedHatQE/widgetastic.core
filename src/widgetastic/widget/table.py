@@ -408,6 +408,14 @@ class Table(Widget):
 
     Row = TableRow
 
+    _CACHED_PROPERTIES = [
+        "headers",
+        "attributized_headers",
+        "header_index_mapping",
+        "index_header_mapping",
+        "assoc_column_position",
+    ]
+
     def __init__(
         self,
         parent,
@@ -444,6 +452,10 @@ class Table(Widget):
     def table_tree(self):
         if self.has_rowcolspan:
             return self._get_table_tree()
+
+    @table_tree.deleter
+    def table_tree(self):
+        self._table_tree = None
 
     @cached_property
     def resolver(self):
@@ -485,18 +497,12 @@ class Table(Widget):
 
     def clear_cache(self):
         """Clear all cached properties."""
-        for item in [
-            "headers",
-            "attributized_headers",
-            "header_index_mapping",
-            "index_header_mapping",
-            "assoc_column_position",
-            "table_tree",
-        ]:
+        for item in self._CACHED_PROPERTIES:
             try:
                 delattr(self, item)
             except AttributeError:
                 pass
+        del self.table_tree
 
     @cached_property
     def headers(self):
