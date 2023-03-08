@@ -55,7 +55,7 @@ class TextInput(BaseInput):
         return self.value
 
     def fill(self, value, sensitive=False):
-        """ Fill TextInput widget with value
+        """Fill TextInput widget with value
         Args:
            value: Text to be filled into the input.
            sensitive: Bool, If is set to True do not log sensitive data.

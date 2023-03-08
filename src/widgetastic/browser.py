@@ -865,7 +865,7 @@ class Browser:
                 self.selenium.file_detector = LocalFileDetector()
             el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
-            self.logger.debug("send_keys %r to %r", '*'*len(text) if sensitive else text, locator)
+            self.logger.debug("send_keys %r to %r", "*" * len(text) if sensitive else text, locator)
             result = el.send_keys(text)
             if Keys.ENTER not in text:
                 try:
