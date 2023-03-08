@@ -843,11 +843,12 @@ class Browser:
     def is_selected(self, *args, **kwargs) -> bool:
         return self.element(*args, **kwargs).is_selected()
 
-    def send_keys(self, text: str, locator: LocatorAlias, *args, **kwargs) -> None:
+    def send_keys(self, text: str, locator: LocatorAlias, sensitive=False, *args, **kwargs) -> None:
         """Sends keys to the element. Detects the file inputs automatically.
 
         Args:
             text: Text to be inserted to the element.
+            sensitive: Bool, If is set to True do not log sensitive data.
             *args: See :py:meth:`elements`
             **kwargs: See :py:meth:`elements`
         """
@@ -864,7 +865,7 @@ class Browser:
                 self.selenium.file_detector = LocalFileDetector()
             el = self.move_to_element(locator, *args, **kwargs)
             self.plugin.before_keyboard_input(el, text)
-            self.logger.debug("send_keys %r to %r", text, locator)
+            self.logger.debug("send_keys %r to %r", '*'*len(text) if sensitive else text, locator)
             result = el.send_keys(text)
             if Keys.ENTER not in text:
                 try:

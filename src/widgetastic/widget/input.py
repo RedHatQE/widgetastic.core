@@ -54,14 +54,19 @@ class TextInput(BaseInput):
     def read(self):
         return self.value
 
-    def fill(self, value):
+    def fill(self, value, sensitive=False):
+        """ Fill TextInput widget with value
+        Args:
+           value: Text to be filled into the input.
+           sensitive: Bool, If is set to True do not log sensitive data.
+        """
         current_value = self.value
         if value == current_value:
             return False
         # Clear and type everything
         self.browser.click(self)
         self.browser.clear(self)
-        self.browser.send_keys(value, self)
+        self.browser.send_keys(value, self, sensitive)
         return True
 
 
