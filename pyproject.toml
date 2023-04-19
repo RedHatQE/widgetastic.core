@@ -17,7 +17,7 @@ dynamic = ["version"]
 keywords = ["widgetastic", "selenium"]
 license = {file = "LICENSE"}
 maintainers = [{name = "Dmitrii Misharov", email = "misharov@redhat.com"}]
-name = "widgetastic"
+name = "widgetastic.core"
 readme = "README.rst"
 requires-python = ">=3.8"
 
