@@ -2,6 +2,8 @@ name: 🕵️ Test suite
 
 on:
   push:
+    branches:
+      - master
   pull_request:
     types: ["opened", "synchronize", "reopened"]
   schedule:
@@ -9,7 +11,6 @@ on:
     - cron: 59 23 * * 5
 
 jobs:
-
   tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
