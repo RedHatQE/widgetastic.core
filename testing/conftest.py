@@ -36,7 +36,7 @@ def pod(podman, worker_id):
     pod = podman.pods.create(
         f"widgetastic_testing_{last_oktet}",
         portmappings=[
-            {"host_ip": localhost_for_worker, "container_port": 5999, "host_port": 5999},
+            {"host_ip": localhost_for_worker, "container_port": 7900, "host_port": 7900},
             {"host_ip": localhost_for_worker, "container_port": 4444, "host_port": 4444},
         ],
     )
@@ -51,13 +51,13 @@ def browser_name(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def selenium_url(worker_id, podman, pod):
+def selenium_url(worker_id, browser_name, podman, pod):
     """Yields a command executor URL for selenium, and a port mapped for the test page to run on"""
     # use the worker id number from gw# to create hosts on loopback
     last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
     localhost_for_worker = f"127.0.0.{last_oktet}"
     container = podman.containers.create(
-        image="quay.io/redhatqe/selenium-standalone:latest",
+        image=f"selenium/standalone-{browser_name}:4.9.0-20230421",
         pod=pod.id,
         remove=True,
         name=f"selenium_{worker_id}",
