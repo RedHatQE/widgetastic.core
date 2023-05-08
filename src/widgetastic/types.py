@@ -1,13 +1,13 @@
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Protocol
 from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
 from selenium.webdriver.remote.webelement import WebElement
 from smartloc import Locator
-from typing_extensions import Protocol
 
 
 if TYPE_CHECKING:
