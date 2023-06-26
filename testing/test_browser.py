@@ -161,6 +161,10 @@ def test_text_invisible(browser):
     assert browser.text("#invisible") == "This is invisible"
 
 
+def test_attributes(browser):
+    assert browser.attributes("//h1") == {"class": "foo bar", "id": "hello"}
+
+
 def test_get_attribute(browser):
     assert browser.get_attribute("id", "//h1") == "hello"
 
