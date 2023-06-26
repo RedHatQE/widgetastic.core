@@ -1169,7 +1169,7 @@ class TableResolver(Resolver):
     index_regexp = re.compile(r"(.*?)\[(\d+)\]$")
 
     def get(self, node, path):
-        node, parts = self._Resolver__start(node, path)
+        node, parts = self._Resolver__start(node, path, self._Resolver__cmp)
         for part in parts:
             if part == "..":
                 node = node.parent
@@ -1182,7 +1182,7 @@ class TableResolver(Resolver):
         return node
 
     def glob(self, node, path, handle_resolver_error=False):
-        node, parts = self._Resolver__start(node, path)
+        node, parts = self._Resolver__start(node, path, self._Resolver__cmp)
         try:
             return self.__glob(node, parts)
         except ResolverError:
