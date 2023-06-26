@@ -16,7 +16,11 @@ description = "Making testing of UIs fantastic."
 dynamic = ["version"]
 keywords = ["widgetastic", "selenium"]
 license = {file = "LICENSE"}
-maintainers = [{name = "Dmitrii Misharov", email = "misharov@redhat.com"}]
+maintainers = [
+  {name = "Mike Shriver", email = "mshriver@redhat.com"},
+  {name = "Nikhil Dhandre", email = "ndhandre@redhat.com"},
+  {name = "Egor Shamardin", email = "eshamard@redhat.com"},
+]
 name = "widgetastic.core"
 readme = "README.rst"
 requires-python = ">=3.8"
