@@ -61,7 +61,9 @@ def selenium_url(worker_id, browser_name, podman, pod):
         pod=pod.id,
         remove=True,
         name=f"selenium_{worker_id}",
+        environment={"SE_VNC_NO_PASSWORD": "1"},
     )
+
     container.start()
     yield f"http://{localhost_for_worker}:4444"
     container.remove(force=True)
@@ -79,6 +81,7 @@ def testing_page_url(worker_id, podman, pod):
                 "source": f"{os.getcwd()}/testing/html",
                 "target": "/usr/share/nginx/html",
                 "type": "bind",
+                "relabel": "Z",
             }
         ],
     )
