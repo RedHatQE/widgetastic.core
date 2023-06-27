@@ -59,6 +59,15 @@ return (
 })(arguments);
 """
 
+EXTRACT_ATTRIBUTES_OF_ELEMENT = """
+var items = {};
+for (index = 0; index < arguments[0].attributes.length; ++index) {
+    items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value
+    };
+return items;
+"""
+
+
 if TYPE_CHECKING:
     from .widget.base import Widget
 
@@ -793,6 +802,23 @@ class Browser:
 
         result = normalize_space(text)
         self.logger.debug("text(%r) => %r", locator, crop_string_middle(result))
+        return result
+
+    @retry_stale_element
+    def attributes(self, locator: LocatorAlias, *args, **kwargs) -> Dict:
+        """Return a dict of attributes attached to the element.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            A :py:class:`dict` of attributes and respective values.
+        """
+        result = self.execute_script(
+            EXTRACT_ATTRIBUTES_OF_ELEMENT,
+            self.element(locator, *args, **kwargs),
+            silent=True,
+        )
+        self.logger.debug("css attributes for %r => %r", locator, result)
         return result
 
     @retry_stale_element
