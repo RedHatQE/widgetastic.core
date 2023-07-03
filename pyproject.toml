@@ -59,6 +59,14 @@ requires = ["hatchling", "hatch-vcs"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/widgetastic"]
+# https://github.com/RedHatQE/widgetastic.core/issues/230
+strict-naming = false
+
+[tool.hatch.build.targets.sdist]
+packages = ["src/widgetastic"]
+# https://github.com/RedHatQE/widgetastic.core/issues/230
+strict-naming = false
+
 
 [tool.hatch.version]
 source = "vcs"
