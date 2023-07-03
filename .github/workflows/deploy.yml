@@ -29,7 +29,12 @@ jobs:
           twine check dist/*
 
       - name: Deploy to PyPi
-        uses: pypa/gh-action-pypi-publish@v1.4.1
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_wt_core }}
+#        uses: pypa/gh-action-pypi-publish@v1.4.1
+#        with:
+#          user: __token__
+#          password: ${{ secrets.pypi_wt_core }}
+        run: |
+          # Modify package as workaround for https://github.com/RedHatQE/widgetastic.core/issues/230
+          python .github/workflows/modpkg.py "${PWD}/dist"
+          twine check dist/*
+          twine upload dist/* --skip-existing --verbose -u  __token__ -p ${{ secrets.pypi_wt_core }}
