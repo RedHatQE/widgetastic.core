@@ -33,7 +33,9 @@ def call_sig(args: Iterator[Any], kwargs: MutableMapping[str, Any]) -> str:
     safe_args = ["sensitive", "locator"]
     if kwargs.get("sensitive"):
         arglist = ["*" * len(repr(x)) for x in args]
-        arglist.extend(f"{k}={repr(v) if k in safe_args else '*' * len(repr(v))}" for k, v in kwargs.items())
+        arglist.extend(
+            f"{k}={repr(v) if k in safe_args else '*' * len(repr(v))}" for k, v in kwargs.items()
+        )
     else:
         arglist = [repr(x) for x in args]
         arglist.extend(f"{k}={v!r}" for k, v in kwargs.items())
