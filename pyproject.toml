@@ -30,7 +30,6 @@ dependencies = [
   "cached_property",
   "selenium >= 4.0.0",
   "selenium-smart-locator",
-  "typing_extensions",
   "wait_for",
 ]
 
