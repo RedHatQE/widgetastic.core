@@ -23,7 +23,7 @@ class OUIABase:
     """
 
     ROOT = ParametrizedLocator(
-        ".//*[@data-ouia-component-type={@component_type}{@component_id_suffix}]"
+        ".//*[contains(@data-ouia-component-type,{@component_type}){@component_id_suffix}]"
     )
     browser: Browser
 

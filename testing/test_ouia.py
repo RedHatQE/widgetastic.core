@@ -28,13 +28,13 @@ def test_ouia_view_without_id(browser):
 
     view = TestView(browser)
     assert view.is_displayed
-    assert view.locator == './/*[@data-ouia-component-type="TestView"]'
+    assert view.locator == './/*[contains(@data-ouia-component-type,"TestView")]'
 
 
 def test_ouia_view(testing_view):
     assert (
         testing_view.locator
-        == './/*[@data-ouia-component-type="TestView" and @data-ouia-component-id="ouia"]'
+        == './/*[contains(@data-ouia-component-type,"TestView") and @data-ouia-component-id="ouia"]'
     )
     assert testing_view.is_displayed
 
@@ -66,4 +66,4 @@ def test_widget_without_id(browser):
 
     view = TestView(browser)
     assert view.is_displayed
-    assert view.button.locator == './/*[@data-ouia-component-type="PF/Button"]'
+    assert view.button.locator == './/*[contains(@data-ouia-component-type,"PF/Button")]'
