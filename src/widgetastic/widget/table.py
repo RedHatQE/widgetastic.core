@@ -1,4 +1,5 @@
 """This module contains the base classes that are used to implement the more specific behaviour."""
+
 import itertools
 import re
 from collections import defaultdict
