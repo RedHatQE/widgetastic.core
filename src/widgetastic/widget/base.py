@@ -372,9 +372,9 @@ class Widget(metaclass=WidgetMetaclass):
             for widget_includer in self._included_widgets:
                 if widget_includer._seq_id == includer_id:
                     parent = self if use_parent else self.parent
-                    self._initialized_included_widgets[
-                        widget_includer._seq_id
-                    ] = widget_includer.widget_class(parent, self.logger)
+                    self._initialized_included_widgets[widget_includer._seq_id] = (
+                        widget_includer.widget_class(parent, self.logger)
+                    )
                     break
             else:
                 raise ValueError(f"Could not find includer #{includer_id}")
