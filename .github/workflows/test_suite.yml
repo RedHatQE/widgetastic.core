@@ -21,6 +21,9 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
+      - name: Pull selenium-standalone:latest
+        run: podman pull selenium/standalone-${{ matrix.browser }}:4.9
+
       - name: Pull docker.io/library/nginx:alpine
         run: podman pull docker.io/library/nginx:alpine
 
@@ -82,7 +85,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]    # We are running test on ubuntu linux. 
+        os: [windows-latest, macos-latest]    # We are running test on ubuntu linux.
 
     steps:
       - name: Checkout
