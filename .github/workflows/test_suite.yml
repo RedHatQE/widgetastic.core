@@ -18,20 +18,17 @@ jobs:
     strategy:
       matrix:
         browser: [chrome, firefox]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
-      - name: Pull selenium-standalone:latest
-        run: podman pull selenium/standalone-${{ matrix.browser }}:4.9.0-20230421
-
       - name: Pull docker.io/library/nginx:alpine
         run: podman pull docker.io/library/nginx:alpine
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python-${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -43,24 +40,25 @@ jobs:
           pip install -e .[test]
           mkdir -p ${XDG_RUNTIME_DIR}/podman
           podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
-          pytest -n 3
+          pytest -n 5
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.13
+        uses: codecov/codecov-action@v4
         with:
           file: coverage.xml
           flags: unittests
           name: ${{ github.run_id }}-py-${{ matrix.python-version }}-${{ matrix.browser }}
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   docs:
     name: Docs Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.8"
 
@@ -84,14 +82,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]    # We are running test on ubuntu linux. 
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.8"
           architecture: "x64"
@@ -107,10 +105,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.8"
           architecture: "x64"
