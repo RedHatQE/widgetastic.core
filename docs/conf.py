@@ -16,7 +16,7 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/3.8/", None),
+    "python": ("http://docs.python.org/3.12/", None),
     "selenium": ("http://selenium-python.readthedocs.org/", None),
 }
 
