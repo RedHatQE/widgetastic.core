@@ -14,6 +14,11 @@ jobs:
     name: Build and publish Python 🐍 distributions to PyPI
     if: startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/widgetastic.core
+    permissions:
+      id-token: write  # This permission is mandatory for trusted publishing
     steps:
       - name: Checkout
         uses: actions/checkout@v4
