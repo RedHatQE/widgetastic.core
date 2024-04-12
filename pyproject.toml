@@ -71,3 +71,9 @@ strict-naming = false
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = true

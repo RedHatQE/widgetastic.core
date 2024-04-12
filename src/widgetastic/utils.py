@@ -1,4 +1,5 @@
 """This module contains some supporting classes."""
+
 import functools
 import re
 import string

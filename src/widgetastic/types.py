@@ -21,8 +21,7 @@ if TYPE_CHECKING:
 class LocatorProtocol(Protocol):
     CHECK_VISIBILITY: bool
 
-    def __locator__(self) -> Union[str, Locator, WebElement]:
-        ...
+    def __locator__(self) -> Union[str, Locator, WebElement]: ...
 
 
 LocatorAlias = Union[str, Dict[str, str], WebElement, LocatorProtocol, "Widget"]
