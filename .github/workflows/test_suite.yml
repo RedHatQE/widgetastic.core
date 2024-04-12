@@ -63,7 +63,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.12"
 
       - name: Install Deps
         run: |
@@ -74,7 +74,7 @@ jobs:
         run: sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs
 
       - name: Archive Docs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sphinx-htmldocs
           path: build/htmldocs
@@ -94,7 +94,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.12"
           architecture: "x64"
 
       - name: Development setup on ${{ matrix.os }}
@@ -113,7 +113,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.12"
           architecture: "x64"
 
       - name: Build and verify with twine
