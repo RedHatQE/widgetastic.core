@@ -853,17 +853,18 @@ class Browser:
     def clear(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Clears a text input with given locator."""
         self.logger.debug("clear: %r", locator)
+
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_keyboard_input(el, None)
-        result = el.clear()
-        if el.get_attribute("value") and self.browser_type == "chrome":
-            # Chrome is not able to clear input with element.clear() method, use javascript instead
-            # We need to click on element
-            el.click()
-            self.execute_script("arguments[0].value = '';", el)
-            # If clearing is not followed by send_keys, the previous text will appear again
-            el.send_keys(Keys.SPACE, Keys.BACK_SPACE)
+
+        self.click(locator, *args, **kwargs)
+        ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys("a").key_up(
+            Keys.CONTROL
+        ).perform()
+        result = el.send_keys(Keys.DELETE)
+
         self.plugin.after_keyboard_input(el, None)
+
         return result
 
     def is_selected(self, *args, **kwargs) -> bool:
