@@ -14,7 +14,7 @@ jobs:
   tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         browser: [chrome, firefox]
@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Pull selenium-standalone:latest
-        run: podman pull selenium/standalone-${{ matrix.browser }}:4.9
+        run: podman pull selenium/standalone-${{ matrix.browser }}:latest
 
       - name: Pull docker.io/library/nginx:alpine
         run: podman pull docker.io/library/nginx:alpine
