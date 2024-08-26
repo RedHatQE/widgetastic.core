@@ -24,8 +24,16 @@ jobs:
       - name: Pull selenium-standalone:latest
         run: podman pull selenium/standalone-${{ matrix.browser }}:latest
 
-      - name: Pull docker.io/library/nginx:alpine
+      - name: Pull nginx:alpine
         run: podman pull docker.io/library/nginx:alpine
+
+      - name: Pull pause
+        run: |
+          # something screwy is going on in the github kube node
+          # seeing 404s pulling from k8s.gcr, which was deprecated a year ago anyway
+          # the registry name is hardcoded somewhere on the infra side, but the pull from the new registry works consistently
+          podman pull registry.k8s.io/pause:3.5
+          podman tag registry.k8s.io/pause:3.5 k8s.gcr.io/pause:3.5
 
       - name: Checkout
         uses: actions/checkout@v4

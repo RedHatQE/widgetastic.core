@@ -57,7 +57,7 @@ def selenium_url(worker_id, browser_name, podman, pod):
     last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
     localhost_for_worker = f"127.0.0.{last_oktet}"
     container = podman.containers.create(
-        image=f"docker.io/selenium/standalone-{browser_name}:4.9",
+        image=f"docker.io/selenium/standalone-{browser_name}",
         pod=pod.id,
         remove=True,
         name=f"selenium_{worker_id}",
