@@ -665,6 +665,12 @@ class Browser:
                 )
             ):
                 pass
+            elif (
+                self.browser_type == "chrome"
+                and self.browser_version >= 123
+                and ("has no size and location" in e.msg)
+            ):
+                pass
             else:
                 # Something else, never let it sink
                 raise
