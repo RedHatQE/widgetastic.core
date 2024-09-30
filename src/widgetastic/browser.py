@@ -856,7 +856,7 @@ class Browser:
         location = self.location_of(*args, **kwargs)
         return Location(int(location.x + size.width / 2), int(location.y + size.height / 2))
 
-    def clear(self, locator: LocatorAlias, *args, **kwargs) -> None:
+    def clear(self, locator: LocatorAlias, *args, **kwargs) -> bool:
         """Clears a text input with given locator."""
         self.logger.debug("clear: %r", locator)
 
@@ -864,14 +864,20 @@ class Browser:
         self.plugin.before_keyboard_input(el, None)
 
         self.click(locator, *args, **kwargs)
+        # CTRL + A doesn't work on 'number' types, as
+        # browser does not treat the numeric value as selectable text
+        if el.get_attribute("type") == "number":
+            self.execute_script("arguments[0].value = '';", el)
+            el.send_keys(Keys.SPACE, Keys.BACK_SPACE)
+
         ActionChains(self.selenium).key_down(Keys.CONTROL).send_keys("a").key_up(
             Keys.CONTROL
         ).perform()
-        result = el.send_keys(Keys.DELETE)
+        el.send_keys(Keys.DELETE)
 
         self.plugin.after_keyboard_input(el, None)
 
-        return result
+        return el.get_attribute("value") == ""
 
     def is_selected(self, *args, **kwargs) -> bool:
         return self.element(*args, **kwargs).is_selected()

@@ -181,6 +181,13 @@ def test_simple_input_send_keys_clear(browser):
     assert browser.get_attribute("value", "#input") == ""
 
 
+def test_clear_input_type_number(browser):
+    browser.send_keys("3", "#input_number")
+    assert browser.get_attribute("value", "#input_number") == "3"
+    browser.clear("#input_number")
+    assert browser.get_attribute("value", "#input") == ""
+
+
 def test_copy_paste(browser):
     t = "copy and paste text"
     browser.send_keys(t, "#input")
