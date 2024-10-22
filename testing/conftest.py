@@ -1,5 +1,4 @@
 import os
-from email.policy import default
 from urllib.request import urlopen
 
 import pytest
@@ -35,19 +34,16 @@ def pytest_addoption(parser):
         "--trace_view",
         action="store_true",
         help="Enable tracing for Playwright tests",
-        default=False
+        default=False,
     )
     parser.addoption(
         "--record_video",
         action="store_true",
         help="Enable video recording for Playwright tests",
-        default=False
+        default=False,
     )
     parser.addoption(
-        "--headless",
-        action="store_true",
-        help="Run the browser in headless mode",
-        default=False
+        "--headless", action="store_true", help="Run the browser in headless mode", default=False
     )
 
 
@@ -159,7 +155,7 @@ def engine_driver(browser_type, engine_url, testing_page_url, request):
             if enable_video:
                 context_options = {
                     "record_video_dir": "videos/",
-                    "record_video_size": {"width": 640, "height": 480}
+                    "record_video_size": {"width": 640, "height": 480},
                 }
             context = browser.new_context(**context_options)
 
@@ -173,7 +169,7 @@ def engine_driver(browser_type, engine_url, testing_page_url, request):
 
             # Cleanup
             if enable_trace:
-                context.tracing.stop(path = "trace.zip")
+                context.tracing.stop(path="trace.zip")
             page.close()
             context.close()
             browser.close()
