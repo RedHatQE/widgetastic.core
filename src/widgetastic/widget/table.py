@@ -731,7 +731,7 @@ class Table(Widget):
                     q = f"contains(normalize-space(.), normalize-space({quote(value)}))"
                 elif method == "startswith":
                     # starts with
-                    q = ("starts-with(normalize-space(.), " "normalize-space({}))").format(
+                    q = ("starts-with(normalize-space(.), normalize-space({}))").format(
                         quote(value)
                     )
                 elif method == "endswith":
