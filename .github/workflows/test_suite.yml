@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         browser: [chrome, firefox]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: Pull selenium-standalone:latest
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.x"
 
       - name: Install Deps
         run: |
@@ -102,7 +102,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.x"
           architecture: "x64"
 
       - name: Development setup on ${{ matrix.os }}
@@ -121,7 +121,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.x"
           architecture: "x64"
 
       - name: Build and verify with twine
