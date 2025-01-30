@@ -25,6 +25,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from smartloc import Locator
 from wait_for import TimedOutError
 from wait_for import wait_for
+from playwright.sync_api import Locator as PlayLocator, Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import ElementHandle
 
 from .exceptions import ElementNotInteractableException
 from .exceptions import LocatorNotImplemented
@@ -225,12 +227,14 @@ class Browser:
 
     def __init__(
         self,
-        selenium: WebDriver,
+        selenium: WebDriver = None,
+        page: Page = None,
         plugin_class: Optional[Type[DefaultPlugin]] = None,
         logger: Optional[Logger] = None,
         extra_objects: Optional[Dict[Any, Any]] = None,
     ) -> None:
         self.selenium = selenium
+        self.playwright = page
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
         self.logger = logger or null_logger
@@ -253,6 +257,13 @@ class Browser:
     def title(self) -> str:
         """Returns current title"""
         current_title = self.selenium.title
+        self.logger.info("Current title: %r", current_title)
+        return current_title
+
+    @property
+    def title_play(self) -> str:
+        """Returns the current page title."""
+        current_title = self.playwright.title()
         self.logger.info("Current title: %r", current_title)
         return current_title
 
@@ -385,6 +396,91 @@ class Browser:
 
         return result
 
+    def elements_play(
+        self,
+        locator: Union[str, dict, ElementHandle],
+        parent: Optional[Union[Locator, ElementHandle]] = None,
+        check_visibility: bool = False,
+        check_safe: bool = True,
+        force_check_safe: bool = False,
+        *args,
+        **kwargs,
+    ) -> List[ElementHandle]:
+        """Method that resolves locators into Playwright ElementHandles.
+
+        Args:
+            locator: A valid locator. Valid locators are:
+                * strings (CSS or XPath selectors).
+                * dictionaries - like ``{'xpath': '//something'}``.
+                * :py:class:`ElementHandle` instances.
+            parent: A parent element or locator.
+            check_visibility: If set to ``True`` it will filter out elements that are not visible.
+            check_safe: Checks if the page is safe to interact with.
+        Returns:
+            A :py:class:`list` of :py:class:`ElementHandle`
+        """
+
+        if force_check_safe:
+            import warnings
+
+            warnings.warn(
+                "force_check_safe has been removed and left in definition "
+                "only for backward compatibility. "
+                "It will also be removed from definition soon.",
+                category=DeprecationWarning,
+            )
+
+        locator = self._process_locator_play(locator)
+
+        # Resolve root element or page
+        if isinstance(locator, ElementHandle):
+            result = [locator]
+        else:
+            root_element = self.resolve_parent_element_play(parent)
+            result = self.find_elements_play(locator, root_element)
+
+        if check_visibility:
+            result = [e for e in result if e.is_visible()]
+
+        return result
+
+    def _process_locator_play(
+        self, locator: Union[str, dict, ElementHandle]
+    ) -> Union[str, ElementHandle]:
+        """Converts locator to string for Playwright (CSS or XPath)."""
+        if isinstance(locator, ElementHandle):
+            return locator
+        elif isinstance(locator, dict):
+            # Handle dictionary-based locators, assuming XPath for simplicity
+            if "xpath" in locator:
+                return locator["xpath"]
+            elif "css" in locator:
+                return locator["css"]
+            else:
+                raise ValueError(f"Unsupported locator format: {locator}")
+        return locator
+
+    def resolve_parent_element_play(
+        self, parent: Optional[Union[PlayLocator, ElementHandle]]
+    ) -> PlayLocator:
+        """Resolves the parent element or defaults to the page."""
+        if parent is None:
+            return self.playwright
+        elif isinstance(parent, ElementHandle):
+            return parent
+        return parent
+
+    def find_elements_play(
+        self, locator: str, root: Union[Page, ElementHandle]
+    ) -> List[ElementHandle]:
+        """Finds elements using the provided locator under the root element."""
+        if locator.startswith("//"):
+            # If locator looks like an XPath, use it
+            return root.query_selector_all(f"xpath={locator}")
+        else:
+            # Otherwise, treat as a CSS selector
+            return root.query_selector_all(locator)
+
     def wait_for_element(
         self,
         locator: str,
@@ -446,6 +542,46 @@ class Browser:
         # wait_for returns NamedTuple, return first item from 'out', the WebElement
         return result.out[0]
 
+    def wait_for_element_play(
+        self,
+        locator: str,
+        visible: bool = False,
+        timeout: Union[float, int] = 5000,  # Playwright's timeout is in milliseconds
+        exception: bool = True,
+        ensure_page_safe: bool = False,
+    ) -> Optional[str]:
+        """
+        Wait for presence or visibility of an element specified by a locator.
+
+        Args:
+            locator (str): The selector or locator to find the element.
+            visible (bool): If True, it checks for visibility as well as presence.
+            timeout (int or float): How long to wait for (in milliseconds). Defaults to 5000 ms.
+            exception (bool): If True (default), raises an error if the element isn't found.
+                              If False, returns None if not found.
+            ensure_page_safe (bool): Not used in this context, can be removed if unnecessary.
+
+        Returns:
+            The Playwright locator if found; None if not found and exception is False.
+
+        Raises:
+            PlaywrightTimeoutError if the element is not found and exception is True.
+        """
+        try:
+            if visible:
+                # Wait for the element to be visible
+                self.playwright.locator(locator).wait_for(state="visible", timeout=timeout)
+            else:
+                # Wait for the element to be present in the DOM
+                self.playwright.locator(locator).wait_for(state="attached", timeout=timeout)
+
+            return self.playwright.locator(locator)
+        except PlaywrightTimeoutError:
+            if exception:
+                raise PlaywrightTimeoutError(f"Failed waiting for element with locator: {locator}")
+            else:
+                return None
+
     def element(self, locator: LocatorAlias, *args, **kwargs) -> WebElement:
         """Returns one :py:class:`selenium.webdriver.remote.webelement.WebElement`
 
@@ -465,6 +601,33 @@ class Browser:
             return elements[0]
         except IndexError:
             raise NoSuchElementException(f"Could not find an element {repr(locator)}") from None
+
+    def element_play(self, locator: Any, *args, **kwargs) -> PlayLocator:
+        """Returns a Locator for the specified element.
+
+        Args:
+            locator: The locator for the element.
+
+        Returns:
+            A Locator object representing the element.
+
+        Raises:
+            Error if the element is not found.
+        """
+        try:
+            vcheck = self._locator_force_visibility_check(locator)
+            if vcheck is not None:
+                kwargs["visible"] = vcheck  # Use Playwright's 'visible' option
+
+            elements = self.elements_play(
+                locator, *args, **kwargs
+            )  # Assuming this method returns a list of Locators
+            return elements[0]  # Return the first element
+
+        except IndexError:
+            raise Exception(
+                f"Could not find an element {repr(locator)}"
+            )  # Playwright's equivalent for not found
 
     def perform_click(self) -> None:
         """Clicks the left mouse button at the current mouse position."""
@@ -503,6 +666,22 @@ class Browser:
             self.plugin.after_click(el, locator)
         except UnexpectedAlertPresentException:
             pass
+
+    def click_play(self, locator: str, ignore_ajax: bool = False, *args, **kwargs) -> None:
+        """
+        Clicks a specific element using Playwright's click method.
+
+        Args:
+            locator (str): The selector or locator to find the element.
+            ignore_ajax (bool): If True, it won't wait for network activity after clicking.
+        """
+        # Move to the element and click
+        self.playwright.locator(locator).hover()
+        self.playwright.locator(locator).click()
+
+        # Optionally wait for any AJAX or page activity if not ignoring it
+        if not ignore_ajax:
+            self.playwright.wait_for_load_state("networkidle")
 
     @retry_stale_element
     def double_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
@@ -575,6 +754,22 @@ class Browser:
         try:
             return self.move_to_element(locator, *args, **kwargs).is_displayed()
         except (NoSuchElementException, MoveTargetOutOfBoundsException):
+            return False
+
+    def is_displayed_play(self, locator: PlayLocator) -> bool:
+        """Check if the element represented by the locator is displayed.
+
+        Args:
+            locator: The locator for the element.
+
+        Returns:
+            A bool indicating whether the element is displayed.
+        """
+        try:
+            element = self.playwright.locator(locator)
+            # Check if the element is visible
+            return element.is_visible()
+        except Exception:
             return False
 
     @retry_stale_element
@@ -678,6 +873,19 @@ class Browser:
             self.plugin.highlight_element(el)
         return el
 
+    def move_to_element_play(self, locator: str, *args, **kwargs) -> None:
+        """
+        Moves the mouse cursor to the middle of the element represented by the locator.
+
+        Args:
+            locator: A string representing the locator (e.g., CSS selector, XPath).
+        """
+        # Use the locator to find the element and move the mouse to it.
+        element = self.playwright.locator(locator)
+        element.evaluate("(el) => el.scrollIntoView()")
+        self.logger.debug("Hovered over element at locator: %r", locator)
+        return element
+
     def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
         """Drags the source element and drops it into target.
 
@@ -769,6 +977,26 @@ class Browser:
         self.logger.debug("css classes for %r => %r", locator, result)
         return result
 
+    def classes_play(self, locator: str) -> set:
+        """
+        Returns a set of classes attached to the element identified by the locator.
+
+        Args:
+            locator: A string representing the locator (e.g., CSS selector, XPath).
+
+        Returns:
+            A set of strings with the classes.
+        """
+        # Use the locator to find the element.
+        element = self.playwright.locator(locator)
+
+        # Use JavaScript to retrieve the class list of the element.
+        class_list = element.evaluate("(el) => el.className.split(' ').filter(Boolean)")
+        self.logger.debug(f"CSS classes for {locator} => {class_list}")
+
+        # Convert the list to a set to ensure uniqueness.
+        return set(class_list)
+
     def tag(self, *args, **kwargs) -> str:
         """Returns the tag name of the element represented by the locator passed.
 
@@ -778,6 +1006,18 @@ class Browser:
             :py:class:`str` with the tag name
         """
         return self.element(*args, **kwargs).tag_name
+
+    def tag_play(self, locator: str, *args, **kwargs) -> str:
+        """Returns the tag name of the element represented by the locator passed.
+
+        Args: locator: The selector string or locator of the element.
+
+        Returns:
+            str: The tag name of the element.
+        """
+        element = self.playwright.locator(locator)
+        tag_name = element.evaluate("element => element.tagName.toLowerCase()")
+        return tag_name
 
     @retry_stale_element
     def text(self, locator: LocatorAlias, *args, **kwargs) -> str:
@@ -810,6 +1050,28 @@ class Browser:
         self.logger.debug("text(%r) => %r", locator, crop_string_middle(result))
         return result
 
+    def text_play(self, locator: str, *args, **kwargs) -> str:
+        """Returns the normalized text inside the element represented by the locator passed.
+
+        Args:
+            locator: The selector string or locator of the element.
+
+        Returns:
+            str: The normalized text content of the element.
+        """
+        element = self.playwright.locator(locator)
+
+        # Fetch text content, handling cases where the element might be invisible or empty
+        try:
+            text_content = element.text_content()
+        except Exception as e:
+            # Handle cases where the text content can't be retrieved, fall back to empty string
+            self.logger.error(f"Error fetching text content for {locator}: {e}")
+            text_content = ""
+
+        # Normalize the text by stripping extra spaces
+        return text_content.strip() if text_content else ""
+
     @retry_stale_element
     def attributes(self, locator: LocatorAlias, *args, **kwargs) -> Dict:
         """Return a dict of attributes attached to the element.
@@ -827,9 +1089,55 @@ class Browser:
         self.logger.debug("css attributes for %r => %r", locator, result)
         return result
 
+    def attributes_play(self, locator: str, *args, **kwargs) -> dict:
+        """Return a dictionary of attributes attached to the element.
+
+        Args:
+            locator: The selector string or locator of the element.
+
+        Returns:
+            dict: A dictionary of attributes and their respective values.
+        """
+        element = self.playwright.locator(locator)
+
+        try:
+            # Use JavaScript to get all attributes of the element
+            attributes = element.evaluate(
+                "(el) => { let attrs = {}; for (let attr of el.attributes) { attrs[attr.name] = attr.value; } return attrs; }"
+            )
+        except Exception as e:
+            self.logger.error(f"Error fetching attributes for {locator}: {e}")
+            attributes = {}
+
+        return attributes
+
     @retry_stale_element
     def get_attribute(self, attr: str, *args, **kwargs) -> Optional[str]:
         return self.element(*args, **kwargs).get_attribute(attr)
+
+    def get_attribute_play(self, attr: str, locator: str, *args, **kwargs) -> str:
+        """
+        Returns the value of the specified attribute of the element.
+
+        Args:
+            locator: The locator of the element.
+            attr: The attribute to retrieve the value of.
+
+        Returns:
+            The value of the specified attribute as a string.
+        """
+        # Locate the element using Playwright
+        element: Locator = self.element_play(locator, *args, **kwargs)
+
+        # Retrieve the attribute value
+        attribute_value = element.get_attribute(attr)
+
+        if attribute_value is None:
+            self.logger.warning(f"Attribute '{attr}' not found for element located by {locator}")
+            return ""
+
+        self.logger.debug(f"Attribute '{attr}' for {locator} => {attribute_value}")
+        return attribute_value
 
     @retry_stale_element
     def set_attribute(self, attr: str, value: str, *args, **kwargs) -> None:
@@ -840,10 +1148,52 @@ class Browser:
             value,
         )
 
+    def set_attribute_play(self, locator: str, attr: str, value: str) -> None:
+        """
+        Sets an attribute on an element.
+
+        Args:
+            locator: The locator of the element (e.g., CSS selector or XPath).
+            attr: The name of the attribute to set.
+            value: The value to set for the attribute.
+        """
+        # Find the element using the locator and set the attribute using JavaScript
+        print(f"\n{attr=}, \n{value=}")
+        element = self.playwright.locator(locator)
+        element.evaluate(
+            "(el, props) => el.setAttribute(props.attr, props.value)",
+            {"attr": attr, "value": value},
+        )
+
     def size_of(self, *args, **kwargs) -> Size:
         """Returns element's size as a tuple of width/height."""
         size = self.element(*args, **kwargs).size
         return Size(size["width"], size["height"])
+
+    def size_of_play(self, locator: str, *args, **kwargs) -> Size:
+        """
+        Returns the element's size as a named tuple of width and height.
+
+        Args:
+            locator: A string representing the selector of the element.
+            *args: Additional arguments (if any).
+            **kwargs: Additional keyword arguments (if any).
+
+        Returns:
+            A named tuple containing the width and height of the element.
+        """
+        # Locate the element using the provided locator
+        element = self.playwright.locator(locator, *args, **kwargs)
+
+        # Get the bounding box of the element
+        bounding_box = element.bounding_box()
+
+        # Extract width and height from the bounding box
+        width = bounding_box["width"]
+        height = bounding_box["height"]
+
+        # Return as a named tuple for easier access
+        return Size(width, height)
 
     def location_of(self, *args, **kwargs) -> Location:
         """Returns element's location as a tuple of x/y."""
@@ -878,6 +1228,29 @@ class Browser:
         self.plugin.after_keyboard_input(el, None)
 
         return el.get_attribute("value") == ""
+
+    def clear_play(self, locator: str, *args, **kwargs) -> None:
+        """Clears a text input with the given locator."""
+        input_locator = self.playwright.locator(locator)
+
+        try:
+            # First attempt: use the fill method to clear the input
+            input_locator.fill("")  # Try to clear the input by setting it to an empty string
+            # Verify if the input is cleared
+            if input_locator.evaluate("el => el.value") == "":
+                return
+        except Exception as e:
+            print(f"fill() method failed with error: {e}")
+
+        try:
+            # Second attempt: use JavaScript to clear the value
+            input_locator.evaluate("el => el.value = ''")
+            # Verify if the input is cleared
+            if input_locator.evaluate("el => el.value") == "":
+                print("Input cleared using JavaScript.")
+                return
+        except Exception as e:
+            print(f"JavaScript method failed with error: {e}")
 
     def is_selected(self, *args, **kwargs) -> bool:
         return self.element(*args, **kwargs).is_selected()
@@ -923,6 +1296,47 @@ class Browser:
             if file_intercept:
                 self.selenium.file_detector = UselessFileDetector()
 
+    def send_keys_play(
+        self, text: str, locator: LocatorAlias, sensitive=False, *args, **kwargs
+    ) -> None:
+        """
+        Sends keys to the element. Clears the input field before typing.
+        Detects file inputs automatically and handles sensitive text.
+
+        Args:
+            text: Text to be inserted into the element.
+            sensitive: If True, sensitive data will not be logged.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        text = str(text) or ""
+        file_intercept = False
+
+        # Check if the element is an input of type file
+        element = self.element_play(locator, *args, **kwargs)
+        tag_name = element.evaluate("el => el.tagName.toLowerCase()")
+
+        if tag_name == "input":
+            input_type = element.get_attribute("type")
+            if input_type and input_type.strip() == "file":
+                file_intercept = True
+
+        # Handle file input field
+        if file_intercept:
+            self.logger.debug(f"Uploading file {text} to {locator}")
+            element.set_input_files(text)
+        else:
+            # Clear the input field before typing
+            element.fill("")  # Clear the input field
+
+            # Log sensitive data conditionally
+            self.logger.debug(f"Sending keys {'*' * len(text) if sensitive else text} to {locator}")
+            element.fill(text)  # Use `fill` to input the text
+
+        # Optionally handle ENTER key separately if needed
+        if "\n" in text:
+            self.logger.info(f"Detected ENTER in the text {text}")
+
     def send_keys_to_focused_element(self, *keys: str) -> None:
         """Sends keys to current focused element.
 
@@ -945,6 +1359,24 @@ class Browser:
         ).perform()
         self.plugin.after_keyboard_input(el, None)
 
+    def copy_play(self, locator: str) -> None:
+        """
+        Selects all text in an element and copies it to the clipboard.
+
+        Args:
+            page: A Playwright Page object.
+            locator: A string representing the selector of the input element.
+        """
+        # Locate the input element and Click on the element to ensure it has focus
+        self.playwright.locator(locator).click()
+
+        # Simulate keyboard events to select all text and copy it
+        # Adjust for macOS with 'Meta' if necessary
+        self.playwright.keyboard.press("Control+A")  # Select all text (use 'Meta+A' on macOS)
+        self.playwright.keyboard.press(
+            "Control+C"
+        )  # Copy the selected text (use 'Meta+C' on macOS)
+
     def paste(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Paste from clipboard to current element."""
         self.logger.debug("paste: %r", locator)
@@ -955,6 +1387,21 @@ class Browser:
             Keys.CONTROL
         ).perform()
         self.plugin.after_keyboard_input(el, None)
+
+    def paste_play(self, locator: str) -> None:
+        """
+        Pastes clipboard content into the specified element.
+
+        Args:
+            page: A Playwright Page object.
+            locator: A string representing the selector of the input element.
+        """
+        # Locate the input element and Click on the element to ensure it has focus
+        self.playwright.locator(locator).click()
+
+        # Simulate keyboard events to paste content
+        # Adjust for macOS with 'Meta' if necessary
+        self.playwright.keyboard.press("Control+V")  # Paste content (use 'Meta+V' on macOS)
 
     def get_alert(self) -> Alert:
         """Returns the current alert object.
@@ -1138,6 +1585,26 @@ class Browser:
         """
         self.logger.debug("Saving screenshot to -> %r", filename)
         self.selenium.save_screenshot(filename=filename)
+
+    def save_screenshot_play(self, filename: str) -> bool:
+        """Saves a screenshot of the current browser window to a PNG image file.
+
+        Args:
+            filename: The full path where you wish to save your screenshot.
+                      This should end with a `.png` extension.
+
+        Returns:
+            bool: True if the screenshot is saved successfully, False otherwise.
+        """
+        self.logger.debug("Saving screenshot to -> %r", filename)
+        try:
+            # Use Playwright's screenshot method to save the screenshot.
+            self.playwright.screenshot(path=filename)
+            self.logger.info("Screenshot saved successfully.")
+            return True
+        except Exception as e:
+            self.logger.error("Failed to save screenshot: %s", e)
+            return False
 
 
 class BrowserParentWrapper:
