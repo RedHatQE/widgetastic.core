@@ -841,6 +841,11 @@ class ConditionalSwitchableView(Widgetable):
                             ref_o = nested_getattr(o, self.reference)
                             if isinstance(ref_o, Widget):
                                 ref_value = ref_o.read()
+                                ref_value = (
+                                    ref_value.split(" ")[1]
+                                    if ref_value.startswith("×")
+                                    else ref_value
+                                )
                             else:
                                 ref_value = ref_o
                             condition_arg_cache[self.reference] = ref_value
