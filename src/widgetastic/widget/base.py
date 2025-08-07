@@ -3,15 +3,18 @@ import inspect
 import types
 from copy import copy
 
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement
-from smartloc import Locator
+from playwright.sync_api import ElementHandle
+from playwright.sync_api import Locator
+
+
+from widgetastic.locator import SmartLocator
 from wait_for import wait_for
 
 from widgetastic.browser import Browser
 from widgetastic.browser import BrowserParentWrapper
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.exceptions import LocatorNotImplemented
+from widgetastic.exceptions import NoSuchElementException
 from widgetastic.log import call_sig
 from widgetastic.log import create_child_logger
 from widgetastic.log import create_widget_logger
@@ -274,7 +277,7 @@ class WidgetMetaclass(type):
             if isinstance(root, ParametrizedLocator):
                 new_attrs["__locator__"] = _gen_locator_root()
             else:
-                new_attrs["__locator__"] = _gen_locator_meth(Locator(root))
+                new_attrs["__locator__"] = _gen_locator_meth(SmartLocator(root))
         new_attrs["_included_widgets"] = tuple(sorted(included_widgets, key=lambda w: w._seq_id))
         new_attrs["_desc_name_mapping"] = desc_name_mapping
         return super().__new__(cls, name, bases, new_attrs)
@@ -304,6 +307,8 @@ class Widget(metaclass=WidgetMetaclass):
 
     #: Default value for parent_descriptor
     parent_descriptor = None
+    #: Set of HTML tags for elements that can have a 'disabled' state.
+    DISABLEABLE_TAGS = {"button", "input", "select", "textarea", "option", "optgroup", "fieldset"}
 
     # Helper methods
     @staticmethod
@@ -343,13 +348,12 @@ class Widget(metaclass=WidgetMetaclass):
         self._initialized_included_widgets = {}
 
     def __element__(self):
-        """Implement the logic of querying
-        :py:class:`selenium.webdriver.remote.webelement.WebElement` from Selenium.
+        """Implement the logic of querying a Playwright Locator.
 
-        It uses :py:meth:`__locator__` to retrieve the locator and then it looks up the WebElement
+        It uses :py:meth:`__locator__` to retrieve the locator and then it looks up the Locator
         on the parent's browser.
 
-        If the ``__locator__`` isbadly implemented and returns a ``WebElement`` instance, it returns
+        If the ``__locator__`` is badly implemented and returns a Playwright Locator instance, it returns
         it directly.
 
         You usually want this method to be intact.
@@ -359,15 +363,17 @@ class Widget(metaclass=WidgetMetaclass):
         except AttributeError:
             raise AttributeError(f"__locator__() is not defined on {type(self).__name__} class")
         else:
-            if isinstance(locator, WebElement):
+            if isinstance(locator, (Locator, ElementHandle)):
                 self.logger.warning(
-                    "__locator__ of %s class returns a WebElement!", type(self).__name__
+                    "__locator__ of %s class returns a Playwright Locator!", type(self).__name__
                 )
                 return locator
             else:
                 return self.parent_browser.element(locator)
 
     def _get_included_widget(self, includer_id, widget_name, use_parent):
+        """Get an included widget by ID, initializing it if needed."""
+
         if includer_id not in self._initialized_included_widgets:
             for widget_includer in self._included_widgets:
                 if widget_includer._seq_id == includer_id:
@@ -383,7 +389,7 @@ class Widget(metaclass=WidgetMetaclass):
     def flush_widget_cache(self):
         """Flush the widget cache recursively for the whole :py:class:`Widget` tree structure.
 
-        Do not use this unless you see glitches and ``StaleElementReferenceException``. Well written
+        Do not use this unless you see glitches. Well written
         widgets should not need flushing.
         """
         for widget in self._widget_cache.values():
@@ -501,26 +507,36 @@ class Widget(metaclass=WidgetMetaclass):
 
     @property
     def is_displayed(self):
-        """Shortcut allowing you to detect if the widget is displayed.
-
-        If the logic behind is_displayed is more complex, you can always override this.
+        """Check whether the widget is displayed.
 
         Returns:
             :py:class:`bool`
         """
+        # Ensure proper frame context before checking visibility
+        if hasattr(self.parent, "child_widget_accessed"):
+            self.parent.child_widget_accessed(self)
+
         return self.browser.is_displayed(self)
 
     @property
     def is_enabled(self):
         """Check widget is enabled or not.
 
-        The logic behind `is_enabled` is WebElement property. If `__locator__` not pointing to the
-        expected `WebElement`, you can always override this.
+        The logic behind `is_enabled` is browser dependent. If `__locator__` not pointing to the
+        expected element, you can always override this. This version is adapted for Playwright's
+        stricter checks on non-form elements.
 
         Returns:
             :py:class:`bool`
         """
-        return self.browser.element(self).is_enabled()
+        tag = self.browser.tag(self)
+        if tag in self.DISABLEABLE_TAGS:
+            return self.browser.is_enabled(self)
+        else:
+            self.logger.warning(
+                f"`is_enabled` only applicable for these tags: {self.DISABLEABLE_TAGS}"
+            )
+            return True
 
     @logged()
     def wait_displayed(self, timeout="10s", delay=0.2):
@@ -535,10 +551,10 @@ class Widget(metaclass=WidgetMetaclass):
 
     @logged()
     def move_to(self):
-        """Moves the mouse to the Selenium WebElement that is resolved by this widget.
+        """Moves the mouse to the Playwright Locator that is resolved by this widget.
 
         Returns:
-            :py:class:`selenium.webdriver.remote.webelement.WebElement` instance
+            :py:class:`playwright.sync_api.Locator` instance
         """
         return self.browser.move_to_element(self)
 
@@ -647,16 +663,17 @@ class Widget(metaclass=WidgetMetaclass):
         return [
             getattr(self, widget_name)
             for widget_name in self.widget_names
-            # Grab the descriptor
             if getattr(type(self), widget_name) in self._widget_cache
         ]
 
     @property
     def width(self):
+        """Get the width of the widget in pixels."""
         return self.browser.size_of(self, parent=self.parent)[0]
 
     @property
     def height(self):
+        """Get the height of the widget in pixels."""
         return self.browser.size_of(self, parent=self.parent)[1]
 
     def __iter__(self):
@@ -666,6 +683,8 @@ class Widget(metaclass=WidgetMetaclass):
 
 
 def _gen_locator_meth(loc):
+    """Generate a __locator__ method for a widget."""
+
     def __locator__(self):  # noqa
         return loc
 
@@ -673,6 +692,8 @@ def _gen_locator_meth(loc):
 
 
 def _gen_locator_root():
+    """Generate a __locator__ method for a widget that returns the ROOT locator."""
+
     def __locator__(self):  # noqa
         return self.ROOT
 
@@ -680,6 +701,8 @@ def _gen_locator_root():
 
 
 class ClickableMixin:
+    """Mixin for widgets that can be clicked."""
+
     @logged()
     def click(self, handle_alert=None):
         """Click this widget
@@ -690,8 +713,6 @@ class ClickableMixin:
         self.browser.click(self, ignore_ajax=(handle_alert is not None))
         if handle_alert is not None:
             self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
-            # ignore_ajax will not execute the ensure_page_safe plugin with True
-            self.browser.plugin.ensure_page_safe()
 
 
 class GenericLocatorWidget(Widget, ClickableMixin):
@@ -778,6 +799,7 @@ class ConditionalSwitchableView(Widgetable):
 
     @property
     def child_items(self):
+        """Get all child items registered with this conditional switchable view."""
         return [
             descriptor
             for _, descriptor in self.registered_views
@@ -800,6 +822,7 @@ class ConditionalSwitchableView(Widgetable):
         """
 
         def view_process(cls_or_descriptor):
+            """Process a view class or descriptor."""
             if not (
                 isinstance(cls_or_descriptor, WidgetDescriptor)
                 or (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))
@@ -987,7 +1010,7 @@ class View(Widget):
         not have the root locator, it returns None.
 
         Returns:
-            :py:class:`selenium.webdriver.remote.webelement.WebElement` instance or ``None``.
+            :py:class:`playwright.sync_api.Locator` instance or ``None``.
         """
         try:
             return super().move_to()
@@ -1239,6 +1262,7 @@ class ParametrizedViewRequest:
         )
 
     def read(self):
+        """Read the parametrized view and return a dictionary of values."""
         # Special handling of the parametrized views
         all_presences = self.view_class.all(self.parent_object.browser)
         value = {}
@@ -1252,6 +1276,7 @@ class ParametrizedViewRequest:
         return value
 
     def fill(self, value):
+        """Fill the parametrized view with the given values."""
         was_change = False
         if not isinstance(value, dict):
             raise ValueError("When filling parametrized view a dict is required")
