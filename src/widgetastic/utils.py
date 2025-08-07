@@ -1,21 +1,47 @@
-"""This module contains some supporting classes."""
+"""
+Widgetastic Core Utilities
+==========================
 
-import functools
+This module contains supporting classes and utilities for widgetastic.core framework.
+"""
+
 import re
 import string
-import time
 from threading import Lock
 
 from cached_property import cached_property
-from selenium.common.exceptions import StaleElementReferenceException
-from smartloc import Locator
 
+from .locator import SmartLocator
 from . import log
 from . import xpath
 
 
 class Widgetable:
-    """A base class that should be a base class of anything that can be or act like a Widget."""
+    """A base class that should be a base class of anything that can be or act like a Widget.
+
+    This class provides the fundamental infrastructure for widget-like objects in widgetastic.core.
+    It handles sequential ID assignment for widgets and provides the child_items interface that
+    enables the widget system to discover and manage widget descriptors.
+
+    Key Features:
+    - Thread-safe sequential ID assignment for each widget instance
+    - Child widget discovery through the child_items property
+    - Foundation for widget descriptor mapping and instantiation
+
+    Usage:
+        Inherit from Widgetable when creating custom widget-like classes:
+
+        .. code-block:: python
+
+            class MyCustomWidget(Widgetable):
+                def __init__(self, locator):
+                    super().__init__()
+                    self.locator = locator
+
+                @property
+                def child_items(self):
+                    return []  # Override to return child widget descriptors
+    """
 
     #: Sequential counter that gets incremented on each Widgetable creation
     _seq_cnt = 0
@@ -263,10 +289,38 @@ class VersionPick(Widgetable, ConstructorResolvable):
                 '2.5.0': Bar('baz'),
             })
 
-    This sample will resolve the correct (Foo or Bar) kind of item and returns it.
+            # Different widget types for same functionality
+            user_selector = VersionPick({
+                '1.0': Select("//select[@name='user']"),           # Dropdown in v1
+                '2.0': TextInput("//input[@placeholder='Search users']"),  # Search box in v2
+            })
+
+            # Version-dependent text patterns
+            status_message = VersionPick({
+                '1.0': Text("//div[@class='status']"),
+                '2.0': Text("//span[@data-testid='status-indicator']"),
+            })
+
+
+    Practical Usage:
+
+    .. code-block:: python
+
+        # Browser setup with version
+        browser.product_version = "2.1.0"
+
+        view = ProductView(browser)
+
+        # Automatically resolves to the v2.0 button (highest compatible)
+        submit_btn = view.submit_button  # Returns Button("//button[contains(@class, 'btn-submit')]")
+        submit_btn.click()
+
+        # Works with any widget method
+        view.user_selector.fill("john_doe")  # Uses TextInput for v2.1.0
 
     Args:
-        version_dict: Dictionary of ``version_introduced: item``
+        version_dict: Dictionary mapping version strings to objects/widgets.
+                     Keys should be version strings, values can be any object.
     """
 
     #: This variable specifies the class that is used for version comparisons. You can replace it
@@ -326,6 +380,20 @@ class VersionPick(Widgetable, ConstructorResolvable):
 
 
 class Fillable:
+    """Interface for objects that can provide values for widget filling operations.
+
+    The Fillable interface allows complex objects to define how they should be
+    represented when used as fill values in widgets. This is particularly useful
+    for domain objects, data classes, or any complex objects that need to be
+    converted to simple values for UI interaction.
+
+    Key Benefits:
+    - **Automatic Conversion**: Objects automatically convert to fill-appropriate values
+    - **Domain Object Support**: Business objects can define their UI representation
+    - **Type Safety**: Ensures consistent value extraction across the application
+    - **Extensible**: Easy to implement for custom object types
+    """
+
     @classmethod
     def coerce(cls, o):
         """This method serves as a processor for filling values.
@@ -348,45 +416,92 @@ class Fillable:
             return o
 
     def as_fill_value(self):
+        """Return the value that should be used when filling widgets.
+
+        This method must be implemented by all Fillable subclasses to define
+        how the object should be represented in UI filling operations.
+
+        Returns:
+            The value to use for widget filling (typically str, int, float, bool)
+
+        Raises:
+            NotImplementedError: If not implemented by subclass
+        """
         raise NotImplementedError("Descendants of Fillable must implement .as_fill_value method!")
 
 
 class ParametrizedString(ConstructorResolvable):
-    """Class used to generate strings based on the context passed to the view.
+    """Dynamic string template that resolves parameters from view context and attributes.
 
-    Useful for parametrized views.
+    This class creates dynamic strings by substituting parameters from the view's context
+    or attributes. It's particularly useful for creating dynamic locators, messages, or
+    any strings that need to change based on the current view state.
 
-    They are a descriptor, so the :py:class:`ParametrizedString` instance materializes as a string
-    upon accessing on an instance.
+    Key Features:
+    - **Context Resolution**: Access view context data using `{param_name}`
+    - **Attribute Resolution**: Access view attributes using `{@attr_name}`
+    - **Nested Access**: Access nested attributes using `{@parent/child/attr}`
+    - **String Filters**: Apply transformations using pipe operators `{param|filter}`
+    - **Locator Support**: Automatically handles SmartLocator objects
+    - **Descriptor Pattern**: Automatically resolves when accessed on view instances
 
-    Supported filters:
+    Available Filters:
+    - `quote`: XPath-safe quoting for string values
+    - `lower`: Convert to lowercase
+    - `upper`: Convert to uppercase
+    - `title`: Convert to title case
 
-        See :py:attr:`OPERATIONS`
+    Template Syntax:
+        - `{param}`: Resolve from view.context['param']
+        - `{@attr}`: Resolve from view.attr
+        - `{@parent/child}`: Resolve from view.parent.child
+        - `{param|filter}`: Apply filter to resolved value
+        - `{"nested-{@attr}"|quote}`: Nested templates with filtering
 
-    Sample strings:
+    Common Usage Patterns:
 
     .. code-block:: python
 
-        "foo"           # No resolution, returns a string
-        "foo-{xyz}"     # if xyz=bar in the view context data, then the result is foo-bar
-        "foo-{@xyz}"    # Same as the preceeding string, just the xyz is looked up as view attribute
-        "//a[@id={@boo|quote}]"  # Same as preceeding, but quote the value per XPath specifications
-        '//a[@id={"vm-{@boo}"|quote}]'  # Same as preceding, use double quotes to use maximum of
-                                        # single level nesting if you need to use the value in
-                                        # conjuntion with a constant or another value
+        class MyView(View):
+            # Simple context parameter
+            title = ParametrizedString("Welcome {username}")
 
-    The last example demonstrated is a sort of workaround for the fact there is no suitable XPath
-    processing and manipulating library in Python. It is not recommended to exploit that use case
-    further. If you need more than what the last use case provides, you will be better off creating
-    a property to generate the required string.
+            # Attribute-based locator
+            button_locator = ParametrizedString("//button[@id='{@button_id}']")
 
-    You can use the functionality of :py:func:`nested_getattr` - the reference of parameters on the
-    object (``@param_name``) also supports nesting, so you can access a child or parent value, like
-    ``{@parent/something}``. The dots are replaced with forward slashes because python ``.format``
-    does not support dots.
+            # With filtering for XPath safety
+            safe_xpath = ParametrizedString("//div[@title={@title|quote}]")
+
+            # Nested attribute access
+            nested_element = ParametrizedString("//span[contains(text(), '{@parent/config/name}')]")
+
+            # Complex template with multiple parameters
+            dynamic_message = ParametrizedString("User {username} has {@item_count} items")
+
+        # Usage
+        view = MyView(browser, additional_context={'username': 'john'})
+        view.button_id = 'submit-btn'
+
+        # Automatically resolves when accessed
+        locator_string = view.button_locator  # "//button[@id='submit-btn']"
+
+    Advanced Examples:
+
+    .. code-block:: python
+
+        # Working with SmartLocator objects
+        class FormView(View):
+            base_locator = SmartLocator("//form[@id='user-form']")
+            field_template = ParametrizedString("{@base_locator}//input[@name='{field_name}']")
+
+        # Conditional templates
+        class ConditionalView(View):
+            element = ParametrizedString(
+                "//div[@class='item {status}']//span[text()='{@item_name|quote}']"
+            )
 
     Args:
-        template: String template in ``.format()`` format,
+        template: String template using Python's .format() syntax with widgetastic extensions
     """
 
     OPERATIONS = {
@@ -412,7 +527,38 @@ class ParametrizedString(ConstructorResolvable):
                 self.format_params[param_name] = (context_var_name, tuple(ops))
 
     def resolve(self, view):
-        """Resolve the parametrized string like on a view."""
+        """Resolve the parametrized string using the provided view's context and attributes.
+
+        This method performs the actual parameter substitution by:
+        1. Extracting values from view.context for {param} patterns
+        2. Extracting values from view attributes for {@attr} patterns
+        3. Supporting nested attribute access with {@parent/child} patterns
+        4. Applying any specified filters using the pipe operator
+        5. Handling SmartLocator objects by extracting their string representation
+
+        The resolution process is context-aware and supports complex nested structures,
+        making it suitable for dynamic locator generation and template strings.
+
+        Args:
+            view: The view instance containing context data and attributes to resolve.
+                 Must have a 'context' dictionary attribute for parameter resolution.
+
+        Returns:
+            str: The fully resolved string with all parameters substituted and filters applied.
+
+        Raises:
+            AttributeError: When a referenced attribute doesn't exist on the view
+            KeyError: When a referenced context parameter doesn't exist
+            NameError: When an unknown filter operation is specified
+            TypeError: When parameter resolution is attempted on a non-view object
+
+        Example:
+            >>> template = ParametrizedString("User {username} has {@item_count} items")
+            >>> view.context = {'username': 'john'}
+            >>> view.item_count = 5
+            >>> template.resolve(view)
+            'User john has 5 items'
+        """
         format_dict = {}
         for format_key, (context_name, ops) in self.format_params.items():
             if context_name.startswith('"') and context_name.endswith('"'):
@@ -420,12 +566,21 @@ class ParametrizedString(ConstructorResolvable):
             else:
                 try:
                     if context_name.startswith("@"):
+                        # Resolve view attribute (supports nested access via "/")
                         attr_name = context_name[1:]
                         param_value = nested_getattr(view, attr_name.split("/"))
-                        if isinstance(param_value, Locator):
-                            # Check if it is a locator. We want to pull the string out of it
+
+                        # Playwright Migration: Enhanced locator detection
+                        # Check if it's a SmartLocator or any locator-like object
+                        if hasattr(param_value, "by") and hasattr(param_value, "locator"):
+                            # Extract the locator string for template substitution
+                            # This ensures compatibility with both legacy Locator and new SmartLocator
                             param_value = param_value.locator
+                        elif hasattr(param_value, "__str__") and hasattr(param_value, "by"):
+                            # Handle SmartLocator string conversion for Playwright
+                            param_value = str(param_value)
                     else:
+                        # Resolve from view context dictionary
                         param_value = view.context[context_name]
                 except AttributeError:
                     if context_name.startswith("@"):
@@ -456,8 +611,63 @@ class ParametrizedString(ConstructorResolvable):
 
 
 class ParametrizedLocator(ParametrizedString):
-    """
-    :py:class:`ParametrizedString` modified to return instances of :py:class:`smartloc.Locator`
+    """Dynamic locator template that returns SmartLocator instances.
+
+    This class extends ParametrizedString to automatically create SmartLocator objects
+    from resolved template strings. It's the preferred way to create dynamic locators
+    that need to be resolved at runtime based on view context or attributes.
+
+    Key Benefits:
+    - **Automatic SmartLocator Creation**: Resolved strings become SmartLocator instances
+    - **Format Detection**: SmartLocator automatically detects CSS, XPath, etc.
+    - **Playwright Compatibility**: Generated locators work seamlessly with Playwright
+    - **Frame Context Support**: Works correctly within iframe-based widgets
+    - **Template Flexibility**: All ParametrizedString features available
+
+    Common Usage Patterns:
+
+    .. code-block:: python
+
+        class UserView(View):
+            # Dynamic XPath locator
+            user_row = ParametrizedLocator("//tr[@data-user-id='{user_id}']")
+
+            # CSS selector with attribute substitution
+            status_badge = ParametrizedLocator("#{@container_id} .status-{status}")
+
+            # Complex locator with filtering
+            safe_locator = ParametrizedLocator("//div[@title={@title|quote}]")
+
+        # Usage
+        view = UserView(browser, additional_context={'user_id': '123', 'status': 'active'})
+        view.container_id = 'user-panel'
+
+        # Returns SmartLocator instances
+        locator = view.user_row  # SmartLocator("//tr[@data-user-id='123']")
+        element = browser.element(locator)  # Works with Playwright
+
+    Advanced Examples:
+
+    .. code-block:: python
+
+        class DynamicFormView(View):
+            # Locator that adapts based on form type
+            submit_button = ParametrizedLocator(
+                "//form[@class='{form_type}']//button[@type='submit']"
+            )
+
+            # Nested attribute access for complex hierarchies
+            field_locator = ParametrizedLocator(
+                "//fieldset[@id='{@parent/section_id}']//input[@name='{field_name}']"
+            )
+
+            # Conditional locator based on view state
+            action_button = ParametrizedLocator(
+                "//button[contains(@class, '{@mode}') and text()='{@action_text|title}']"
+            )
+
+    Args:
+        template: String template that will be resolved to create SmartLocator instances
     """
 
     def __get__(self, o, t=None):
@@ -465,7 +675,9 @@ class ParametrizedLocator(ParametrizedString):
         if isinstance(result, ParametrizedString):
             return result
         else:
-            return Locator(result)
+            # Playwright Migration: Use SmartLocator for intelligent locator handling
+            # This provides automatic format detection and Playwright compatibility
+            return SmartLocator(result)
 
 
 class Parameter(ParametrizedString):
@@ -523,15 +735,47 @@ def normalize_space(text):
 
 
 def nested_getattr(o, steps):
-    """Works exactly like :py:func:`getattr`, however it treats ``.`` as the resolution steps,
-    therefore allowing you to grab an attribute across objects.
+    """Get nested attributes from an object using dot notation or path lists.
+
+    This function extends the built-in getattr() to support nested attribute access
+    across object hierarchies. It's particularly useful for accessing attributes
+    in complex view structures or when working with parametrized strings that
+    reference nested view attributes.
+
+    The function supports both dot-separated strings and pre-split lists/tuples
+    for flexibility in different usage scenarios.
 
     Args:
-        o: Object to get the attributes from.
-        steps: A string with attribute name path separated by dots or a list.
+        o: The root object to start attribute resolution from
+        steps: Attribute path as either:
+            - String: "parent.child.attribute" (dot-separated)
+            - List/Tuple: ["parent", "child", "attribute"]
 
     Returns:
-        The value of required attribute.
+        The value of the nested attribute
+
+    Raises:
+        AttributeError: If any step in the path doesn't exist
+        TypeError: If steps is not a string, list, or tuple
+        ValueError: If steps is empty after processing
+
+    Examples:
+        >>> class Parent:
+        ...     def __init__(self):
+        ...         self.child = Child()
+        >>> class Child:
+        ...     def __init__(self):
+        ...         self.value = "found"
+        >>>
+        >>> parent = Parent()
+        >>> nested_getattr(parent, "child.value")
+        'found'
+        >>> nested_getattr(parent, ["child", "value"])
+        'found'
+
+        # Usage in ParametrizedString templates
+        >>> template = ParametrizedString("{@parent/config/database_url}")
+        # Resolves to: nested_getattr(view, ["parent", "config", "database_url"])
     """
     if isinstance(steps, str):
         steps = steps.split(".")
@@ -677,28 +921,6 @@ class Ignore:
         return f"Ignore({self.wt_class!r})"
 
 
-def retry_stale_element(method):
-    """Aim of this decorator is to invoke some method one more time
-    if it raised StaleElementReferenceException.
-
-    This is necessary because there are cases when some element get updated by JS during attempt
-    to work with it. There is no 100% robust solution to check that all JS are over on some page.
-    """
-
-    @functools.wraps(method)
-    def wrap(*args, **kwargs):
-        attempts = 10
-        for _ in range(attempts):
-            try:
-                return method(*args, **kwargs)
-            except StaleElementReferenceException:
-                time.sleep(0.5)
-        else:
-            raise StaleElementReferenceException("Couldn't handle it")
-
-    return wrap
-
-
 class FillContext:
     def __init__(self, parent, logger=None, **kwargs):
         self.parent = parent
@@ -709,7 +931,69 @@ class FillContext:
 
 
 class DefaultFillViewStrategy:
-    """Used to fill view's widgets by default. It just calls fill for every passed widget"""
+    """Default strategy for filling view widgets with values.
+
+    This strategy iterates through all fillable widgets in a view and calls their
+    fill() methods with the provided values. It provides intelligent error handling,
+    logging, and supports complex nested data structures.
+
+    Key Features:
+    - **Sequential Filling**: Fills widgets in the order they appear in widget_names
+    - **Error Tolerance**: Continues filling even if individual widgets fail
+    - **Detailed Logging**: Provides comprehensive logs for debugging fill operations
+    - **Nested Data Support**: Automatically flattens nested dictionaries
+    - **Frame Context Aware**: Works seamlessly with iframe-based widgets
+    - **Change Detection**: Returns whether any widgets actually changed values
+
+    Usage Patterns:
+
+    .. code-block:: python
+
+        class UserFormView(View):
+            fill_strategy = DefaultFillViewStrategy()
+
+            username = TextInput("#username")
+            email = TextInput("#email")
+            password = PasswordInput("#password")
+            confirm_password = PasswordInput("#confirm")
+
+        # Basic filling
+        form_data = {
+            'username': 'john_doe',
+            'email': 'john@example.com',
+            'password': 'secret123',
+            'confirm_password': 'secret123'
+        }
+
+        view = UserFormView(browser)
+        changed = view.fill(form_data)  # Returns True if any field changed
+
+        # Nested data structures (automatically flattened)
+        nested_data = {
+            'user.profile.name': 'John Doe',
+            'user.profile.email': 'john@example.com'
+        }
+        view.fill(nested_data)  # Equivalent to {'user': {'profile': {'name': '...', 'email': '...'}}}
+
+    Advanced Configuration:
+
+    .. code-block:: python
+
+        class CustomFormView(View):
+            # Respect parent fill strategy if available
+            fill_strategy = DefaultFillViewStrategy(respect_parent=True)
+
+            # Widget definitions...
+
+        # The strategy will automatically:
+        # 1. Log each fill operation with results
+        # 2. Skip widgets that don't have fill methods
+        # 3. Handle widgets that are not currently displayed
+        # 4. Work correctly within iframe contexts
+
+    Args:
+        respect_parent: If True, uses parent's fill strategy when available
+    """
 
     def __init__(self, respect_parent=False):
         # uses parent fill strategy if set and not overridden in current view
@@ -756,11 +1040,77 @@ class DefaultFillViewStrategy:
 
 
 class WaitFillViewStrategy(DefaultFillViewStrategy):
-    """It is used to fill view's widgets where changes in one widget
-    may cause another widget appear.
+    """Fill strategy that waits for widgets to become available before filling.
 
-    New widgets may appear after some delay.
-    So such strategy gives next widget some time to turn up.
+    This strategy extends DefaultFillViewStrategy by adding wait functionality
+    before attempting to fill each widget. It's particularly useful for dynamic
+    forms where widgets may appear or become enabled based on previous interactions.
+
+    Key Features:
+    - **Automatic Waiting**: Waits for each widget to be displayed before filling
+    - **Configurable Timeout**: Customizable wait timeout per widget
+    - **Dynamic Content Support**: Handles widgets that appear after user interactions
+    - **Robust Error Handling**: Gracefully handles widgets that never appear
+    - **Performance Optimized**: Uses Playwright's efficient waiting mechanisms
+
+    Ideal Use Cases:
+    - **Dynamic Forms**: Forms where fields appear based on selections
+    - **Single Page Applications**: SPAs with asynchronously loaded content
+    - **Conditional Widgets**: Widgets that appear/disappear based on state
+    - **Iframe Content**: Widgets inside frames that may load slowly
+    - **Progressive Forms**: Multi-step forms with dynamic field revelation
+
+    Usage Examples:
+
+    .. code-block:: python
+
+        class DynamicFormView(View):
+            # Use wait strategy with 10-second timeout per widget
+            fill_strategy = WaitFillViewStrategy(wait_widget="10s")
+
+            user_type = Select("#user-type")
+            username = TextInput("#username")
+
+            # These fields only appear after selecting user_type
+            admin_key = TextInput("#admin-key")  # Only if user_type == "admin"
+            department = Select("#department")   # Only if user_type == "employee"
+
+        # Usage
+        form_data = {
+            'user_type': 'admin',
+            'username': 'admin_user',
+            'admin_key': 'secret_key_123'
+        }
+
+        view = DynamicFormView(browser)
+        # Strategy will:
+        # 1. Fill user_type immediately
+        # 2. Wait for username to be displayed, then fill
+        # 3. Wait for admin_key to appear (triggered by user_type), then fill
+        # 4. Skip department since it won't appear for admin users
+        view.fill(form_data)
+
+    Advanced Configuration:
+
+    .. code-block:: python
+
+        class ConditionalView(View):
+            # Custom timeout and parent strategy respect
+            fill_strategy = WaitFillViewStrategy(
+                wait_widget="15s",      # Wait up to 15 seconds per widget
+                respect_parent=True     # Use parent's strategy if available
+            )
+
+            # Widget definitions...
+
+    Timeout Formats:
+    - String format: "5s", "10s", "2m" (seconds, minutes)
+    - Numeric: 5.0 (seconds as float)
+    - Default: "5s" if not specified
+
+    Args:
+        respect_parent: If True, uses parent's fill strategy when available
+        wait_widget: Timeout for waiting for each widget to become displayed
     """
 
     def __init__(self, respect_parent=False, wait_widget="5s"):

@@ -1,3 +1,8 @@
+"""
+Widgetastic Core Type Declarations
+==================================
+"""
+
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -6,9 +11,10 @@ from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
-from selenium.webdriver.remote.webelement import WebElement
-from smartloc import Locator
+from playwright.sync_api import ElementHandle
+from playwright.sync_api import Locator
 
+from .locator import SmartLocator
 
 if TYPE_CHECKING:
     from .browser import Browser
@@ -21,10 +27,12 @@ if TYPE_CHECKING:
 class LocatorProtocol(Protocol):
     CHECK_VISIBILITY: bool
 
-    def __locator__(self) -> Union[str, Locator, WebElement]: ...
+    # Updated return type to include Playwright types
+    def __locator__(self) -> Union[str, SmartLocator, Locator, ElementHandle]: ...
 
 
-LocatorAlias = Union[str, Dict[str, str], WebElement, LocatorProtocol, "Widget"]
+# Updated alias to include Playwright types
+LocatorAlias = Union[str, Dict[str, str], Locator, ElementHandle, LocatorProtocol, "Widget"]
 
 ElementParent = Union[LocatorAlias, "Browser"]
 
