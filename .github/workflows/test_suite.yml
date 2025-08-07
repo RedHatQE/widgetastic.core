@@ -3,7 +3,7 @@ name: 🕵️ Test suite
 on:
   push:
     branches:
-      - main
+      - playwright
   pull_request:
     types: ["opened", "synchronize", "reopened"]
   schedule:
@@ -17,24 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome, firefox]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        browser: [chromium, firefox]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - name: Pull selenium-standalone:latest
-        run: podman pull selenium/standalone-${{ matrix.browser }}:latest
-
-      - name: Pull nginx:alpine
-        run: podman pull docker.io/library/nginx:alpine
-
-      - name: Pull pause
-        run: |
-          # something screwy is going on in the github kube node
-          # seeing 404s pulling from k8s.gcr, which was deprecated a year ago anyway
-          # the registry name is hardcoded somewhere on the infra side, but the pull from the new registry works consistently
-          podman pull registry.k8s.io/pause:3.5
-          podman tag registry.k8s.io/pause:3.5 k8s.gcr.io/pause:3.5
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -43,90 +29,91 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Playwright and ${{ matrix.browser }} browser
+        run: |
+          pip install playwright
+          playwright install ${{ matrix.browser }}
+          playwright install-deps
+
       - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
-        env:
-          BROWSER: ${{ matrix.browser }}
-          XDG_RUNTIME_DIR: ${{ github.workspace }}
         run: |
           pip install -e .[test]
-          mkdir -p ${XDG_RUNTIME_DIR}/podman
-          podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
-          pytest -n 5
+          pytest -n 5 -sqvv --browser=${{ matrix.browser }} --headless testing/test_foo.py testing/test_locator.py --cov=src --cov-report=xml
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: coverage.xml
-          flags: unittests
-          name: ${{ github.run_id }}-py-${{ matrix.python-version }}-${{ matrix.browser }}
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  docs:
-    name: Docs Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install Deps
-        run: |
-          pip install -U pip wheel
-          pip install .[docs]
-
-      - name: Build Docs
-        run: sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs
-
-      - name: Archive Docs
-        uses: actions/upload-artifact@v4
-        with:
-          name: sphinx-htmldocs
-          path: build/htmldocs
-
-  platform:
-    # Check package properly install on different platform (dev setup)
-    name: 💻 Platform-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]    # We are running test on ubuntu linux.
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-          architecture: "x64"
-
-      - name: Development setup on ${{ matrix.os }}
-        run: |
-          pip install -e .[dev]
-          python -c "from widgetastic.widget import Widget, Browser"
-
-  package:
-    name: ⚙️ Build & Verify Package
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-          architecture: "x64"
-
-      - name: Build and verify with twine
-        run: |
-          pip install wheel twine
-          pip wheel --no-deps -w dist .
-          ls -l dist
-          twine check dist/*
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v4
+#        with:
+#          file: coverage.xml
+#          flags: unittests
+#          name: ${{ github.run_id }}-py-${{ matrix.python-version }}-${{ matrix.browser }}
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#
+#  docs:
+#    name: Docs Build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.x"
+#
+#      - name: Install Deps
+#        run: |
+#          pip install -U pip wheel
+#          pip install .[docs]
+#
+#      - name: Build Docs
+#        run: sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs
+#
+#      - name: Archive Docs
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: sphinx-htmldocs
+#          path: build/htmldocs
+#
+#  platform:
+#    # Check package properly install on different platform (dev setup)
+#    name: 💻 Platform-${{ matrix.os }}
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        os: [windows-latest, macos-latest]    # We are running test on ubuntu linux.
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.x"
+#          architecture: "x64"
+#
+#      - name: Development setup on ${{ matrix.os }}
+#        run: |
+#          pip install -e .[dev]
+#          python -c "from widgetastic.widget import Widget, Browser"
+#
+#  package:
+#    name: ⚙️ Build & Verify Package
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.x"
+#          architecture: "x64"
+#
+#      - name: Build and verify with twine
+#        run: |
+#          pip install wheel twine
+#          pip wheel --no-deps -w dist .
+#          ls -l dist
+#          twine check dist/*

@@ -1,117 +1,86 @@
-import os
-from urllib.request import urlopen
-
 import pytest
-from podman import PodmanClient
-from selenium import webdriver
-from wait_for import wait_for
-
-from widgetastic.browser import Browser
-
-
-OPTIONS = {"firefox": webdriver.FirefoxOptions(), "chrome": webdriver.ChromeOptions()}
+from pathlib import Path
+from playwright.sync_api import sync_playwright, Page, Browser as PlaywrightBrowser, BrowserContext
+from typing import Iterator
 
 
 def pytest_addoption(parser):
+    """Add custom command line options for browser selection and mode."""
     parser.addoption(
-        "--browser-name",
-        help="Name of the browser, can also be set in env with BROWSER",
-        choices=("firefox", "chrome"),
-        default="firefox",
+        "--browser",
+        action="store",
+        default="chromium",
+        choices=["chromium", "firefox"],
+        help="Browser to run tests with: chromium, firefox (default: chromium)",
+    )
+    parser.addoption(
+        "--headless",
+        action="store_true",
+        default=False,
+        help="Run tests in headless mode (no browser window) default its run in headed mode.",
     )
 
 
 @pytest.fixture(scope="session")
-def podman():
-    runtime_dir = os.getenv("XDG_RUNTIME_DIR")
-    uri = f"unix://{runtime_dir}/podman/podman.sock"
-    with PodmanClient(base_url=uri) as client:
-        yield client
+def browser_name(request):
+    """Get browser name from command line argument."""
+    return request.config.getoption("--browser")
 
 
 @pytest.fixture(scope="session")
-def pod(podman, worker_id):
-    last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
-    localhost_for_worker = f"127.0.0.{last_oktet}"
-    pod = podman.pods.create(
-        f"widgetastic_testing_{last_oktet}",
-        portmappings=[
-            {"host_ip": localhost_for_worker, "container_port": 7900, "host_port": 7900},
-            {"host_ip": localhost_for_worker, "container_port": 4444, "host_port": 4444},
-        ],
+def headless_mode(request):
+    """Determine if tests should run in headless mode."""
+    if request.config.getoption("--headless"):
+        return True
+    return False
+
+
+@pytest.fixture(scope="session")
+def playwright_browser_instance(browser_name: str, headless_mode: bool) -> PlaywrightBrowser:
+    """Launches a Playwright browser instance."""
+    with sync_playwright() as p:
+        # Select browser based on command line argument (default to chromium)
+        if browser_name == "firefox":
+            browser = p.firefox.launch(headless=headless_mode)
+        else:
+            browser = p.chromium.launch(headless=headless_mode)
+
+        print(
+            f"\nLaunching {browser_name} browser ({'headless' if headless_mode else 'headed'} mode)"
+        )
+        yield browser
+        print(f"\nClosing {browser_name} browser")
+        browser.close()
+
+
+@pytest.fixture(scope="session")
+def browser_context(playwright_browser_instance: PlaywrightBrowser) -> BrowserContext:
+    """Creates a browser context for the entire test session."""
+    context = playwright_browser_instance.new_context(
+        viewport={"width": 1280, "height": 720},
     )
-    pod.start()
-    yield pod
-    pod.remove(force=True)
+    yield context
+    context.close()
 
 
 @pytest.fixture(scope="session")
-def browser_name(pytestconfig):
-    return os.environ.get("BROWSER") or pytestconfig.getoption("--browser-name")
+def testing_page_url() -> str:
+    """Provides the local file path to the testing page."""
+    html_file = Path(__file__).parent / "html" / "testing_page.html"
+    return html_file.resolve().as_uri()
 
 
 @pytest.fixture(scope="session")
-def selenium_url(worker_id, browser_name, podman, pod):
-    """Yields a command executor URL for selenium, and a port mapped for the test page to run on"""
-    # use the worker id number from gw# to create hosts on loopback
-    last_oktet = 1 if worker_id == "master" else int(worker_id.lstrip("gw")) + 1
-    localhost_for_worker = f"127.0.0.{last_oktet}"
-    container = podman.containers.create(
-        image=f"docker.io/selenium/standalone-{browser_name}",
-        pod=pod.id,
-        remove=True,
-        name=f"selenium_{worker_id}",
-        environment={"SE_VNC_NO_PASSWORD": "1"},
-    )
-
-    container.start()
-    yield f"http://{localhost_for_worker}:4444"
-    container.remove(force=True)
-
-
-@pytest.fixture(scope="session")
-def testing_page_url(worker_id, podman, pod):
-    container = podman.containers.create(
-        image="docker.io/library/nginx:alpine",
-        pod=pod.id,
-        remove=True,
-        name=f"web_server_{worker_id}",
-        mounts=[
-            {
-                "source": f"{os.getcwd()}/testing/html",
-                "target": "/usr/share/nginx/html",
-                "type": "bind",
-                "relabel": "Z",
-            }
-        ],
-    )
-    container.start()
-    yield "http://127.0.0.1/testing_page.html"
-    container.remove(force=True)
-
-
-@pytest.fixture(scope="session")
-def selenium_webdriver(browser_name, selenium_url, testing_page_url):
-    wait_for(urlopen, func_args=[selenium_url], timeout=180, handle_exception=True)
-    driver = webdriver.Remote(command_executor=selenium_url, options=OPTIONS[browser_name.lower()])
-    driver.maximize_window()
-    driver.get(testing_page_url)
-    yield driver
-    driver.quit()
-
-
-class CustomBrowser(Browser):
-    @property
-    def product_version(self):
-        return "1.0.0"
-
-
-@pytest.fixture(scope="session")
-def custom_browser(selenium_webdriver):
-    return CustomBrowser(selenium_webdriver)
+def page(browser_context: BrowserContext, testing_page_url: str) -> Page:
+    """Creates the initial page within the session context."""
+    page = browser_context.new_page()
+    page.goto(testing_page_url)
+    return page
 
 
 @pytest.fixture(scope="function")
-def browser(selenium_webdriver, custom_browser):
-    yield custom_browser
-    selenium_webdriver.refresh()
+def browser(page: Page) -> Iterator[Page]:
+    """Provides the active widgetastic Browser from the manager."""
+    # TODO: Handle windows management here.
+    page.reload()
+    yield page
