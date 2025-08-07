@@ -27,11 +27,9 @@ if TYPE_CHECKING:
 class LocatorProtocol(Protocol):
     CHECK_VISIBILITY: bool
 
-    # Updated return type to include Playwright types
     def __locator__(self) -> Union[str, SmartLocator, Locator, ElementHandle]: ...
 
 
-# Updated alias to include Playwright types
 LocatorAlias = Union[str, Dict[str, str], Locator, ElementHandle, LocatorProtocol, "Widget"]
 
 ElementParent = Union[LocatorAlias, "Browser"]

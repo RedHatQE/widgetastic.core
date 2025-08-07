@@ -44,7 +44,7 @@ class OUIABase:
         An attribute called data-ouia-safe, which is True only when the component is in a static
         state, i.e. no animations are occurring. At all other times, this value MUST be False.
         """
-        return "true" in self.browser.get_attribute("data-ouia-safe", self)
+        return "true" == self.browser.get_attribute("data-ouia-safe", self)
 
     def __locator__(self) -> ParametrizedLocator:
         return self.ROOT

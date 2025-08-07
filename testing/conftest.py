@@ -1,7 +1,15 @@
 import pytest
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Page, Browser as PlaywrightBrowser, BrowserContext
+from widgetastic.browser import Browser
 from typing import Iterator
+
+
+# custom browser class
+class CustomBrowser(Browser):
+    @property
+    def product_version(self):
+        return "1.0.0"
 
 
 def pytest_addoption(parser):
@@ -79,8 +87,9 @@ def page(browser_context: BrowserContext, testing_page_url: str) -> Page:
 
 
 @pytest.fixture(scope="function")
-def browser(page: Page) -> Iterator[Page]:
+def browser(page: Page) -> Iterator[Browser]:
     """Provides the active widgetastic Browser from the manager."""
     # TODO: Handle windows management here.
-    page.reload()
-    yield page
+    br = CustomBrowser(page)
+    br.refresh()
+    yield br

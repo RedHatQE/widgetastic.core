@@ -570,11 +570,9 @@ class ParametrizedString(ConstructorResolvable):
                         attr_name = context_name[1:]
                         param_value = nested_getattr(view, attr_name.split("/"))
 
-                        # Playwright Migration: Enhanced locator detection
                         # Check if it's a SmartLocator or any locator-like object
                         if hasattr(param_value, "by") and hasattr(param_value, "locator"):
                             # Extract the locator string for template substitution
-                            # This ensures compatibility with both legacy Locator and new SmartLocator
                             param_value = param_value.locator
                         elif hasattr(param_value, "__str__") and hasattr(param_value, "by"):
                             # Handle SmartLocator string conversion for Playwright
@@ -675,8 +673,6 @@ class ParametrizedLocator(ParametrizedString):
         if isinstance(result, ParametrizedString):
             return result
         else:
-            # Playwright Migration: Use SmartLocator for intelligent locator handling
-            # This provides automatic format detection and Playwright compatibility
             return SmartLocator(result)
 
 
