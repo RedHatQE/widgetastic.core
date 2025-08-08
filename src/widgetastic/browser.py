@@ -21,7 +21,16 @@ TODO Items:
 import inspect
 from logging import Logger
 from textwrap import dedent
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Set, Type, TYPE_CHECKING, Union
+from typing import Any
+from typing import cast
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Optional
+from typing import Set
+from typing import Type
+from typing import TYPE_CHECKING
+from typing import Union
 import warnings
 
 from cached_property import cached_property
@@ -33,14 +42,16 @@ from playwright.sync_api import Page
 from .locator import SmartLocator
 from wait_for import TimedOutError
 
-from .exceptions import (
-    LocatorNotImplemented,
-    NoSuchElementException,
-    WidgetOperationFailed,
-)
+from .exceptions import LocatorNotImplemented
+from .exceptions import NoSuchElementException
+from .exceptions import WidgetOperationFailed
 
-from .log import create_widget_logger, null_logger
-from .types import ElementParent, LocatorAlias, LocatorProtocol
+
+from .log import create_widget_logger
+from .log import null_logger
+from .types import ElementParent
+from .types import LocatorAlias
+from .types import LocatorProtocol
 from .xpath import normalize_space
 
 

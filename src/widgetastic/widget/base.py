@@ -307,8 +307,6 @@ class Widget(metaclass=WidgetMetaclass):
 
     #: Default value for parent_descriptor
     parent_descriptor = None
-    #: Set of HTML tags for elements that can have a 'disabled' state.
-    DISABLEABLE_TAGS = {"button", "input", "select", "textarea", "option", "optgroup", "fieldset"}
 
     # Helper methods
     @staticmethod
@@ -509,6 +507,8 @@ class Widget(metaclass=WidgetMetaclass):
     def is_displayed(self):
         """Check whether the widget is displayed.
 
+        If the logic behind is_displayed is more complex, you can always override this.
+
         Returns:
             :py:class:`bool`
         """
@@ -529,13 +529,22 @@ class Widget(metaclass=WidgetMetaclass):
         Returns:
             :py:class:`bool`
         """
+        #: Set of HTML tags for elements that can have a 'disabled' state.
+        DISABLEABLE_TAGS = {
+            "button",
+            "input",
+            "select",
+            "textarea",
+            "option",
+            "optgroup",
+            "fieldset",
+        }
+
         tag = self.browser.tag(self)
-        if tag in self.DISABLEABLE_TAGS:
+        if tag in DISABLEABLE_TAGS:
             return self.browser.is_enabled(self)
         else:
-            self.logger.warning(
-                f"`is_enabled` only applicable for these tags: {self.DISABLEABLE_TAGS}"
-            )
+            self.logger.warning(f"`is_enabled` only applicable for these tags: {DISABLEABLE_TAGS}")
             return True
 
     @logged()
