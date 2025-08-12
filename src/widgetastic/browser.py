@@ -509,6 +509,18 @@ class Browser:
                 self.plugin.after_click_safe_timeout(el, locator)
         self.plugin.after_click(el, locator)
 
+    def check(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Check an element (Checkboxes/ Radio buttons) specified by the locator."""
+        self.logger.debug("check: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.check()
+
+    def uncheck(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Uncheck an element (Checkboxes/ Radio buttons) specified by the locator."""
+        self.logger.debug("uncheck: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.uncheck()
+
     def raw_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Alias for the standard click method in Playwright."""
         self.click(locator, *args, **kwargs)
