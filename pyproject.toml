@@ -30,14 +30,11 @@ dependencies = [
   "anytree >= 2.9.0",
   "cached_property",
   "playwright >= 1.54.0",
-  "selenium >= 4.0.0",
-  "selenium-smart-locator",
   "wait_for",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "podman",
   "pre-commit",
   "pytest",
   "pytest-xdist",

@@ -60,6 +60,19 @@
     <input id="input2" type="checkbox" />
     <input id="input2_disabled" type="checkbox" disabled />
   </form>
+
+  <fieldset>
+    <legend>Radio Input:</legend>
+    <div>
+      <input type="radio" id="choice1" name="radio_input" value="x" checked>
+      <label for="choice1">x</label>
+    </div>
+    <div>
+      <input type="radio" id="choice2" name="radio_input" value="y">
+      <label for="choice2">y</label>
+    </div>
+  </fieldset>
+
   <hr />
   <table id="with-thead">
     <thead>
@@ -324,10 +337,10 @@
   <div data-ouia-component-type="TestView" data-ouia-component-id="ouia">
     <p>OUIA Examples</p>
     <select data-ouia-component-type="PF/Select" data-ouia-component-id="some_id" data-ouia-safe="true">
-      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="first option">
+      <option value="first" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="first option">
         first option
       </option>
-      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="second option">
+      <option value="second" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="second option">
         second option
       </option>
     </select>

@@ -55,8 +55,8 @@ def test_safety(testing_view):
 
 
 def test_select(testing_view):
-    testing_view.select.choose("first_option")
-    testing_view.select.choose("second_option")
+    assert "second" in testing_view.select.choose("second option")
+    assert "first" in testing_view.select.choose("first option")
 
 
 def test_widget_without_id(browser):

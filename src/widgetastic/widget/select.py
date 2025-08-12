@@ -12,7 +12,7 @@ from widgetastic.xpath import quote
 class Select(Widget, ClickableMixin):
     """Representation of the bogo-standard ``<select>`` tag.
 
-    Check documentation for each method. The API is based on the selenium select, but modified so
+    Check documentation for each method. The API is based on the playwright select, but modified so
     we don't bother with WebElements.
 
     Fill and read work as follows:
@@ -51,35 +51,41 @@ class Select(Widget, ClickableMixin):
     Option = namedtuple("Option", ["text", "value"])
 
     ALL_OPTIONS = """
-            var result_arr = [];
-            var opt_elements = arguments[0].options;
-            for(var i = 0; i < opt_elements.length; i++){
-                var option = opt_elements[i];
-                var value = option.getAttribute("value");
-                result_arr.push([
-                    option.innerHTML,
-                    value === null ? option.textContent : value
-                ]);
+            (select) => {
+                var result_arr = [];
+                var opt_elements = select.options;
+                for(var i = 0; i < opt_elements.length; i++){
+                    var option = opt_elements[i];
+                    var value = option.getAttribute("value");
+                    result_arr.push([
+                        option.innerHTML,
+                        value === null ? option.textContent : value
+                    ]);
+                }
+                return result_arr;
             }
-            return result_arr;
         """
 
-    SELECTED_OPTIONS_TEXT = """\
-            var result_arr = [];
-            var opt_elements = arguments[0].selectedOptions;
-            for(var i = 0; i < opt_elements.length; i++){
-                result_arr.push(opt_elements[i].innerHTML);
+    SELECTED_OPTIONS_TEXT = """
+            (select) => {
+                var result_arr = [];
+                var opt_elements = select.selectedOptions;
+                for(var i = 0; i < opt_elements.length; i++){
+                    result_arr.push(opt_elements[i].innerHTML);
+                }
+                return result_arr;
             }
-            return result_arr;
         """
 
-    SELECTED_OPTIONS_VALUE = """\
-            var result_arr = [];
-            var opt_elements = arguments[0].selectedOptions;
-            for(var i = 0; i < opt_elements.length; i++){
-                result_arr.push(opt_elements[i].getAttribute("value"));
+    SELECTED_OPTIONS_VALUE = """
+            (select) => {
+                var result_arr = [];
+                var opt_elements = select.selectedOptions;
+                for(var i = 0; i < opt_elements.length; i++){
+                    result_arr.push(opt_elements[i].getAttribute("value"));
+                }
+                return result_arr;
             }
-            return result_arr;
         """
 
     def __init__(self, parent, locator=None, id=None, name=None, logger=None):
@@ -118,24 +124,8 @@ class Select(Widget, ClickableMixin):
         Returns:
             A :py:class:`list` of :py:class:`Option`
         """
-        # Use element.evaluate instead of browser.execute_script
         select_element = self.browser.element(self)
-
-        options = select_element.evaluate("""
-            (select) => {
-                var result_arr = [];
-                var opt_elements = select.options;
-                for(var i = 0; i < opt_elements.length; i++){
-                    var option = opt_elements[i];
-                    var value = option.getAttribute("value");
-                    result_arr.push([
-                        option.innerHTML,
-                        value === null ? option.textContent : value
-                    ]);
-                }
-                return result_arr;
-            }
-        """)
+        options = select_element.evaluate(self.ALL_OPTIONS)
 
         return [self.Option(normalize_space(unescape(option[0])), option[1]) for option in options]
 
@@ -143,17 +133,7 @@ class Select(Widget, ClickableMixin):
     def all_selected_options(self):
         """Returns a list of all selected options as their displayed texts."""
         select_element = self.browser.element(self)
-
-        selected_texts = select_element.evaluate("""
-            (select) => {
-                var result_arr = [];
-                var opt_elements = select.selectedOptions;
-                for(var i = 0; i < opt_elements.length; i++){
-                    result_arr.push(opt_elements[i].innerHTML);
-                }
-                return result_arr;
-            }
-        """)
+        selected_texts = select_element.evaluate(self.SELECTED_OPTIONS_TEXT)
 
         return [normalize_space(unescape(option)) for option in selected_texts]
 
@@ -164,17 +144,7 @@ class Select(Widget, ClickableMixin):
         If the value is not present, it is ignored.
         """
         select_element = self.browser.element(self)
-
-        selected_values = select_element.evaluate("""
-            (select) => {
-                var result_arr = [];
-                var opt_elements = select.selectedOptions;
-                for(var i = 0; i < opt_elements.length; i++){
-                    result_arr.push(opt_elements[i].getAttribute("value"));
-                }
-                return result_arr;
-            }
-        """)
+        selected_values = select_element.evaluate(self.SELECTED_OPTIONS_VALUE)
 
         return [value for value in selected_values if value is not None]
 
@@ -188,7 +158,7 @@ class Select(Widget, ClickableMixin):
         try:
             return self.all_selected_options[0]
         except IndexError:
-            # Match original test expectation of returning None if nothing is selected
+            # returning None if nothing is selected
             return None
 
     def deselect_all(self):
@@ -237,7 +207,6 @@ class Select(Widget, ClickableMixin):
         if len(items) > 1 and not self.is_multiple:
             raise ValueError(f"The Select {self!r} does not allow multiple selections")
 
-        # To handle whitespace issues, we find the values for the texts and select by value.
         values_to_select = [self.get_value_by_text(text) for text in items]
         if not values_to_select and items:
             available = ", ".join(repr(opt.text) for opt in self.all_options)
@@ -272,7 +241,6 @@ class Select(Widget, ClickableMixin):
         options_to_select = []
         values_to_select = []
 
-        # This logic is restored from the original to correctly parse all fill arguments
         for item in items:
             if isinstance(item, tuple):
                 try:
@@ -293,20 +261,17 @@ class Select(Widget, ClickableMixin):
             else:
                 raise ValueError(f"Unknown select modifier {mod}")
 
-        # This is the corrected change-detection logic
         target_values_to_select = set(values_to_select)
 
         for text in options_to_select:
             target_values_to_select.add(self.get_value_by_text(text))
 
         if selected_values == target_values_to_select:
-            return False  # No change needed
+            return False
 
-        # Perform the action
         if self.is_multiple:
             self.deselect_all()
 
-        # Use a single, efficient call to select all desired options
         self.browser.element(self).select_option(value=list(target_values_to_select))
 
         return True

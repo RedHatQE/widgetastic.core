@@ -726,9 +726,14 @@ class Browser:
         """
         return self.page.evaluate(js_wrapper_function, processed_args)
 
-    def refresh(self) -> None:
-        """Triggers a page refresh."""
-        self.page.reload()
+    def refresh(self, *args, **kwargs) -> None:
+        """Triggers a page refresh.
+
+        Args:
+            timeout : Maximum operation time in milliseconds, defaults to 30 seconds.
+            wait_until : commit / domcontentloaded / load / networkidle / None
+        """
+        self.page.reload(*args, **kwargs)
 
     def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
         """Return a set of classes attached to the element."""

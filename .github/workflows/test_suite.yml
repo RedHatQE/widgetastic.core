@@ -38,8 +38,7 @@ jobs:
       - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
         run: |
           pip install -e .[test]
-          cd testing
-          pytest -n 5 -sqvv --browser=${{ matrix.browser }} --headless test_xpath.py test_version.py test_widget_descriptor.py test_version_pick.py test_fillable.py test_utils.py test_log.py test_browser.py test_locator.py --cov=src --cov-report=xml
+          pytest -n 5 -sqvv --browser=${{ matrix.browser }} --headless --cov=src --cov-report=xml
 
 #      - name: Upload coverage to Codecov
 #        uses: codecov/codecov-action@v4
