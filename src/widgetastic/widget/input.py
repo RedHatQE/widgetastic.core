@@ -1,5 +1,3 @@
-from selenium.webdriver.remote.file_detector import LocalFileDetector
-
 from .base import Widget
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.xpath import quote
@@ -49,7 +47,7 @@ class TextInput(BaseInput):
 
     @property
     def value(self):
-        return self.browser.get_attribute("value", self)
+        return self.browser.input_value(self)
 
     def read(self):
         return self.value
@@ -63,8 +61,8 @@ class TextInput(BaseInput):
         current_value = self.value
         if value == current_value:
             return False
+
         # Clear and type everything
-        self.browser.click(self)
         self.browser.clear(self)
         self.browser.send_keys(value, self, sensitive)
         return True
@@ -80,11 +78,15 @@ class FileInput(BaseInput):
     """
 
     def read(self):
+        """Reading a file input's value is not a reliable operation and is disabled."""
         raise DoNotReadThisWidget()
 
     def fill(self, value):
-        with self.browser.selenium.file_detector_context(LocalFileDetector):
-            self.browser.send_keys(value, self)
+        """Fills the file input with a path to a local file.
+
+        Uses Playwright's dedicated method for handling file uploads.
+        """
+        self.browser.element(self).set_input_files(value)
         return True
 
 
@@ -99,25 +101,20 @@ class ColourInput(BaseInput):
 
     @property
     def colour(self):
-        return self.browser.execute_script("return arguments[0].value;", self)
+        """Returns the current color value of the input."""
+        return self.browser.input_value(self)
 
     @colour.setter
     def colour(self, value):
-        self.browser.execute_script(
-            """
-            arguments[0].value = arguments[1];
-            if(arguments[0].onchange !== null) {
-                arguments[0].onchange();
-            }
-        """,
-            self,
-            value,
-        )
+        """Sets the color value of the input."""
+        self.browser.fill(value, self)
 
     def read(self):
+        """Reads the current color value."""
         return self.colour
 
     def fill(self, value):
+        """Fills the input with a new color value."""
         if self.colour == value:
             return False
         self.colour = value
