@@ -63,7 +63,10 @@ Supported Locator Types
 
 import re
 from collections import namedtuple
-from typing import Any, Optional, Tuple, TYPE_CHECKING
+from typing import Any
+from typing import Optional
+from typing import Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Type
