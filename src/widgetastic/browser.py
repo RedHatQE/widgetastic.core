@@ -15,7 +15,6 @@ Key Features:
 
 TODO Items:
 - Alert handling implementation (currently placeholder)
-- iframe handling
 """
 
 import inspect
@@ -198,7 +197,7 @@ class Browser:
         # Form filling with automatic input type detection
         browser.send_keys("#username", "admin")
 
-        # Iframe handling (TODO: Enhanced support planned)
+        # Iframe handling
         browser.switch_to_frame("//iframe[@name='content']")
         browser.element("#inner-button").click()
         browser.switch_to_main_frame()
@@ -363,9 +362,9 @@ class Browser:
                 elif hasattr(parent, "__locator__"):
                     root_element = self.element(parent, check_visibility=check_visibility)
                 else:
-                    root_element = self.page
+                    root_element = self.active_context
             else:
-                root_element = self.page
+                root_element = self.active_context
             result = root_element.locator(str(locator)).all()
 
         if check_visibility:
@@ -1012,8 +1011,6 @@ class Browser:
         All subsequent element operations will be scoped to this frame until
         switch_to_main_frame() is called.
 
-        TODO: Enhanced iframe handling with better way.
-
         Args:
             locator: Locator for the iframe element to switch to
         """
@@ -1024,8 +1021,6 @@ class Browser:
         """Switch browser context back to the main page (exit iframe context).
 
         Resets the active context to the main page, exiting any iframe context.
-
-        TODO: Enhanced iframe handling with better way.
         """
         self.logger.debug("Switching back to main frame")
         self.active_context = self.page
