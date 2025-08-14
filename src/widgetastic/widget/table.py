@@ -21,6 +21,7 @@ from .base import Widgetable
 from .base import WidgetDescriptor
 from widgetastic.browser import Browser
 from widgetastic.exceptions import RowNotFound
+from widgetastic.exceptions import NoSuchElementException
 from widgetastic.log import create_child_logger
 from widgetastic.log import create_item_logger
 from widgetastic.utils import attributize_string
@@ -441,7 +442,7 @@ class Table(Widget):
         self._table_tree = None
 
     def _get_table_tree(self):
-        current_element_id = self.browser.element(self).id
+        current_element_id = self.browser.get_attribute("id", self)
         if not self._table_tree or current_element_id != self.element_id:
             # no table tree processed yet, or the table at this locator has changed
             self.element_id = current_element_id
@@ -465,8 +466,8 @@ class Table(Widget):
     @cached_property
     def caption(self):
         try:
-            return self.browser.elements("./caption")[0].text
-        except IndexError:
+            return self.browser.text(self.browser.element("./caption", parent=self))
+        except NoSuchElementException:
             return None
 
     def __repr__(self):
@@ -798,7 +799,7 @@ class Table(Widget):
         return query
 
     def _filter_rows_by_query(self, query):
-        # Preload the rows to prevent stale element exceptions
+        # Preload the rows to prevent stale element errors
         rows = []
         for row_element in self.browser.elements(query, parent=self):
             row_pos = self._get_number_preceeding_rows(row_element)
@@ -1054,7 +1055,7 @@ class Table(Widget):
         return bool(self.browser.elements("./tbody//td[@rowspan or @colspan]", parent=self))
 
     def _filter_child(self, child):
-        return child.tag_name not in self.IGNORE_TAGS
+        return self.browser.tag(child) not in self.IGNORE_TAGS
 
     def _process_table(self):
         queue = deque()
@@ -1067,7 +1068,7 @@ class Table(Widget):
             children = self.browser.elements("./*[descendant-or-self::node()]", parent=node.obj)
 
             for position, child in enumerate(filter(self._filter_child, children)):
-                cur_tag = child.tag_name
+                cur_tag = self.browser.tag(child)
 
                 if cur_tag == self.ROW_TAG:
                     # todo: add logger
@@ -1086,8 +1087,8 @@ class Table(Widget):
                     )
                     Node(name=cur_tag, parent=node, obj=cur_obj, position=cur_position)
 
-                    rowsteps = range(1, int(child.get_attribute("rowspan") or 0))
-                    colsteps = range(1, int(child.get_attribute("colspan") or 0))
+                    rowsteps = range(1, int(self.browser.get_attribute("rowspan", child) or 0))
+                    colsteps = range(1, int(self.browser.get_attribute("colspan", child) or 0))
                     coordinates = set(itertools.zip_longest(colsteps, rowsteps, fillvalue=0))
 
                     # when there are both rowspan and colspan set, we need to generate additional

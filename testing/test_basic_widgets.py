@@ -24,7 +24,7 @@ def test_basic_widgets(browser):
         input1 = TextInput(name="input1")
         input2 = Checkbox(id="input2")
         input3 = ColourInput(id="colourinput")
-        input4 = Checkbox(name="input1_disabled")
+        input4 = TextInput(name="input1_disabled")
         input5 = Checkbox(id="input2_disabled")
         fileinput = FileInput(id="fileinput")
 
@@ -792,7 +792,8 @@ def test_table_row_ignore_bottom_and_top(browser):
 def test_table_dynamic_add_not_assoc(browser):
     class MyTable(Table):
         def row_add(self):
-            el = self.browser.element('//button[@id="dynamicadd"]')
+            # using root_browser as ROOT will be table locator and this is outof dom.
+            el = self.root_browser.element('//button[@id="dynamicadd"]')
             self.browser.click(el)
             return -1
 
@@ -828,7 +829,8 @@ def test_table_dynamic_add_not_assoc(browser):
 def test_table_dynamic_add_assoc(browser):
     class MyTable(Table):
         def row_add(self):
-            self.browser.click('//button[@id="dynamicadd"]')
+            # using root_browser as ROOT will be table locator and this is outof dom.
+            self.root_browser.click('//button[@id="dynamicadd"]')
             return -1  # testing negative index when we expect row to be added to end of table
 
     class MyView(View):

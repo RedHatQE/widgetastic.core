@@ -509,6 +509,18 @@ class Browser:
                 self.plugin.after_click_safe_timeout(el, locator)
         self.plugin.after_click(el, locator)
 
+    def check(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Check an element (Checkboxes/ Radio buttons) specified by the locator."""
+        self.logger.debug("check: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.check()
+
+    def uncheck(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Uncheck an element (Checkboxes/ Radio buttons) specified by the locator."""
+        self.logger.debug("uncheck: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.uncheck()
+
     def raw_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Alias for the standard click method in Playwright."""
         self.click(locator, *args, **kwargs)
@@ -714,9 +726,14 @@ class Browser:
         """
         return self.page.evaluate(js_wrapper_function, processed_args)
 
-    def refresh(self) -> None:
-        """Triggers a page refresh."""
-        self.page.reload()
+    def refresh(self, *args, **kwargs) -> None:
+        """Triggers a page refresh.
+
+        Args:
+            timeout : Maximum operation time in milliseconds, defaults to 30 seconds.
+            wait_until : commit / domcontentloaded / load / networkidle / None
+        """
+        self.page.reload(*args, **kwargs)
 
     def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
         """Return a set of classes attached to the element."""
