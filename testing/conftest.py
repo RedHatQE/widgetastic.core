@@ -91,6 +91,7 @@ def browser_context(playwright_browser_instance: PlaywrightBrowser) -> BrowserCo
 def page(browser_context: BrowserContext, testing_page_url: str) -> Iterator[Page]:
     """Creates the initial page within the session context."""
     page = browser_context.new_page()
+    page.goto(testing_page_url)
     yield page
     page.close()
 
@@ -107,10 +108,9 @@ def window_manager(browser_context: BrowserContext, page: Page) -> Iterator[Wind
 
 @pytest.fixture(scope="function")
 def browser(window_manager: WindowManager, testing_page_url: str) -> Iterator[Browser]:
-    """Provides the active widgetastic Browser from the manager."""
+    """Provides the active widgetastic Browser from the manager.
+    This will provide isolated tests for each browser.
+    """
     br = window_manager.current
-    if br.browser_type == "firefox":
-        # Firefox needs special handling: navigate and wait for load before refresh
-        br.url = testing_page_url
-    br.refresh(wait_until="domcontentloaded")
+    br.url = testing_page_url
     yield br

@@ -1207,7 +1207,7 @@ class WindowManager:
         return self._browsers[page]
 
     def _on_new_page(self, page: Page):
-        self.current.logger.info("New page opened (popup detected): %s", page.url)
+        self.current.logger.info("New page opened / popup detected: %s", page.url)
         self._wrap_page(page)
 
     @property
