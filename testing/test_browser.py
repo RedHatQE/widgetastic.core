@@ -38,7 +38,7 @@ def invoke_alert(browser):
 
 
 def test_is_displayed(browser):
-    assert browser.is_displayed("#hello")
+    assert browser.is_displayed("#wt-core-title")
 
 
 def test_is_displayed_negative(browser):
@@ -57,10 +57,10 @@ def test_elements_string_locator_xpath(browser):
 def test_elements_string_locator_css(browser):
     # TODO: Why this doesnt work properly?
     # assert len(browser.elements('h1')) == 1
-    assert len(browser.elements("#hello")) == 1
-    assert len(browser.elements("h1#hello")) == 1
-    assert len(browser.elements("h1#hello.foo")) == 1
-    assert len(browser.elements("h1#hello.foo.bar")) == 1
+    assert len(browser.elements("#wt-core-title")) == 1
+    assert len(browser.elements("h1#wt-core-title")) == 1
+    assert len(browser.elements("h1#wt-core-title.foo")) == 1
+    assert len(browser.elements("h1#wt-core-title.foo.bar")) == 1
     assert len(browser.elements("h1.foo.bar")) == 1
     assert len(browser.elements(".foo.bar")) == 1
 
@@ -70,14 +70,14 @@ def test_elements_dict(browser):
 
 
 def test_elements_webelement(browser):
-    element = browser.element("#hello")
+    element = browser.element("#wt-core-title")
     assert browser.elements(element)[0] is element
 
 
 def test_elements_locatable_locator(browser):
     class Object:
         def __locator__(self):
-            return "#hello"
+            return "#wt-core-title"
 
     assert len(browser.elements(Object())) == 1
 
@@ -116,7 +116,7 @@ def test_wait_for_element_exception_control(browser, exception):
 
 
 def test_element_only_invisible(browser):
-    browser.element("#hello", check_visibility=False)
+    browser.element("#wt-core-title", check_visibility=False)
 
 
 def test_element_only_visible(browser):
@@ -152,11 +152,11 @@ def test_raw_click(browser):
 
 
 def test_tag(browser):
-    assert browser.tag("#hello") == "h1"
+    assert browser.tag("#wt-core-title") == "h1"
 
 
 def test_text_visible(browser):
-    assert browser.text("#hello") == "Hello"
+    assert browser.text("#wt-core-title") == "Widgetastic.Core - Testing Page"
 
 
 def test_text_invisible(browser):
@@ -164,11 +164,11 @@ def test_text_invisible(browser):
 
 
 def test_attributes(browser):
-    assert browser.attributes("//h1") == {"class": "foo bar", "id": "hello"}
+    assert browser.attributes("//h1") == {"class": "foo bar", "id": "wt-core-title"}
 
 
 def test_get_attribute(browser):
-    assert browser.get_attribute("id", "//h1") == "hello"
+    assert browser.get_attribute("id", "//h1") == "wt-core-title"
 
 
 def test_set_attribute(browser):
@@ -265,13 +265,13 @@ def test_element_force_visibility_check_by_locator(browser):
 
 def test_size(browser):
     width, height = browser.size_of("#exact_dimensions")
-    assert width == 42
-    assert height == 69
+    assert width == 100
+    assert height == 50
 
 
 def test_title(browser):
     """Test title of current window"""
-    assert browser.title == "Test page"
+    assert browser.title == "Widgetastic.Core - Testing Page"
 
 
 def test_current_window_handle(window_manager):

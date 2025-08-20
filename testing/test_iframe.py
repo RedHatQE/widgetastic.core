@@ -26,7 +26,7 @@ def test_basic_iframe_access(browser):
     assert iframe_view.select2.is_displayed
 
     # Test content reading
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
     assert iframe_view.select1.read() == "Foo"
 
     # Test interaction
@@ -54,11 +54,11 @@ def test_nested_iframe_navigation(browser):
 
     # Test access at each level
     assert nested_view.is_displayed
-    assert nested_view.h3.text == "IFrame Tests"
+    assert nested_view.h3.text == "IFrame Widget Testing"
 
     # Test nested iframe access
     assert nested_view.nested_iframe.is_displayed
-    assert nested_view.nested_iframe.h3.text == "IFrame Tests 2"
+    assert nested_view.nested_iframe.h3.text == "Nested IFrame Content"
     assert nested_view.nested_iframe.select3.read() == "Foo"
 
     # Test deeply nested view access
@@ -83,7 +83,7 @@ def test_frame_context_isolation(browser):
 
     # Test that both views work independently
     assert main_view.h3.text == "footest"
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
 
     # Test interactions don't affect each other
     main_view.checkbox1.fill(True)
@@ -93,7 +93,7 @@ def test_frame_context_isolation(browser):
     assert main_view.checkbox1.read() is True
     assert iframe_view.select1.read() == "Bar"
     assert main_view.h3.text == "footest"  # Main context unchanged
-    assert iframe_view.h3.text == "IFrame Tests"  # Frame context unchanged
+    assert iframe_view.h3.text == "IFrame Widget Testing"  # Frame context unchanged
 
 
 def test_cross_frame_element_access_errors(browser):
@@ -171,7 +171,7 @@ def test_iframe_widget_properties(browser):
     assert iframe_view.select2.is_displayed
 
     # Test text content
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
 
     # Test select options
     assert iframe_view.select1.all_options == [("Foo", "foo"), ("Bar", "bar")]
@@ -243,8 +243,10 @@ def test_iframe_view_hierarchy(browser):
     assert complex_view.iframe_section.nested_iframe_section.nested_div.nested_input.is_displayed
 
     # Test content at all levels
-    assert complex_view.iframe_section.iframe_h3.text == "IFrame Tests"
-    assert complex_view.iframe_section.nested_iframe_section.nested_h3.text == "IFrame Tests 2"
+    assert complex_view.iframe_section.iframe_h3.text == "IFrame Widget Testing"
+    assert (
+        complex_view.iframe_section.nested_iframe_section.nested_h3.text == "Nested IFrame Content"
+    )
     assert (
         complex_view.iframe_section.nested_iframe_section.nested_div.nested_input.read()
         == "Default Value"
@@ -288,7 +290,7 @@ def test_iframe_widget_names_and_iteration(browser):
         assert widget.is_displayed, f"Widget {name} should be displayed"
 
     # Test widget access by name
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
     assert iframe_view.select1.read() == "Foo"
 
 

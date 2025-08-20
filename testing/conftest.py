@@ -27,6 +27,13 @@ def pytest_addoption(parser):
         default=False,
         help="Run tests in headless mode (no browser window) default its run in headed mode.",
     )
+    parser.addoption(
+        "--slowmo",
+        action="store",
+        type=int,
+        default=0,
+        help="Slow down Playwright operations by specified milliseconds (default: 0, no slowdown)",
+    )
 
 
 @pytest.fixture(scope="session")
@@ -41,6 +48,12 @@ def headless_mode(request):
     if request.config.getoption("--headless"):
         return True
     return False
+
+
+@pytest.fixture(scope="session")
+def slowmo_delay(request):
+    """Get slowmo delay from command line argument."""
+    return request.config.getoption("--slowmo")
 
 
 @pytest.fixture(scope="session")
@@ -60,17 +73,20 @@ def external_test_url() -> str:
 
 
 @pytest.fixture(scope="session")
-def playwright_browser_instance(browser_name: str, headless_mode: bool) -> PlaywrightBrowser:
+def playwright_browser_instance(
+    browser_name: str, headless_mode: bool, slowmo_delay: int
+) -> PlaywrightBrowser:
     """Launches a Playwright browser instance."""
     with sync_playwright() as p:
         # Select browser based on command line argument (default to chromium)
         if browser_name == "firefox":
-            browser = p.firefox.launch(headless=headless_mode)
+            browser = p.firefox.launch(headless=headless_mode, slow_mo=slowmo_delay)
         else:
-            browser = p.chromium.launch(headless=headless_mode)
+            browser = p.chromium.launch(headless=headless_mode, slow_mo=slowmo_delay)
 
+        slowmo_info = f" with {slowmo_delay}ms slowmo" if slowmo_delay > 0 else ""
         print(
-            f"\nLaunching {browser_name} browser ({'headless' if headless_mode else 'headed'} mode)"
+            f"\nLaunching {browser_name} browser ({'headless' if headless_mode else 'headed'} mode){slowmo_info}"
         )
         yield browser
         print(f"\nClosing {browser_name} browser")

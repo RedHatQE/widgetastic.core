@@ -127,7 +127,7 @@ def test_view_is_displayed_without_root_locator(browser):
 
 def test_view_is_displayed_with_root_locator(browser):
     class MyView(View):
-        ROOT = "#hello"
+        ROOT = "#wt-core-title"
 
     assert MyView(browser).is_displayed
 
@@ -736,7 +736,7 @@ def test_iframe_view(browser):
     assert all([getattr(iframe_view, name).is_displayed for name in iframe_view.widget_names])
     assert all([getattr(parent_view, name).is_displayed for name in parent_view.widget_names])
 
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
     assert parent_view.h3.text == "footest"
 
     assert iframe_view.select1.read() == "Foo"
@@ -746,7 +746,7 @@ def test_iframe_view(browser):
     assert parent_view.checkbox1.fill(True) and parent_view.checkbox1.read()
 
     assert iframe_view.nested_iframe_view.is_displayed
-    assert iframe_view.nested_iframe_view.h3.text == "IFrame Tests 2"
+    assert iframe_view.nested_iframe_view.h3.text == "Nested IFrame Content"
     assert (
         iframe_view.nested_iframe_view.select3.fill("Bar")
         and iframe_view.nested_iframe_view.select3.read() == "Bar"
