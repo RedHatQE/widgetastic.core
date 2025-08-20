@@ -20,7 +20,7 @@ def current_and_new_handle(request, window_manager, testing_page_url):
 
     @request.addfinalizer
     def _close_window():
-        if not new_browser.page.is_closed():
+        if not new_browser.is_browser_closed:
             window_manager.close_browser(new_browser)
 
     return main_browser, new_browser
@@ -289,7 +289,7 @@ def test_new_window(request, window_manager, focus, testing_page_url):
 
     @request.addfinalizer
     def _close_window():
-        if not new_browser.page.is_closed():
+        if not new_browser.is_browser_closed:
             window_manager.close_browser(new_browser)
 
     assert new_browser.page is not None

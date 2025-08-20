@@ -236,7 +236,21 @@ class Browser:
     def url(self, address: str) -> None:
         """Navigate to the specified URL."""
         self.logger.info("Opening URL: %r", address)
-        self.page.goto(address)
+        self.goto(address, wait_until=None)
+
+    def goto(
+        self, address: str, *, wait_until: Optional[str] = "domcontentloaded", **kwargs
+    ) -> None:
+        """Navigate to the specified URL with configurable wait conditions.
+
+        Args:
+            address: URL to navigate to
+            wait_until: Wait condition before considering navigation successful.
+                       Options: "commit", "domcontentloaded", "load", "networkidle", None
+            **kwargs: Additional arguments passed to page.goto()
+        """
+        self.logger.info("Opening URL: %r (wait_until=%s)", address, wait_until)
+        self.page.goto(address, wait_until=wait_until, **kwargs)
 
     @property
     def title(self) -> str:
@@ -258,6 +272,11 @@ class Browser:
     def browser_type(self) -> str:
         """Browser engine name (chromium, firefox)."""
         return self.page.context.browser.browser_type.name
+
+    @property
+    def is_browser_closed(self) -> bool:
+        """Check browser/page is closed."""
+        return self.page.is_closed()
 
     @property
     def browser_version(self) -> int:

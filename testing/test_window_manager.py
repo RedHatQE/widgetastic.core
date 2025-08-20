@@ -172,9 +172,9 @@ def test_close_extra_pages_except_current(window_manager, external_test_url, tes
     window_manager.close_extra_pages()
 
     # Current should remain, others should be closed
-    assert not current_browser.page.is_closed()
-    assert browser2.page.is_closed()
-    assert browser3.page.is_closed()
+    assert not current_browser.is_browser_closed
+    assert browser2.is_browser_closed
+    assert browser3.is_browser_closed
     assert len(window_manager.all_pages) == 1
 
 
@@ -193,9 +193,9 @@ def test_close_extra_pages_including_current(window_manager, external_test_url, 
     window_manager.close_extra_pages(current=True)
 
     # All should be closed
-    assert current_browser.page.is_closed()
-    assert browser2.page.is_closed()
-    assert browser3.page.is_closed()
+    assert current_browser.is_browser_closed
+    assert browser2.is_browser_closed
+    assert browser3.is_browser_closed
     assert len(window_manager.all_pages) == 0
 
 
@@ -232,7 +232,7 @@ def test_close_extra_pages_with_exceptions(window_manager, external_test_url, te
 
         # Clean up the test browser
         try:
-            if not test_browser.page.is_closed():
+            if not test_browser.is_browser_closed:
                 test_browser.page.close()
         except Exception:
             pass
@@ -369,4 +369,4 @@ def test_browser_workflow_integration(window_manager, external_test_url, testing
 
     # Verify current browser is still valid
     assert window_manager.current in window_manager.all_browsers
-    assert not window_manager.current.page.is_closed()
+    assert not window_manager.current.is_browser_closed

@@ -107,10 +107,23 @@ def window_manager(browser_context: BrowserContext, page: Page) -> Iterator[Wind
 
 
 @pytest.fixture(scope="function")
-def browser(window_manager: WindowManager, testing_page_url: str) -> Iterator[Browser]:
-    """Provides the active widgetastic Browser from the manager.
-    This will provide isolated tests for each browser.
+def browser(page: Page, testing_page_url: str) -> Iterator[Browser]:
+    """Provides the active widgetastic Browser with isolated state per test.
+
+    This fixture provides a clean browser state for each test by creating a fresh
+    browser wrapper and refreshing the page.
     """
+    br = CustomBrowser(page)
+    if br.browser_type == "firefox":
+        # Firefox needs special handling: navigate and wait for load before refresh
+        br.url = testing_page_url
+    br.refresh(wait_until="domcontentloaded")
+    yield br
+
+
+@pytest.fixture(scope="function")
+def managed_browser(window_manager: WindowManager, testing_page_url: str) -> Iterator[Browser]:
+    """Provides a browser from the WindowManager for window management tests."""
     br = window_manager.current
-    br.url = testing_page_url
+    br.goto(testing_page_url, wait_until="domcontentloaded")
     yield br
