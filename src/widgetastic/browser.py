@@ -33,6 +33,7 @@ from typing import Union
 import warnings
 
 from cached_property import cached_property
+from playwright.sync_api import BrowserContext
 from playwright.sync_api import ElementHandle, FrameLocator
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Locator
@@ -235,7 +236,21 @@ class Browser:
     def url(self, address: str) -> None:
         """Navigate to the specified URL."""
         self.logger.info("Opening URL: %r", address)
-        self.page.goto(address)
+        self.goto(address, wait_until=None)
+
+    def goto(
+        self, address: str, *, wait_until: Optional[str] = "domcontentloaded", **kwargs
+    ) -> None:
+        """Navigate to the specified URL with configurable wait conditions.
+
+        Args:
+            address: URL to navigate to
+            wait_until: Wait condition before considering navigation successful.
+                       Options: "commit", "domcontentloaded", "load", "networkidle", None
+            **kwargs: Additional arguments passed to page.goto()
+        """
+        self.logger.info("Opening URL: %r (wait_until=%s)", address, wait_until)
+        self.page.goto(address, wait_until=wait_until, **kwargs)
 
     @property
     def title(self) -> str:
@@ -257,6 +272,11 @@ class Browser:
     def browser_type(self) -> str:
         """Browser engine name (chromium, firefox)."""
         return self.page.context.browser.browser_type.name
+
+    @property
+    def is_browser_closed(self) -> bool:
+        """Check browser/page is closed."""
+        return self.page.is_closed()
 
     @property
     def browser_version(self) -> int:
@@ -1096,3 +1116,349 @@ class BrowserParentWrapper:
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} for {self._o!r}>"
+
+
+class WindowManager:
+    """Multi-page/window manager for Playwright-based browser automation.
+
+    WindowManager provides comprehensive management of multiple browser tabs, windows, and popups
+    within a single Playwright browser context. It automatically wraps each page with widgetastic
+    Browser instances and provides seamless switching between them, making multi-window testing
+    scenarios much more manageable.
+
+    Args:
+        context: Playwright BrowserContext instance for managing pages
+        initial_page: The first Page to wrap and manage
+        browser_class: Browser class to use for wrapping pages (defaults to Browser)
+        **browser_kwargs: Additional arguments passed to Browser constructor
+
+    **Key Features:**
+
+    **Automatic Page Wrapping:**
+    Every Playwright Page is automatically wrapped with a widgetastic Browser instance, providing
+    the full widgetastic API for each tab/window. This eliminates the need to manually create
+    Browser instances for new pages.
+
+    **Popup Detection and Management:**
+    Automatically detects when new pages are opened (via popups, target="_blank" links, etc.)
+    and immediately wraps them with Browser instances. No manual intervention required for
+    popup handling.
+
+    **Intelligent Page Cleanup:**
+    Automatically removes closed pages from the managed collection and cleans up associated
+    Browser instances to prevent memory leaks during long-running test sessions.
+
+    **Current Page Tracking:**
+    Maintains a reference to the currently active Browser instance, making it easy to work
+    with the "focused" window while keeping track of all available windows.
+
+    **Seamless Context Switching:**
+    Provides simple methods to switch between different pages/windows and automatically
+    brings the target page to the front for user visibility during debugging.
+
+    **Practical Usage Examples:**
+
+    .. code-block:: python
+
+        # Initialize with a browser context and initial page
+        window_manager = WindowManager(context, initial_page)
+
+        # Work with the current page
+        window_manager.current.element("#login-button").click()
+
+        # Open a new tab and switch to it
+        new_browser = window_manager.new_browser("https://example.com", focus=True)
+        new_browser.element("#search-box").fill("test query")
+
+        # Handle popup windows automatically
+        window_manager.current.click("a[target='_blank']")  # Opens popup
+        # WindowManager automatically detects and wraps the popup
+
+        # List all open windows
+        all_browsers = window_manager.all_browsers
+        print(f"Managing {len(all_browsers)} windows")
+
+        # Switch to a specific window
+        window_manager.switch_to(all_browsers[1])
+
+        # Close current window (automatically switches to next available)
+        window_manager.close_browser()
+
+        # Close specific window
+        window_manager.close_browser(all_browsers[0])
+
+
+    Example Integration:
+        .. code-block:: python
+
+            @pytest.fixture(scope="session")
+            def window_manager(playwright_context, initial_page):
+                return WindowManager(playwright_context, initial_page)
+
+            def test_multi_window_workflow(window_manager):
+                # Test flows across multiple windows
+                main_browser = window_manager.current
+                popup_browser = window_manager.new_browser("https://popup.com")
+
+                # Test interactions between windows
+                main_browser.element("#trigger-popup").click()
+                popup_browser.element("#confirm").click()
+
+                # Verify results in main window
+                window_manager.switch_to(main_browser)
+                assert main_browser.element("#result").text == "Success"
+    """
+
+    def __init__(
+        self, context: BrowserContext, initial_page: Page, browser_class=Browser, **browser_kwargs
+    ):
+        self._context = context
+        self._browser_class = browser_class
+        self._browser_kwargs = browser_kwargs
+        self._browsers: Dict[Page, Browser] = {}
+
+        self.current: Browser = self._wrap_page(initial_page)
+        self._context.on("page", self._on_new_page)
+
+    def _wrap_page(self, page: Page) -> Browser:
+        if page not in self._browsers:
+            self._browsers[page] = self._browser_class(page, **self._browser_kwargs)
+        return self._browsers[page]
+
+    def _on_new_page(self, page: Page):
+        self.current.logger.info("New page opened / popup detected: %s", page.url)
+        self._wrap_page(page)
+
+    @property
+    def all_browsers(self) -> List[Browser]:
+        """Get all managed Browser instances with automatic cleanup.
+
+        Returns a list of all currently active widgetastic Browser instances. This property
+        automatically performs cleanup by removing any Browser instances associated with
+        closed pages, ensuring the returned list only contains valid, active browsers.
+
+
+        Example:
+            .. code-block:: python
+
+                # Get all active browsers
+                browsers = window_manager.all_browsers
+                print(f"Currently managing {len(browsers)} windows")
+
+                # Iterate through all browsers
+                for i, browser in enumerate(browsers):
+                    print(f"Window {i}: {browser.title} - {browser.url}")
+        """
+        current_pages = self._context.pages
+        # Clean up browsers for pages that are no longer in the context or are closed
+        for page in list(self._browsers.keys()):
+            try:
+                # Check if page is still in context and not closed
+                if page not in current_pages or page.is_closed():
+                    del self._browsers[page]
+            except Exception:
+                # If we can't check the page state, assume it's closed and remove it
+                if page in self._browsers:
+                    del self._browsers[page]
+
+        # Ensure all current pages are wrapped
+        for page in current_pages:
+            if not page.is_closed():
+                self._wrap_page(page)
+
+        return list(self._browsers.values())
+
+    @property
+    def all_pages(self) -> List[Page]:
+        """Get all active Playwright Page objects from the browser context.
+
+        Returns the raw Playwright Page instances managed by the browser context.
+        Unlike all_browsers, this property returns the underlying Page objects
+        without any widgetastic wrapping or cleanup logic.
+
+        Example:
+            .. code-block:: python
+
+                # Get raw Playwright pages
+                pages = window_manager.all_pages
+
+                # Access Playwright-specific methods
+                for page in pages:
+                    print(f"Page URL: {page.url}")
+                    print(f"Page title: {page.title()}")
+        """
+        return self._context.pages
+
+    def new_browser(self, url: str, focus: bool = True) -> Browser:
+        """Create a new browser tab/window and navigate to the specified URL.
+
+        Opens a new page in the current browser context, navigates to the provided URL,
+        wraps it with a widgetastic Browser instance, and optionally switches focus to it.
+        This is the primary method for opening new tabs during testing.
+
+        Args:
+            url: URL to navigate to in the new page
+            focus: If True, switches to the new page immediately (default: True)
+
+        Returns:
+            New Browser instance wrapping the created page
+
+        Example:
+            .. code-block:: python
+
+                # Open new tab and switch to it
+                new_browser = window_manager.new_browser("https://example.com")
+                new_browser.element("#search").fill("test query")
+
+                # Open new tab without switching focus
+                background_browser = window_manager.new_browser(
+                    "https://api.example.com",
+                    focus=False
+                )
+
+                # Continue working with current tab while background loads
+                window_manager.current.element("#submit").click()
+
+                # Switch to background tab when ready
+                window_manager.switch_to(background_browser)
+        """
+        self.current.logger.info("Opening URL in new page: %r", url)
+        page = self._context.new_page()
+        page.goto(url)
+        new_browser_instance = self._wrap_page(page)
+        if focus:
+            self.switch_to(new_browser_instance)
+        return new_browser_instance
+
+    def switch_to(self, browser_or_page: Union[Browser, Page]):
+        """Switch focus to a different browser tab/window.
+
+        Changes the currently active browser to the specified Browser or Page instance.
+        The target page is brought to the front for visibility and becomes the new
+        current browser for subsequent operations.
+
+        Args:
+            browser_or_page: Browser instance or Playwright Page to switch to
+
+        Raises:
+            NoSuchElementException: If the specified page doesn't exist in the context
+
+        Example:
+            .. code-block:: python
+
+                # Switch using Browser instance
+                all_browsers = window_manager.all_browsers
+                window_manager.switch_to(all_browsers[1])
+
+                # Switch using Playwright Page
+                all_pages = window_manager.all_pages
+                window_manager.switch_to(all_pages[0])
+
+                # Verify the switch
+                print(f"Now on: {window_manager.current.title}")
+        """
+        target_page = (
+            browser_or_page.page if isinstance(browser_or_page, Browser) else browser_or_page
+        )
+
+        if target_page not in self.all_pages:
+            raise NoSuchElementException("The specified Page handle does not exist.")
+
+        target_page.bring_to_front()
+        self.current = self._browsers[target_page]
+
+    def close_browser(self, browser_or_page: Optional[Union[Browser, Page]] = None):
+        """Close a browser tab/window with automatic cleanup and focus management.
+
+        Closes the specified browser tab/window or the current one if none specified.
+        Automatically cleans up the associated Browser instance and switches focus
+        to another available page if the current page was closed.
+
+        Args:
+            browser_or_page: Browser or Page instance to close. If None, closes current page.
+
+        Behavior:
+            - Removes the Browser instance from the managed collection
+            - Closes the underlying Playwright Page
+            - If the closed page was current, switches to the first available page
+            - If no pages remain, the WindowManager becomes inactive
+
+        Example:
+            .. code-block:: python
+
+                # Close current tab
+                window_manager.close_browser()
+
+                # Close specific tab
+                browsers = window_manager.all_browsers
+                window_manager.close_browser(browsers[1])
+
+                # Close using Page reference
+                pages = window_manager.all_pages
+                window_manager.close_browser(pages[0])
+
+                # Check remaining browsers
+                remaining = len(window_manager.all_browsers)
+                print(f"{remaining} tabs still open")
+        """
+        target_browser = browser_or_page or self.current
+        target_page = target_browser.page if isinstance(target_browser, Browser) else target_browser
+
+        # Check if page is already closed
+        try:
+            is_closed = target_page.is_closed()
+        except Exception:
+            is_closed = True
+
+        if not is_closed:
+            try:
+                self.current.logger.debug("Closing page: %r", target_page.url)
+            except Exception:
+                self.current.logger.debug("Closing page (URL unavailable)")
+
+        # Remove from internal tracking
+        if target_page in self._browsers:
+            del self._browsers[target_page]
+
+        # Close the page if not already closed
+        if not is_closed:
+            try:
+                target_page.close()
+            except Exception:
+                pass  # Page might already be closed
+
+        # Switch focus if there are remaining pages
+        remaining_pages = self.all_pages
+        if remaining_pages:
+            try:
+                self.switch_to(remaining_pages[0])
+            except Exception:
+                # If switching fails, try to find a valid page
+                for page in remaining_pages:
+                    try:
+                        if not page.is_closed():
+                            self.switch_to(page)
+                            break
+                    except Exception:
+                        continue
+
+    def close_extra_pages(self, current=False):
+        """Cleanup all extra pages other than current page.
+
+        Args:
+            current: Close current page as well. Default current page will not close.
+        """
+        pages = list(self.all_pages)
+
+        if current:
+            pages_to_delete = pages
+        else:
+            current_page = self.current.page if hasattr(self, "current") and self.current else None
+            pages_to_delete = [p for p in pages if p != current_page]
+
+        for p in pages_to_delete:
+            try:
+                if not p.is_closed():
+                    p.close()
+            except Exception:
+                pass

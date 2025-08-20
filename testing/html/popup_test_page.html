@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Popup Test Page</title>
+</head>
+<body>
+    <h1>Popup Test Page</h1>
+
+    <button id="open-popup" onclick="openPopup()">Open Popup</button>
+    <button id="open-new-tab" onclick="openNewTab()">Open New Tab</button>
+    <a href="external_test_page.html" target="_blank" id="external-link">External Link (New Tab)</a>
+
+    <script>
+        function openPopup() {
+            window.open('testing_page.html', 'popup', 'width=400,height=300');
+        }
+
+        function openNewTab() {
+            window.open('testing_page.html', '_blank');
+        }
+    </script>
+</body>
+</html>

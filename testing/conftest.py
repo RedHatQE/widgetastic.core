@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Page, Browser as PlaywrightBrowser, BrowserContext
-from widgetastic.browser import Browser
+from widgetastic.browser import Browser, WindowManager
 from typing import Iterator
 
 
@@ -44,6 +44,22 @@ def headless_mode(request):
 
 
 @pytest.fixture(scope="session")
+def testing_page_url() -> str:
+    """Provides the local file path to the testing page."""
+    html_file = Path(__file__).parent / "html" / "testing_page.html"
+    return html_file.resolve().as_uri()
+
+
+@pytest.fixture(scope="session")
+def external_test_url() -> str:
+    """Provides a reliable local URL simulating external domain for testing.
+    We are going to use this for window/browser management testing.
+    """
+    html_file = Path(__file__).parent / "html" / "external_test_page.html"
+    return html_file.resolve().as_uri()
+
+
+@pytest.fixture(scope="session")
 def playwright_browser_instance(browser_name: str, headless_mode: bool) -> PlaywrightBrowser:
     """Launches a Playwright browser instance."""
     with sync_playwright() as p:
@@ -72,13 +88,6 @@ def browser_context(playwright_browser_instance: PlaywrightBrowser) -> BrowserCo
 
 
 @pytest.fixture(scope="session")
-def testing_page_url() -> str:
-    """Provides the local file path to the testing page."""
-    html_file = Path(__file__).parent / "html" / "testing_page.html"
-    return html_file.resolve().as_uri()
-
-
-@pytest.fixture(scope="session")
 def page(browser_context: BrowserContext, testing_page_url: str) -> Iterator[Page]:
     """Creates the initial page within the session context."""
     page = browser_context.new_page()
@@ -87,13 +96,34 @@ def page(browser_context: BrowserContext, testing_page_url: str) -> Iterator[Pag
     page.close()
 
 
+@pytest.fixture(scope="session")
+def window_manager(browser_context: BrowserContext, page: Page) -> Iterator[WindowManager]:
+    """Provides a WindowManager instance for multi-window testing."""
+    manager = WindowManager(browser_context, page, browser_class=CustomBrowser)
+    try:
+        yield manager
+    finally:
+        manager.close_extra_pages()
+
+
 @pytest.fixture(scope="function")
 def browser(page: Page, testing_page_url: str) -> Iterator[Browser]:
-    """Provides the active widgetastic Browser from the manager."""
-    # TODO: Handle windows management here.
+    """Provides the active widgetastic Browser with isolated state per test.
+
+    This fixture provides a clean browser state for each test by creating a fresh
+    browser wrapper and refreshing the page.
+    """
     br = CustomBrowser(page)
     if br.browser_type == "firefox":
         # Firefox needs special handling: navigate and wait for load before refresh
         br.url = testing_page_url
     br.refresh(wait_until="domcontentloaded")
+    yield br
+
+
+@pytest.fixture(scope="function")
+def managed_browser(window_manager: WindowManager, testing_page_url: str) -> Iterator[Browser]:
+    """Provides a browser from the WindowManager for window management tests."""
+    br = window_manager.current
+    br.goto(testing_page_url, wait_until="domcontentloaded")
     yield br

@@ -13,16 +13,17 @@ from playwright.sync_api import Locator
 
 
 @pytest.fixture()
-def current_and_new_handle(request, browser, testing_page_url):
-    """fixture return current and newly open window handle"""
-    handle = browser.new_window(url=testing_page_url)
+def current_and_new_handle(request, window_manager, testing_page_url):
+    """Fixture to open a new window and return both browser instances."""
+    main_browser = window_manager.current
+    new_browser = window_manager.new_browser(url=testing_page_url)
 
     @request.addfinalizer
     def _close_window():
-        if handle in browser.window_handles:
-            browser.close_window(handle)
+        if not new_browser.is_browser_closed:
+            window_manager.close_browser(new_browser)
 
-    return browser.current_window_handle, handle
+    return main_browser, new_browser
 
 
 @pytest.fixture()
@@ -273,63 +274,62 @@ def test_title(browser):
     assert browser.title == "Test page"
 
 
-# TODO: Review these test with new window and alert handling
+def test_current_window_handle(window_manager):
+    """Test current window handle property"""
+    assert window_manager.current.page
 
-# def test_current_window_handle(browser):
-#     """Test current window handle property"""
-#     assert browser.current_window_handle
-#
-#
-# @pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
-# def test_new_window(request, browser, focus, testing_page_url):
-#     """Test open new window with and without focus"""
-#     # main window handle
-#     main_handle = browser.current_window_handle
-#
-#     # open new window focus/no-focus
-#     handle = browser.new_window(url=testing_page_url, focus=focus)
-#
-#     @request.addfinalizer
-#     def _close_window():
-#         browser.close_window(handle)
-#
-#     assert handle
-#
-#     if focus:
-#         assert handle == browser.current_window_handle
-#
-#         @request.addfinalizer
-#         def _back_to_main():
-#             browser.switch_to_window(main_handle)
-#
-#     else:
-#         assert handle != browser.current_window_handle
-#
-#
-# def test_window_handles(browser, current_and_new_handle):
-#     """Test window handles property"""
-#     assert len(browser.window_handles) == 2
-#     assert set(browser.window_handles) == set(current_and_new_handle)
-#
-#
-# def test_close_window(browser, current_and_new_handle):
-#     """Test close window"""
-#     main_handle, new_handle = current_and_new_handle
-#
-#     assert new_handle in browser.window_handles
-#     browser.close_window(new_handle)
-#     assert new_handle not in browser.window_handles
-#
-#
-# def test_switch_to_window(browser, current_and_new_handle):
-#     """Test switch to other window"""
-#     main_handle, new_handle = current_and_new_handle
-#
-#     # switch to new window
-#     browser.switch_to_window(new_handle)
-#     assert new_handle == browser.current_window_handle
-#     browser.switch_to_window(main_handle)
-#     assert main_handle == browser.current_window_handle
+
+@pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
+def test_new_window(request, window_manager, focus, testing_page_url):
+    """Test open new window with and without focus"""
+    main_browser = window_manager.current
+
+    # open new window focus/no-focus
+    new_browser = window_manager.new_browser(url=testing_page_url, focus=focus)
+
+    @request.addfinalizer
+    def _close_window():
+        if not new_browser.is_browser_closed:
+            window_manager.close_browser(new_browser)
+
+    assert new_browser.page is not None
+
+    if focus:
+        assert window_manager.current is new_browser
+    else:
+        assert window_manager.current is main_browser
+
+
+def test_window_handles(window_manager, current_and_new_handle):
+    """Test window handles property"""
+    main_browser, new_browser = current_and_new_handle
+    # Compare the Page objects, not the Browser wrappers
+    expected_pages = {main_browser.page, new_browser.page}
+    assert len(window_manager.all_pages) == 2
+    assert set(window_manager.all_pages) == expected_pages
+
+
+def test_close_window(window_manager, current_and_new_handle):
+    """Test close window"""
+    main_browser, new_browser = current_and_new_handle
+
+    assert new_browser.page in window_manager.all_pages
+    window_manager.close_browser(new_browser)
+    assert new_browser.page not in window_manager.all_pages
+
+
+def test_switch_to_window(window_manager, current_and_new_handle):
+    """Test switch to other window"""
+    main_browser, new_browser = current_and_new_handle
+
+    # switch to new window
+    window_manager.switch_to(new_browser)
+    assert window_manager.current is new_browser
+    # switch back to main window
+    window_manager.switch_to(main_browser)
+    assert window_manager.current is main_browser
+
+
 #
 #
 # def test_alert(browser):
