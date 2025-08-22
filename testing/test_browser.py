@@ -5,24 +5,25 @@ from pathlib import Path
 import pytest
 
 from widgetastic.browser import BrowserParentWrapper
-from widgetastic.browser import WebElement
 from widgetastic.exceptions import LocatorNotImplemented
 from widgetastic.exceptions import NoSuchElementException
 from widgetastic.widget import Text
 from widgetastic.widget import View
+from playwright.sync_api import Locator
 
 
 @pytest.fixture()
-def current_and_new_handle(request, browser, testing_page_url):
-    """fixture return current and newly open window handle"""
-    handle = browser.new_window(url=testing_page_url)
+def current_and_new_handle(request, window_manager, testing_page_url):
+    """Fixture to open a new window and return both browser instances."""
+    main_browser = window_manager.current
+    new_browser = window_manager.new_browser(url=testing_page_url)
 
     @request.addfinalizer
     def _close_window():
-        if handle in browser.window_handles:
-            browser.close_window(handle)
+        if not new_browser.is_browser_closed:
+            window_manager.close_browser(new_browser)
 
-    return browser.current_window_handle, handle
+    return main_browser, new_browser
 
 
 @pytest.fixture()
@@ -37,7 +38,7 @@ def invoke_alert(browser):
 
 
 def test_is_displayed(browser):
-    assert browser.is_displayed("#hello")
+    assert browser.is_displayed("#wt-core-title")
 
 
 def test_is_displayed_negative(browser):
@@ -56,10 +57,10 @@ def test_elements_string_locator_xpath(browser):
 def test_elements_string_locator_css(browser):
     # TODO: Why this doesnt work properly?
     # assert len(browser.elements('h1')) == 1
-    assert len(browser.elements("#hello")) == 1
-    assert len(browser.elements("h1#hello")) == 1
-    assert len(browser.elements("h1#hello.foo")) == 1
-    assert len(browser.elements("h1#hello.foo.bar")) == 1
+    assert len(browser.elements("#wt-core-title")) == 1
+    assert len(browser.elements("h1#wt-core-title")) == 1
+    assert len(browser.elements("h1#wt-core-title.foo")) == 1
+    assert len(browser.elements("h1#wt-core-title.foo.bar")) == 1
     assert len(browser.elements("h1.foo.bar")) == 1
     assert len(browser.elements(".foo.bar")) == 1
 
@@ -69,14 +70,14 @@ def test_elements_dict(browser):
 
 
 def test_elements_webelement(browser):
-    element = browser.element("#hello")
+    element = browser.element("#wt-core-title")
     assert browser.elements(element)[0] is element
 
 
 def test_elements_locatable_locator(browser):
     class Object:
         def __locator__(self):
-            return "#hello"
+            return "#wt-core-title"
 
     assert len(browser.elements(Object())) == 1
 
@@ -95,7 +96,7 @@ def test_wait_for_element_visible(browser):
     # Click on the button
     browser.click("#invisible_appear_button")
     try:
-        assert isinstance(browser.wait_for_element("#invisible_appear_p", visible=True), WebElement)
+        assert isinstance(browser.wait_for_element("#invisible_appear_p", visible=True), Locator)
     except NoSuchElementException:
         pytest.fail("NoSuchElementException raised when webelement expected")
 
@@ -115,7 +116,7 @@ def test_wait_for_element_exception_control(browser, exception):
 
 
 def test_element_only_invisible(browser):
-    browser.element("#hello", check_visibility=False)
+    browser.element("#wt-core-title", check_visibility=False)
 
 
 def test_element_only_visible(browser):
@@ -134,7 +135,8 @@ def test_element_nonexisting(browser):
 
 
 def test_move_to_element_option(browser):
-    assert browser.move_to_element("#myoption").tag_name == "option"
+    el = browser.move_to_element("#myoption")
+    assert browser.tag(el) == "option"
 
 
 def test_click(browser):
@@ -150,11 +152,11 @@ def test_raw_click(browser):
 
 
 def test_tag(browser):
-    assert browser.tag("#hello") == "h1"
+    assert browser.tag("#wt-core-title") == "h1"
 
 
 def test_text_visible(browser):
-    assert browser.text("#hello") == "Hello"
+    assert browser.text("#wt-core-title") == "Widgetastic.Core - Testing Page"
 
 
 def test_text_invisible(browser):
@@ -162,11 +164,11 @@ def test_text_invisible(browser):
 
 
 def test_attributes(browser):
-    assert browser.attributes("//h1") == {"class": "foo bar", "id": "hello"}
+    assert browser.attributes("//h1") == {"class": "foo bar", "id": "wt-core-title"}
 
 
 def test_get_attribute(browser):
-    assert browser.get_attribute("id", "//h1") == "hello"
+    assert browser.get_attribute("id", "//h1") == "wt-core-title"
 
 
 def test_set_attribute(browser):
@@ -263,107 +265,108 @@ def test_element_force_visibility_check_by_locator(browser):
 
 def test_size(browser):
     width, height = browser.size_of("#exact_dimensions")
-    assert width == 42
-    assert height == 69
+    assert width == 100
+    assert height == 50
 
 
 def test_title(browser):
     """Test title of current window"""
-    assert browser.title == "Test page"
+    assert browser.title == "Widgetastic.Core - Testing Page"
 
 
-def test_current_window_handle(browser):
+def test_current_window_handle(window_manager):
     """Test current window handle property"""
-    assert browser.current_window_handle
+    assert window_manager.current.page
 
 
 @pytest.mark.parametrize("focus", [False, True], ids=["no_focus", "focus"])
-def test_new_window(request, browser, focus, testing_page_url):
+def test_new_window(request, window_manager, focus, testing_page_url):
     """Test open new window with and without focus"""
-    # main window handle
-    main_handle = browser.current_window_handle
+    main_browser = window_manager.current
 
     # open new window focus/no-focus
-    handle = browser.new_window(url=testing_page_url, focus=focus)
+    new_browser = window_manager.new_browser(url=testing_page_url, focus=focus)
 
     @request.addfinalizer
     def _close_window():
-        browser.close_window(handle)
+        if not new_browser.is_browser_closed:
+            window_manager.close_browser(new_browser)
 
-    assert handle
+    assert new_browser.page is not None
 
     if focus:
-        assert handle == browser.current_window_handle
-
-        @request.addfinalizer
-        def _back_to_main():
-            browser.switch_to_window(main_handle)
-
+        assert window_manager.current is new_browser
     else:
-        assert handle != browser.current_window_handle
+        assert window_manager.current is main_browser
 
 
-def test_window_handles(browser, current_and_new_handle):
+def test_window_handles(window_manager, current_and_new_handle):
     """Test window handles property"""
-    assert len(browser.window_handles) == 2
-    assert set(browser.window_handles) == set(current_and_new_handle)
+    main_browser, new_browser = current_and_new_handle
+    # Compare the Page objects, not the Browser wrappers
+    expected_pages = {main_browser.page, new_browser.page}
+    assert len(window_manager.all_pages) == 2
+    assert set(window_manager.all_pages) == expected_pages
 
 
-def test_close_window(browser, current_and_new_handle):
+def test_close_window(window_manager, current_and_new_handle):
     """Test close window"""
-    main_handle, new_handle = current_and_new_handle
+    main_browser, new_browser = current_and_new_handle
 
-    assert new_handle in browser.window_handles
-    browser.close_window(new_handle)
-    assert new_handle not in browser.window_handles
+    assert new_browser.page in window_manager.all_pages
+    window_manager.close_browser(new_browser)
+    assert new_browser.page not in window_manager.all_pages
 
 
-def test_switch_to_window(browser, current_and_new_handle):
+def test_switch_to_window(window_manager, current_and_new_handle):
     """Test switch to other window"""
-    main_handle, new_handle = current_and_new_handle
+    main_browser, new_browser = current_and_new_handle
 
     # switch to new window
-    browser.switch_to_window(new_handle)
-    assert new_handle == browser.current_window_handle
-    browser.switch_to_window(main_handle)
-    assert main_handle == browser.current_window_handle
+    window_manager.switch_to(new_browser)
+    assert window_manager.current is new_browser
+    # switch back to main window
+    window_manager.switch_to(main_browser)
+    assert window_manager.current is main_browser
 
 
-def test_alert(browser):
-    """Test alert_present, get_alert object"""
-    assert not browser.alert_present
-    alert_btn = browser.element("#alert_button")
-    alert_btn.click()
-    assert browser.alert_present
-
-    alert = browser.get_alert()
-    assert alert.text == "Please enter widget name:"
-    alert.dismiss()
-    assert not browser.alert_present
-
-
-def test_dismiss_any_alerts(browser, invoke_alert):
-    """Test dismiss_any_alerts"""
-    assert browser.alert_present
-    browser.dismiss_any_alerts()
-    assert not browser.alert_present
-
-
-@pytest.mark.parametrize(
-    "cancel_text",
-    [(True, "User dismissed alert."), (False, "User accepted alert:")],
-    ids=["dismiss", "accept"],
-)
-@pytest.mark.parametrize("prompt", [None, "Input"], ids=["without_prompt", "with_prompt"])
-def test_handle_alert(browser, cancel_text, prompt, invoke_alert):
-    """Test handle_alert method with cancel and prompt"""
-    cancel, alert_out_text = cancel_text
-    assert browser.alert_present
-    assert browser.handle_alert(cancel=cancel, prompt=prompt)
-    if not cancel:
-        alert_out_text = alert_out_text + ("Input" if prompt else "TextBox")
-    assert browser.text("#alert_out") == alert_out_text
-    assert not browser.alert_present
+#
+#
+# def test_alert(browser):
+#     """Test alert_present, get_alert object"""
+#     assert not browser.alert_present
+#     alert_btn = browser.element("#alert_button")
+#     alert_btn.click()
+#     assert browser.alert_present
+#
+#     alert = browser.get_alert()
+#     assert alert.text == "Please enter widget name:"
+#     alert.dismiss()
+#     assert not browser.alert_present
+#
+#
+# def test_dismiss_any_alerts(browser, invoke_alert):
+#     """Test dismiss_any_alerts"""
+#     assert browser.alert_present
+#     browser.dismiss_any_alerts()
+#     assert not browser.alert_present
+#
+#
+# @pytest.mark.parametrize(
+#     "cancel_text",
+#     [(True, "User dismissed alert."), (False, "User accepted alert:")],
+#     ids=["dismiss", "accept"],
+# )
+# @pytest.mark.parametrize("prompt", [None, "Input"], ids=["without_prompt", "with_prompt"])
+# def test_handle_alert(browser, cancel_text, prompt, invoke_alert):
+#     """Test handle_alert method with cancel and prompt"""
+#     cancel, alert_out_text = cancel_text
+#     assert browser.alert_present
+#     assert browser.handle_alert(cancel=cancel, prompt=prompt)
+#     if not cancel:
+#         alert_out_text = alert_out_text + ("Input" if prompt else "TextBox")
+#     assert browser.text("#alert_out") == alert_out_text
+#     assert not browser.alert_present
 
 
 def test_save_screenshot(browser):

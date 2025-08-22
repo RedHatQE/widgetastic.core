@@ -2,21 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Page for testing IFrames</title>
+    <title>Widgetastic IFrame Testing Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h3 {
+            color: #333;
+            margin: 10px 0;
+        }
+
+        select, input {
+            padding: 5px;
+            margin: 5px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        .widget-section {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
-    <h3>IFrame Tests</h3>
+    <h3>IFrame Widget Testing</h3>
 
-    <select id="iframe_select1">
-        <option value="foo">Foo</option>
-        <option value="bar"> Bar</option>
-    </select>
+    <div class="widget-section">
+        <label>Single Select:</label>
+        <select id="iframe_select1">
+            <option value="foo">Foo</option>
+            <option value="bar"> Bar</option>
+        </select>
 
-    <select name="iframe_select2" multiple class="xfoo xbar">
-        <option value="foo">Foo</option>
-        <option value="bar"> Bar</option>
-        <option value="baz">Baz</option>
-    </select>
-    <iframe src="iframe_page2.html" height="300" width="200" name="another_iframe"></iframe>
+        <br><br>
+
+        <label>Multiple Select:</label>
+        <select name="iframe_select2" multiple class="xfoo xbar" size="3">
+            <option value="foo">Foo</option>
+            <option value="bar"> Bar</option>
+            <option value="baz">Baz</option>
+        </select>
+    </div>
+
+    <div class="widget-section">
+        <h4>Nested IFrame:</h4>
+        <iframe src="iframe_page2.html" height="300" width="100%" name="another_iframe"></iframe>
+    </div>
 </body>
 </html>
