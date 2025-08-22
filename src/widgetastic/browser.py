@@ -273,6 +273,10 @@ class Browser:
         """Browser engine name (chromium, firefox)."""
         return self.page.context.browser.browser_type.name
 
+    def close(self) -> None:
+        """Close browser page."""
+        self.page.close()
+
     @property
     def is_browser_closed(self) -> bool:
         """Check browser/page is closed."""
