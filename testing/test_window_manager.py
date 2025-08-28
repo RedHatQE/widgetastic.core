@@ -199,11 +199,15 @@ def test_close_extra_pages_including_current(window_manager, external_test_url, 
     assert len(window_manager.all_pages) == 0
 
 
-def test_close_extra_pages_with_exceptions(window_manager, external_test_url, testing_page_url):
+def test_close_extra_pages_with_exceptions(
+    isolated_window_manager, external_test_url, testing_page_url
+):
     """Test that close_extra_pages handles exceptions gracefully."""
-    reset_to_clean_state(window_manager, testing_page_url)
+    reset_to_clean_state(isolated_window_manager, testing_page_url)
 
-    test_browser = window_manager.new_browser(f"{external_test_url}#exception_test", focus=False)
+    test_browser = isolated_window_manager.new_browser(
+        f"{external_test_url}#exception_test", focus=False
+    )
 
     # Mock the page.close method to raise an exception
     original_close = test_browser.page.close
@@ -218,7 +222,7 @@ def test_close_extra_pages_with_exceptions(window_manager, external_test_url, te
 
     try:
         # This should not raise an exception even if individual page.close() fails
-        window_manager.close_extra_pages()
+        isolated_window_manager.close_extra_pages()
 
         # Verify that close was attempted on the mocked page
         assert close_called, "close() should have been called on the test page"

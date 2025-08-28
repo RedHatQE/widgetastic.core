@@ -322,6 +322,8 @@
         <div class="widget-description">Buttons with state changes and click handlers</div>
         <button id="a_button" onclick="this.className += ' clicked'">Click Me (State Changes)</button>
         <div class="code-example">Button adds 'clicked' class when pressed</div>
+        <button id='disabled_button' disabled>Disabled Button</button>
+        <div class="code-example">Button in disabled state - cannot be clicked</div>
       </div>
     </div>
   </div>
@@ -364,10 +366,27 @@
           <label>Color Picker:</label>
           <input type='color' id='colourinput' value="#007bff" />
         </div>
+
+        <div class="form-row">
+          <label>Editable Content:</label>
+          <div id='editable_content' contenteditable="true" style="border: 1px solid #ccc; padding: 8px; min-height: 30px;">Editable content here</div>
+        </div>
+        <div class="form-row">
+          <label>Hidden Input:</label>
+          <input type='text' id='hidden_input' style="display: none;" value="hidden" />
+        </div>
+        <div class="form-row">
+          <label>Textarea:</label>
+          <textarea id='textarea_input' placeholder="Multi-line text"></textarea>
+        </div>
         <div class="code-example">
           TextInput(id="input")<br>
+          TextInput(id="input_paste")<br>
+          TextInput(id="input_number")  # HTML type=number<br>
           FileInput(id="fileinput")<br>
-          ColourInput(id="colourinput")
+          ColourInput(id="colourinput")<br>
+          Text(id="editable_content")  # Editable content<br>
+          TextInput(id="textarea_input")  # Textarea element
         </div>
       </div>
 
@@ -383,6 +402,207 @@
   </div>
 
   <script>
+  // Enhanced drag and drop functionality
+  let draggedElement = null;
+  let dragStartCoords = null;
+  let dropCount = 0;
+
+  // Track mouse coordinates
+  document.addEventListener('mousemove', function(e) {
+    const mouseCoords = document.getElementById('mouse_coords');
+    if (mouseCoords) {
+      mouseCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+  });
+
+  // Enhanced Drag and Drop Event Handlers
+  function handleDragStart(e) {
+    draggedElement = e.target;
+    dragStartCoords = {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    // Visual feedback
+    e.target.style.opacity = '0.6';
+    e.target.style.transform = 'scale(0.95)';
+
+    // Update coordinates display
+    const startCoords = document.getElementById('drag_start_coords');
+    if (startCoords) {
+      startCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+
+    logDragAction(`Started dragging ${e.target.id || 'element'} from (${e.clientX}, ${e.clientY})`);
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.dataTransfer.setData('text/plain', e.target.id);
+  }
+
+  function handleDragEnd(e) {
+    // Reset visual feedback
+    e.target.style.opacity = '1';
+    e.target.style.transform = 'scale(1)';
+
+    const endCoords = document.getElementById('drag_end_coords');
+    const offsetCoords = document.getElementById('drag_offset');
+
+    if (endCoords) {
+      endCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+
+    if (offsetCoords && dragStartCoords) {
+      const offsetX = e.clientX - dragStartCoords.x;
+      const offsetY = e.clientY - dragStartCoords.y;
+      offsetCoords.textContent = `(${offsetX}, ${offsetY})`;
+    }
+
+    logDragAction(`Ended dragging ${e.target.id || 'element'} at (${e.clientX}, ${e.clientY})`);
+
+    draggedElement = null;
+    dragStartCoords = null;
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    e.preventDefault();
+    // Visual feedback for drop zone
+    if (e.target.classList.contains('drop-area') || e.target.closest('.drop-area')) {
+      const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+      dropArea.style.borderColor = '#28a745';
+      dropArea.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.textContent = 'Ready to drop!';
+        status.style.color = '#28a745';
+      }
+    }
+  }
+
+  function handleDragLeave(e) {
+    // Only handle if we're actually leaving the drop zone
+    const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+    if (dropArea && !dropArea.contains(e.relatedTarget)) {
+      dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
+      dropArea.style.backgroundColor = '';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.textContent = 'Ready';
+        status.style.color = '';
+      }
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+
+    const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+    if (dropArea) {
+      dropCount++;
+
+      // Visual feedback
+      dropArea.style.borderColor = '#007bff';
+      dropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.innerHTML = `✅ Dropped!<br><small>Count: ${dropCount}</small>`;
+        status.style.color = '#007bff';
+      }
+
+      // Reset after delay
+      setTimeout(() => {
+        dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
+        dropArea.style.backgroundColor = '';
+        if (status) {
+          status.textContent = 'Ready';
+          status.style.color = '';
+        }
+      }, 2000);
+
+      const draggedId = e.dataTransfer.getData('text/plain');
+      logDragAction(`Dropped ${draggedId || 'element'} in drop zone at (${e.clientX}, ${e.clientY})`);
+    }
+  }
+
+  // Sortable List Handlers
+  function handleSortStart(e) {
+    draggedElement = e.target;
+    e.target.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    logDragAction(`Started sorting: ${e.target.textContent.trim()}`);
+  }
+
+  function handleSortOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const afterElement = getDragAfterElement(e.currentTarget.parentNode, e.clientY);
+    const dragging = document.querySelector('.sortable-item[style*="opacity: 0.5"]');
+
+    if (afterElement == null) {
+      e.currentTarget.parentNode.appendChild(dragging);
+    } else {
+      e.currentTarget.parentNode.insertBefore(dragging, afterElement);
+    }
+  }
+
+  function handleSortDrop(e) {
+    e.preventDefault();
+    e.target.style.opacity = '1';
+    logDragAction(`Reordered list items`);
+  }
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.sortable-item:not([style*="opacity: 0.5"])')];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // Logging function
+  function logDragAction(message) {
+    const log = document.getElementById('drag_log');
+    if (log) {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+
+      // Remove placeholder text if exists
+      const placeholder = log.querySelector('div[style*="italic"]');
+      if (placeholder) {
+        placeholder.remove();
+      }
+
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function clearDragLog() {
+    const log = document.getElementById('drag_log');
+    if (log) {
+      log.innerHTML = '<div style="color: #6c757d; font-style: italic;">Drag and drop actions will be logged here...</div>';
+    }
+  }
+
   function alertFunction() {
     var txt;
     var widget = prompt("Please enter widget name:", "TextBox");
@@ -567,8 +787,8 @@
           </div>
         </div>
         <div class="code-example">
-          Text(".//div[@class='c1']//span[@class='lookmeup']") - Specific locator<br>
-          Text(".//span[@class='lookmeup']") - Ambiguous, may match wrong element
+          Text(".//div[@class='c1']//span[@class='lookmeup']")  # Returns "You looked me up!"<br>
+          Text(".//span[@class='lookmeup']")  # Ambiguous - matches multiple elements
         </div>
       </div>
 
@@ -585,7 +805,7 @@
           <button id="fill_with_button_2" onclick="this.className += ' clicked'">Click 2</button>
         </div>
         <div class="code-example">
-          view.fill({"fill_with_1": "value1", "fill_with_2": "value2"}) - Batch filling
+          view.fill({"fill_with_1": "value1", "fill_with_2": "value2", "fill_with_3": "value3"})
         </div>
       </div>
 
@@ -594,7 +814,133 @@
         <div class="widget-description">Widget with exact pixel dimensions for size testing</div>
         <div id="exact_dimensions" style="width: 100px; height: 50px;">Fixed Size</div>
         <div class="code-example">
-          element.size returns (100, 50) - Testing exact dimensions
+          browser.size_of("#exact_dimensions") returns (100, 50)
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Drag and Drop Testing</div>
+        <div class="widget-description">Interactive drag and drop elements with comprehensive visual feedback</div>
+
+        <!-- Two-column layout: Left for drag/drop, Right for reference/log -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
+
+          <!-- Left Column: Drag and Drop Elements -->
+          <div class="left-column">
+            <!-- Basic Drag and Drop -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Basic Drag and Drop</h4>
+              <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div class="drag-container">
+                  <div id="drag_source" class="draggable-item" style="width: 100px; height: 100px; background: linear-gradient(135deg, #007bff, #0056b3); color: white; display: flex; align-items: center; justify-content: center; cursor: move; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.3s ease; user-select: none;" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 16px; font-weight: bold;">📦</div>
+                      <div style="font-size: 11px; margin-top: 2px;">Drag Me</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Source</div>
+                </div>
+
+                <div class="drop-zone">
+                  <div id="drop_target" class="drop-area" style="width: 120px; height: 120px; background: linear-gradient(135deg, #6c757d, #5a6268); color: white; display: flex; align-items: center; justify-content: center; border: 3px dashed rgba(255,255,255,0.5); border-radius: 12px; transition: all 0.3s ease; position: relative;" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 20px; margin-bottom: 3px;">🎯</div>
+                      <div style="font-size: 12px;">Drop Zone</div>
+                      <div id="drop_status" style="font-size: 9px; opacity: 0.8; margin-top: 3px;">Ready</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Target</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Draggable Item for Offset Testing -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Offset Testing Item</h4>
+              <div style="display: flex; justify-content: center;">
+                <div class="drag-container">
+                  <div id="drag_source2" class="draggable-item" style="width: 80px; height: 80px; background: linear-gradient(135deg, #28a745, #1e7e34); color: white; display: flex; align-items: center; justify-content: center; cursor: move; border-radius: 8px; font-size: 12px; transition: all 0.3s ease; user-select: none;" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 14px;">📋</div>
+                      <div style="font-size: 10px; margin-top: 2px;">Offset</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">For drag_and_drop_by_offset()</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sortable List -->
+            <div class="drag-drop-section">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Sortable List</h4>
+              <div id="sortable_list" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>First Item</span>
+                </div>
+                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>Second Item</span>
+                </div>
+                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>Third Item</span>
+                </div>
+              </div>
+              <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Drag items to reorder</div>
+            </div>
+          </div>
+
+          <!-- Right Column: Position Reference and Action Log -->
+          <div class="right-column">
+            <!-- Position Reference & Hover Testing -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Position Reference & Hover</h4>
+              <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                <div style="position: relative;">
+                  <div id="position_reference" style="width: 120px; height: 120px; background: linear-gradient(135deg, #ffc107, #e0a800); color: black; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <div style="text-align: center;">
+                      <div style="font-size: 18px;">📍</div>
+                      <div style="font-size: 12px; font-weight: bold;">Reference</div>
+                      <div style="font-size: 10px;">Point (0,0)</div>
+                    </div>
+                    <div id="hover_target" style="position: absolute; top: -20px; right: -20px; width: 35px; height: 35px; background: linear-gradient(135deg, #dc3545, #c82333); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                      <div style="text-align: center;">
+                        <div style="font-size: 12px;">👆</div>
+                        <div style="font-size: 7px;">Hover</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Coordinate Display -->
+              <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                <h5 style="margin: 0 0 10px 0; font-size: 13px; color: #495057;">Live Coordinates</h5>
+                <div id="drag_coordinates" style="font-family: monospace; font-size: 11px; color: #495057; line-height: 1.5;">
+                  <div>Mouse: <span id="mouse_coords">(0, 0)</span></div>
+                  <div>Drag Start: <span id="drag_start_coords">(-, -)</span></div>
+                  <div>Drag End: <span id="drag_end_coords">(-, -)</span></div>
+                  <div>Offset: <span id="drag_offset">(-, -)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Log -->
+            <div class="drag-drop-section">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Action Log</h4>
+              <div id="drag_log" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.4;">
+                <div style="color: #6c757d; font-style: italic;">Drag and drop actions will be logged here...</div>
+              </div>
+              <button onclick="clearDragLog()" style="margin-top: 8px; padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Clear Log</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-example">
+          browser.drag_and_drop("#drag_source", "#drop_target")<br>
+          browser.drag_and_drop_by_offset("#drag_source2", 50, 30)<br>
+          browser.drag_and_drop_to("#drag_source2", to_x=200, to_y=150)
         </div>
       </div>
     </div>
@@ -627,7 +973,11 @@
             </tr>
           </tbody>
         </table>
-        <div class="code-example">Table with TextInput widgets in cells - access via TableRow</div>
+        <div class="code-example">
+          table = Table(id="table_with_widgets")<br>
+          table[0].foo_r1.fill("foo value")<br>
+          table[1].bar_r2.fill("bar value")
+        </div>
       </div>
 
       <div class="widget-group">
@@ -650,7 +1000,10 @@
             </div>
           </div>
         </div>
-        <div class="code-example">Testing conditional widget visibility and switching</div>
+        <div class="code-example">
+          widget = ConditionalSwitchableView(reference="#conditional_selector")<br>
+          widget.fill("Show Value 2")  # Changes visibility
+        </div>
       </div>
 
       <div class="widget-group">
@@ -671,7 +1024,9 @@
           <button type="button" class='addmore' id='dynamicadd'>Add New Row</button>
         </div>
         <div class="code-example">
-          Dynamic table content generation - click "Add New Row" to test
+          table = Table(id="dynamic")<br>
+          browser.click("#dynamicadd")  # Adds new row dynamically<br>
+          len(table.rows)  # Returns current row count
         </div>
       </div>
 
@@ -753,7 +1108,9 @@
           </tbody>
         </table>
         <div class="code-example">
-          Complex table with rowspan/colspan attributes - tests TableRow navigation with merged cells
+          table = Table(id="rowspan_table")<br>
+          table[0][0].text  # "widget1" (spans 2 rows)<br>
+          table[2][0].text  # "widget3" (spans 2 cols)
         </div>
       </div>
     </div>
@@ -820,7 +1177,9 @@
           </tbody>
         </table>
         <div class="code-example">
-          Multiple tbody elements with data-test attributes for group identification
+          table = Table(id="multitbody")<br>
+          table.bodies[0]  # First tbody (data-test="first")<br>
+          table.bodies[1]  # Second tbody (data-test="second")
         </div>
       </div>
     </div>
@@ -836,7 +1195,9 @@
           <iframe src="iframe_page.html" height="600" width="100%" name="some_iframe" style="border: none;"></iframe>
         </div>
         <div class="code-example">
-          IFrame widgets access with browser.switch_to_frame() context
+          with browser.switch_to_frame("some_iframe"):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;iframe_widget = Text("//h1")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;iframe_widget.text
         </div>
       </div>
     </div>
