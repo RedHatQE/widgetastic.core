@@ -957,7 +957,13 @@ class Browser:
 
     def send_keys_to_focused_element(self, *keys: str) -> None:
         """Sends keys to the current focused element."""
-        self.page.keyboard.press("".join(keys))
+        text = "".join(keys)
+        if len(text) == 1 and text in ["Enter", "Escape", "Tab", "Space"]:
+            # Handle special single keys
+            self.page.keyboard.press(text)
+        else:
+            # Handle regular text
+            self.page.keyboard.type(text)
 
     def copy(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Select all and copy to clipboard."""
