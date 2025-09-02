@@ -285,7 +285,7 @@
       <div class="widget-group">
         <div class="widget-title">Visible & Hidden Elements</div>
         <div class="widget-description">Tests for elements with display: none and visibility states</div>
-        <h2 style="display: none;" id="invisible">This is invisible</h2>
+        <h2 class="foo bar wt-invisible" style="display: none;" id="invisible">This is invisible</h2>
 
         <div class="visibility-demo">
           <strong>Mixed Visibility Container:</strong>
@@ -324,6 +324,9 @@
         <div class="code-example">Button adds 'clicked' class when pressed</div>
         <button id='disabled_button' disabled>Disabled Button</button>
         <div class="code-example">Button in disabled state - cannot be clicked</div>
+        <button id="multi_button" onmousedown="handleButtonClick(event)">Multi-Click Test</button>
+        <div id="click_result" style="margin-left: 10px; font-weight: bold; color: #007bff;">Ready</div>
+        <div class="code-example">Button detects left, right, and middle mouse clicks</div>
       </div>
     </div>
   </div>
@@ -518,63 +521,90 @@
         status.style.color = '#007bff';
       }
 
-      // Reset after delay
-      setTimeout(() => {
-        dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
-        dropArea.style.backgroundColor = '';
-        if (status) {
-          status.textContent = 'Ready';
-          status.style.color = '';
-        }
-      }, 2000);
-
       const draggedId = e.dataTransfer.getData('text/plain');
       logDragAction(`Dropped ${draggedId || 'element'} in drop zone at (${e.clientX}, ${e.clientY})`);
     }
   }
 
-  // Sortable List Handlers
-  function handleSortStart(e) {
-    draggedElement = e.target;
-    e.target.style.opacity = '0.5';
+  // Simple Sortable List Handlers
+  let draggedSortItem = null;
+
+  function simpleSortStart(e) {
+    draggedSortItem = e.target;
+    e.target.style.opacity = '0.6';
+    e.target.style.transform = 'scale(0.95)';
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.outerHTML);
-    logDragAction(`Started sorting: ${e.target.textContent.trim()}`);
+    e.dataTransfer.setData('text/plain', e.target.dataset.sortId || '');
+    logDragAction(`Started sorting: ${e.target.querySelector('span:last-child').textContent.trim()}`);
   }
 
-  function handleSortOver(e) {
+  function simpleSortOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 
-    const afterElement = getDragAfterElement(e.currentTarget.parentNode, e.clientY);
-    const dragging = document.querySelector('.sortable-item[style*="opacity: 0.5"]');
-
-    if (afterElement == null) {
-      e.currentTarget.parentNode.appendChild(dragging);
-    } else {
-      e.currentTarget.parentNode.insertBefore(dragging, afterElement);
+    // Simple visual feedback
+    if (e.target.classList.contains('sortable-item') || e.target.closest('.sortable-item')) {
+      const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+      if (targetItem !== draggedSortItem) {
+        targetItem.style.borderColor = '#007bff';
+        targetItem.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+      }
     }
   }
 
-  function handleSortDrop(e) {
-    e.preventDefault();
-    e.target.style.opacity = '1';
-    logDragAction(`Reordered list items`);
+  function simpleSortLeave(e) {
+    if (e.target.classList.contains('sortable-item') || e.target.closest('.sortable-item')) {
+      const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+      if (targetItem !== draggedSortItem) {
+        targetItem.style.borderColor = '#dee2e6';
+        targetItem.style.backgroundColor = '';
+      }
+    }
   }
 
-  function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.sortable-item:not([style*="opacity: 0.5"])')];
+  function simpleSortDrop(e) {
+    e.preventDefault();
 
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
+    if (!draggedSortItem) return;
 
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
-        return closest;
-      }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+    const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+    if (!targetItem || targetItem === draggedSortItem) {
+      resetSortItemStyles();
+      return;
+    }
+
+    const container = document.getElementById('sortable_list');
+    const allItems = [...container.querySelectorAll('.sortable-item')];
+    const draggedIndex = allItems.indexOf(draggedSortItem);
+    const targetIndex = allItems.indexOf(targetItem);
+
+    // Simple reordering: insert dragged item before or after target
+    if (draggedIndex < targetIndex) {
+      // Moving down: insert after target
+      container.insertBefore(draggedSortItem, targetItem.nextSibling);
+    } else {
+      // Moving up: insert before target
+      container.insertBefore(draggedSortItem, targetItem);
+    }
+
+    logDragAction(`Moved item from position ${draggedIndex} to position ${targetIndex}`);
+    resetSortItemStyles();
+  }
+
+  function resetSortItemStyles() {
+    document.querySelectorAll('.sortable-item').forEach(item => {
+      item.style.opacity = '1';
+      item.style.transform = 'scale(1)';
+      item.style.borderColor = '#dee2e6';
+      item.style.backgroundColor = '';
+    });
+    draggedSortItem = null;
+  }
+
+  // Helper function to get current sortable order for testing
+  function getSortableOrder() {
+    const items = document.querySelectorAll('#sortable_list .sortable-item span:last-child');
+    return Array.from(items).map(item => item.textContent.trim());
   }
 
   // Logging function
@@ -603,6 +633,23 @@
     }
   }
 
+  function resetDropStatus() {
+    const dropArea = document.getElementById('drop_target');
+    const status = document.getElementById('drop_status');
+
+    if (dropArea) {
+      dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
+      dropArea.style.backgroundColor = '';
+    }
+
+    if (status) {
+      status.textContent = 'Ready';
+      status.style.color = '';
+    }
+
+    dropCount = 0;
+  }
+
   function alertFunction() {
     var txt;
     var widget = prompt("Please enter widget name:", "TextBox");
@@ -612,6 +659,28 @@
       txt = "User accepted alert: " + widget;
     }
     document.getElementById("alert_out").innerHTML = txt;
+  }
+
+  function handleButtonClick(event) {
+    var result = document.getElementById("click_result");
+    var clickType = "";
+
+    switch(event.button) {
+      case 0:
+        clickType = "left click";
+        break;
+      case 1:
+        clickType = "middle click";
+        break;
+      case 2:
+        clickType = "right click";
+        break;
+      default:
+        clickType = "unknown click";
+    }
+
+    result.textContent = clickType;
+    event.preventDefault();
   }
   </script>
 
@@ -874,15 +943,15 @@
             <div class="drag-drop-section">
               <h4 style="margin: 0 0 15px 0; color: #495057;">Sortable List</h4>
               <div id="sortable_list" style="display: flex; flex-direction: column; gap: 8px;">
-                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                <div class="sortable-item" data-sort-id="item-1" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
                   <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
                   <span>First Item</span>
                 </div>
-                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                <div class="sortable-item" data-sort-id="item-2" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
                   <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
                   <span>Second Item</span>
                 </div>
-                <div class="sortable-item" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="handleSortStart(event)" ondragover="handleSortOver(event)" ondrop="handleSortDrop(event)">
+                <div class="sortable-item" data-sort-id="item-3" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
                   <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
                   <span>Third Item</span>
                 </div>
@@ -932,7 +1001,10 @@
               <div id="drag_log" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.4;">
                 <div style="color: #6c757d; font-style: italic;">Drag and drop actions will be logged here...</div>
               </div>
-              <button onclick="clearDragLog()" style="margin-top: 8px; padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Clear Log</button>
+              <div style="margin-top: 8px;">
+                <button onclick="clearDragLog()" style="padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px;">Clear Log</button>
+                <button onclick="resetDropStatus()" style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Reset Drop Status</button>
+              </div>
             </div>
           </div>
         </div>

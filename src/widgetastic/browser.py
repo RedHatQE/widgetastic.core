@@ -338,15 +338,6 @@ class Browser:
         version_str = self.page.context.browser.version
         return int(version_str.split(".")[0])
 
-    @property
-    def handles_alerts(self) -> bool:
-        """Returns True as Playwright automatically handles alerts.
-
-        TODO: Implement explicit alert handling methods for better control.
-        """
-        self.logger.info("Playwright always handle alerts.")
-        return True
-
     def save_screenshot(self, filename: str) -> None:
         """Saves a screenshot of the current page.
 
