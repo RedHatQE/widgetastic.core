@@ -526,7 +526,7 @@
     }
   }
 
-  // Simple Sortable List Handlers
+  // Simple Sortable List Handlers - Enhanced for browser automation compatibility
   let draggedSortItem = null;
 
   function simpleSortStart(e) {
@@ -599,6 +599,66 @@
       item.style.backgroundColor = '';
     });
     draggedSortItem = null;
+  }
+
+  // Enhanced drag and drop compatibility for browser automation
+  // Add programmatic drag and drop support for testing
+  function simulateDragDrop(sourceEl, targetEl) {
+    // Simulate drag start
+    const dragStartEvent = new DragEvent('dragstart', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: new DataTransfer()
+    });
+    sourceEl.dispatchEvent(dragStartEvent);
+
+    // Simulate drag over on target
+    const dragOverEvent = new DragEvent('dragover', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    targetEl.dispatchEvent(dragOverEvent);
+
+    // Simulate drop
+    const dropEvent = new DragEvent('drop', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    targetEl.dispatchEvent(dropEvent);
+
+    // Simulate drag end
+    const dragEndEvent = new DragEvent('dragend', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    sourceEl.dispatchEvent(dragEndEvent);
+  }
+
+  // Fallback mechanism for browser automation
+  // If HTML5 drag events don't work, use direct DOM manipulation
+  function automationFallbackDragDrop(sourceSelector, targetSelector) {
+    const source = document.querySelector(sourceSelector);
+    const target = document.querySelector(targetSelector);
+
+    if (!source || !target) return false;
+
+    const container = document.getElementById('sortable_list');
+    const allItems = [...container.querySelectorAll('.sortable-item')];
+    const sourceIndex = allItems.indexOf(source);
+    const targetIndex = allItems.indexOf(target);
+
+    // Perform the reordering
+    if (sourceIndex < targetIndex) {
+      container.insertBefore(source, target.nextSibling);
+    } else {
+      container.insertBefore(source, target);
+    }
+
+    logDragAction(`Automation moved item from position ${sourceIndex} to position ${targetIndex}`);
+    return true;
   }
 
   // Helper function to get current sortable order for testing
