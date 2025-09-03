@@ -1245,6 +1245,69 @@
           table[2][0].text  # "widget3" (spans 2 cols)
         </div>
       </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Comprehensive Edge Case Testing Table</div>
+        <div class="widget-description">Single table designed to test multiple edge cases and error conditions</div>
+
+        <!-- Comprehensive Edge Case Table -->
+        <table id="edge_case_test_table" style="margin: 15px 0;">
+          <caption>Comprehensive Edge Case Testing</caption>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Key</th>          <!-- For duplicate key testing -->
+              <th>Name</th>         <!-- Duplicate header to test warning -->
+              <th>Name</th>         <!-- Duplicate header! -->
+              <th>Input</th>        <!-- For widget testing -->
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-test="row-1" data-category="active">
+              <td>1</td>
+              <td>duplicate</td>    <!-- Duplicate key for associative testing -->
+              <td>First</td>
+              <td>First-Copy</td>
+              <td><input type="text" value="input1" /></td>
+              <td>Active</td>
+            </tr>
+            <tr data-test="row-2" data-category="inactive">
+              <td>2</td>
+              <td>duplicate</td>    <!-- Duplicate key! -->
+              <td>Second</td>
+              <td>Second-Copy</td>
+              <td><input type="text" value="input2" /></td>
+              <td>Inactive</td>
+            </tr>
+            <tr data-test="row-3" data-category="processed">
+              <td>3</td>
+              <td>unique</td>
+              <td>Third</td>
+              <td>Third-Copy</td>
+              <td><input type="checkbox" /></td>
+              <td>Processed</td>
+            </tr>
+            <tr data-test="row-4" data-category="pending">
+              <td>4</td>
+              <td>another</td>
+              <td>Fourth</td>
+              <td>Fourth-Copy</td>
+              <td><input type="text" value="input4" /></td>
+              <td>Pending</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="code-example">
+          Comprehensive edge case testing table covers:<br>
+          - Duplicate headers: "Name" appears twice (columns 2 and 3)<br>
+          - Duplicate keys: "duplicate" value in Key column (rows 1 and 2)<br>
+          - Widget elements: Text inputs and checkboxes in Input column (column 4)<br>
+          - Row attributes: data-test and data-category for filter testing<br>
+          - Unique statuses: Active, Inactive, Processed, Pending for normal testing
+        </div>
+      </div>
     </div>
   </div>
 
