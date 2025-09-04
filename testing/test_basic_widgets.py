@@ -15,7 +15,30 @@ from widgetastic.widget import Table
 from widgetastic.widget import Text
 from widgetastic.widget import TextInput
 from widgetastic.widget import View
+from widgetastic.widget import BaseInput
 from widgetastic.widget.table import TableRow
+
+
+def test_base_input_constructor(browser):
+    """Test BaseInput constructor parameter validation and repr."""
+
+    # Just initialized with respective parameters
+    base_input = BaseInput(browser, locator=".//select[@id='input1']")
+    BaseInput(browser, id="input1")
+    BaseInput(browser, name="input1")
+
+    # Pass only one parameter validation
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, locator=".//select[@id='input1']", id="input1")
+
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, id="input1", name="input1")
+
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, locator=".//select[@id='input1']", name="input1")
+
+    # Test repr
+    assert str(base_input) == "BaseInput(locator=\".//select[@id='input1']\")"
 
 
 def test_basic_widgets(browser):
