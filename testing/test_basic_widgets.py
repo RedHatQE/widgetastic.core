@@ -16,6 +16,7 @@ from widgetastic.widget import Text
 from widgetastic.widget import TextInput
 from widgetastic.widget import View
 from widgetastic.widget import BaseInput
+from widgetastic.widget import Image
 from widgetastic.widget.table import TableRow
 
 
@@ -1178,3 +1179,29 @@ def test_with_including(browser):
     assert form.fileinput.fill("/etc/resolv.conf")
     with pytest.raises(DoNotReadThisWidget):
         form.fileinput.read()
+
+
+def test_image(browser):
+    """Test Image widget properties"""
+
+    class TestForm(View):
+        full_image = Image(locator='.//img[@id="test-image-full"]')
+        src_only_image = Image(locator='.//img[@id="test-image-src-only"]')
+        alt_image = Image(locator='.//img[@id="test-image-alt"]')
+
+    view = TestForm(browser)
+
+    # Test all attributes
+    assert view.full_image.src.startswith("data:image/svg+xml")
+    assert view.full_image.alt == "Green test image"
+    assert view.full_image.title == "Image title"
+
+    # Test src only
+    assert view.src_only_image.src.startswith("data:image/svg+xml")
+    assert view.src_only_image.alt is None
+    assert view.src_only_image.title is None
+
+    # Test with alt
+    assert view.alt_image.src.startswith("data:image/svg+xml")
+    assert view.alt_image.alt == "Blue rectangle"
+    assert view.alt_image.title is None

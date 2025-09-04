@@ -755,7 +755,7 @@
           <h3>Form Testing Examples</h3>
           <div class="form-group">
             <label>Text Input (Enabled):</label>
-            <input name="input1" id="input1" name="input1" type="text" placeholder="Enter text here" />
+            <input name="input1" id="input1" type="text" placeholder="Enter text here" />
           </div>
           <div class="form-group">
             <label>Text Input (Disabled):</label>
@@ -899,6 +899,47 @@
           Select(name="testselect1") - Single selection<br>
           Select(name="testselect2") - Multiple selection<br>
           Select(name="testselect3") - No pre-selected option (tests IndexError case)
+        </div>
+      </div>
+          </div>
+    </div>
+
+  <!-- Image Testing Section -->
+  <div class="section">
+    <div class="section-header">Image Widget Testing</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Image Elements</div>
+        <div class="widget-description">Testing image widget properties: src, alt, title</div>
+
+        <div class="form-row">
+          <label>Full Image:</label>
+          <img id="test-image-full"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%234CAF50'/%3E%3C/svg%3E"
+               alt="Green test image"
+               title="Image title"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="form-row">
+          <label>Src Only:</label>
+          <img id="test-image-src-only"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%23FF5722'/%3E%3C/svg%3E"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="form-row">
+          <label>With Alt:</label>
+          <img id="test-image-alt"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%232196F3'/%3E%3C/svg%3E"
+               alt="Blue rectangle"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="code-example">
+          Image(id="test-image-full") - Full attributes<br>
+          Image(id="test-image-src-only") - Source only<br>
+          Image(id="test-image-alt") - With alt text
         </div>
       </div>
     </div>
