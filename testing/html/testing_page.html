@@ -339,7 +339,7 @@
         <div class="widget-description">Simple dropdown selection with options</div>
         <div class="form-row">
           <label>Select Widget:</label>
-          <select id="myselect">
+          <select id="myselect" name="myselect">
             <option value="test" id="myoption">myoption</option>
           </select>
         </div>
@@ -880,9 +880,25 @@
             <option value="baz">Baz</option>
           </select>
         </div>
+        <div class="form-row">
+          <label>No Selection Select:</label>
+          <select name="testselect3">
+            <option value="alpha">Alpha</option>
+            <option value="beta">Beta</option>
+            <option value="gamma">Gamma</option>
+          </select>
+        </div>
+        <script>
+          // Force the select to have no selection initially
+          document.addEventListener('DOMContentLoaded', function() {
+            const select = document.querySelector('select[name="testselect3"]');
+            select.selectedIndex = -1;
+          });
+        </script>
         <div class="code-example">
           Select(name="testselect1") - Single selection<br>
-          Select(name="testselect2") - Multiple selection
+          Select(name="testselect2") - Multiple selection<br>
+          Select(name="testselect3") - No pre-selected option (tests IndexError case)
         </div>
       </div>
     </div>

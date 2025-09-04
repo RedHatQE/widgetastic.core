@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -1015,10 +1016,10 @@ def test_drag_and_drop_basic_functionality(browser):
 
     # Clear the drag log before test
     browser.execute_script("clearDragLog()")
-
+    time.sleep(0.5)
     # Perform drag and drop
     browser.drag_and_drop("#drag_source", "#drop_target")
-
+    time.sleep(0.5)
     log_content = browser.text("#drag_log")
     assert len(log_content.strip()) > 0
 
@@ -1026,7 +1027,7 @@ def test_drag_and_drop_basic_functionality(browser):
     assert "Dropped!Count: 1" in drop_status
 
     browser.drag_and_drop("#drag_source", "#drop_target")
-
+    time.sleep(0.5)
     drop_status = browser.text("#drop_status")
     assert "Dropped!Count: 2" in drop_status
 

@@ -863,9 +863,35 @@ def test_table_dynamic_add_assoc(browser):
     assert not view.fill(view.read())
 
 
+def test_select_constructor(browser):
+    """Test Select constructor parameter validation"""
+
+    # Just initialized with respective parameters
+    Select(browser, locator=".//select[@id='myselect']")
+    Select(browser, id="myselect")
+    Select(browser, name="myselect")
+
+    # Pass only one parameter validation
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, locator=".//select[@id='myselect']", id="myselect")
+
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, id="myselect", name="myselect")
+
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, locator=".//select[@id='myselect']", name="myselect")
+
+
 def test_simple_select(browser):
     class TestForm(View):
         select = Select(name="testselect1")
+        no_pre_select = Select(name="testselect3")
 
     view = TestForm(browser)
 
@@ -898,6 +924,9 @@ def test_simple_select(browser):
     with pytest.raises(ValueError):
         view.select.select_by_visible_text("Bar", "Foo")
 
+    with pytest.raises(ValueError):
+        view.select.select_by_visible_text("Non Existing Option")
+
     view.select.fill("Foo")
     assert view.select.read() == "Foo"
 
@@ -921,6 +950,23 @@ def test_simple_select(browser):
 
     with pytest.raises(ValueError):
         view.select.fill(("a short tuple",))
+
+    # Test the IndexError case - no option is pre-selected
+    assert view.no_pre_select.first_selected_option is None
+    assert view.no_pre_select.all_selected_options == []
+    assert view.no_pre_select.read() is None
+
+    # Test fill() with actual change
+    assert view.no_pre_select.fill("Alpha")  # Changes from no selection to "Alpha"
+    assert view.no_pre_select.first_selected_option == "Alpha"
+    assert view.no_pre_select.read() == "Alpha"
+
+    # Test fill() with different value
+    assert view.no_pre_select.fill("Beta")  # Changes from "Alpha" to "Beta"
+    assert view.no_pre_select.read() == "Beta"
+
+    # Test fill() with same value
+    assert not view.no_pre_select.fill("Beta")  # No change needed
 
 
 def test_multi_select(browser):
