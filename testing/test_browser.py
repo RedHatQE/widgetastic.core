@@ -344,6 +344,8 @@ def test_element_force_visibility_check_by_locator(browser):
 
 
 # ==================== ELEMENT STATE & PROPERTY QUERIES ====================
+
+
 def test_is_displayed_element(browser):
     """Test is_displayed returns correct state for existing/ non-existing element."""
     assert browser.is_displayed("#wt-core-title")
@@ -579,6 +581,8 @@ def test_highlight_method(browser):
 
 
 # ====================== MOUSE & POINTER INTERACTIONS TESTS ======================
+
+
 def test_click(browser):
     assert len(browser.classes("#a_button")) == 0
     browser.click("#a_button")
@@ -1016,10 +1020,8 @@ def test_drag_and_drop_basic_functionality(browser):
 
     # Clear the drag log before test
     browser.execute_script("clearDragLog()")
-    time.sleep(0.5)
     # Perform drag and drop
     browser.drag_and_drop("#drag_source", "#drop_target")
-    time.sleep(0.5)
     log_content = browser.text("#drag_log")
     assert len(log_content.strip()) > 0
 
@@ -1027,7 +1029,6 @@ def test_drag_and_drop_basic_functionality(browser):
     assert "Dropped!Count: 1" in drop_status
 
     browser.drag_and_drop("#drag_source", "#drop_target")
-    time.sleep(0.5)
     drop_status = browser.text("#drop_status")
     assert "Dropped!Count: 2" in drop_status
 
@@ -1070,15 +1071,17 @@ def test_sortable_list_drag_functionality(browser):
     # Get initial order
     initial_order = browser.execute_script("return getSortableOrder();")
     assert initial_order == ["First Item", "Second Item", "Third Item"]
-
-    browser.highlight(sortable_items[0])  # Just to focus it.
+    browser.move_to_element(".//div[@id='sortable_list']")  # Just to focus it.
     # Test drag first item to second position
+    time.sleep(0.5)
     browser.drag_and_drop(sortable_items[0], sortable_items[1])
     expected_order = ["Second Item", "First Item", "Third Item"]
+    time.sleep(0.5)
     assert browser.execute_script("return getSortableOrder();") == expected_order
 
     # now drag current second item to third position
     browser.drag_and_drop(sortable_items[1], sortable_items[2])
+    time.sleep(0.5)
     expected_order = ["Second Item", "Third Item", "First Item"]
     assert browser.execute_script("return getSortableOrder();") == expected_order
 
@@ -1151,6 +1154,8 @@ def test_get_current_location_method(browser):
 
 
 # =================== OVERALL FUNCTIONALITY & BrowserParentWrapper TESTS ===================
+
+
 def test_nested_views_parent_injection(browser):
     class MyView(View):
         ROOT = "#proper"

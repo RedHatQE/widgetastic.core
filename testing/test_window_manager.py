@@ -191,7 +191,6 @@ def test_close_extra_pages_with_exceptions(
 ):
     """Test that close_extra_pages handles exceptions gracefully."""
 
-
     test_browser = isolated_window_manager.new_browser(
         f"{external_test_url}#exception_test", focus=False
     )
@@ -289,7 +288,6 @@ def test_error_handling_nonexistent_page(
 ):
     """Test error handling for invalid operations."""
 
-
     # Create and immediately close external page
     external_page = isolated_browser_context.new_page()
     external_page.close()
@@ -326,7 +324,6 @@ def test_empty_state_handling(isolated_browser_context, testing_page_url):
 
 def test_browser_workflow_integration(isolated_window_manager, external_test_url, testing_page_url):
     """Test complete workflow: create, switch, and close browsers."""
-
 
     # Verify starting state
     initial_browser = isolated_window_manager.current
