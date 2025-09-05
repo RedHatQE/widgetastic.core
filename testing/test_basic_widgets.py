@@ -15,6 +15,7 @@ from widgetastic.widget import Table
 from widgetastic.widget import Text
 from widgetastic.widget import TextInput
 from widgetastic.widget import View
+from widgetastic.widget import Widget
 from widgetastic.widget import BaseInput
 from widgetastic.widget import Image
 from widgetastic.widget.table import TableRow
@@ -1205,3 +1206,57 @@ def test_image(browser):
     assert view.alt_image.src.startswith("data:image/svg+xml")
     assert view.alt_image.alt == "Blue rectangle"
     assert view.alt_image.title is None
+
+
+def test_widget_dimension_properties(browser):
+    """Test Widget width and height properties."""
+    exact_dimensions_widget = Text(browser, "#exact_dimensions")
+
+    assert exact_dimensions_widget.width == 100
+    assert exact_dimensions_widget.height == 50
+
+
+def test_widget_iteration_and_fill_handler_errors(browser):
+    """Test Widget __iter__ and _process_fill_handler errors."""
+
+    class TestView(View):
+        w1 = Widget()
+        w2 = Widget()
+
+    view = TestView(browser)
+
+    # Test iteration
+    widgets = list(view)
+    assert len(widgets) == 2
+
+    # Test _process_fill_handler
+    widget = Widget(browser)
+
+    # Test non-existent attribute
+    with pytest.raises(TypeError, match="missing_attr does not exist"):
+        widget._process_fill_handler("missing_attr")
+
+    # Test invalid handler type
+    with pytest.raises(TypeError, match="Fill handler must be callable or clickable"):
+        widget._process_fill_handler(123)
+
+
+def test_is_enabled_warning_non_form_element(browser):
+    """Test is_enabled warning for non-form elements."""
+
+    class TestWidget(Widget):
+        def __locator__(self):
+            return "//div[@id='test']"
+
+    widget = TestWidget(browser)
+
+    # Mock browser.tag to return non-form element
+    original_tag = browser.tag
+    browser.tag = lambda element: "div"
+
+    try:
+        # This should trigger warning and return True
+        result = widget.is_enabled
+        assert result is True
+    finally:
+        browser.tag = original_tag

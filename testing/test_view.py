@@ -756,3 +756,27 @@ def test_iframe_view(browser):
     assert iframe_view.nested_iframe_view.nested.nested_input.read() == "Default Value"
     assert iframe_view.nested_iframe_view.nested.nested_input.fill("New Value")
     assert iframe_view.nested_iframe_view.nested.nested_input.read() == "New Value"
+
+
+def test_parametrized_view_request_errors(browser):
+    """Test ParametrizedViewRequest error handling."""
+
+    class TestParam(ParametrizedView):
+        PARAMETERS = ("param1", "param2")
+
+        @classmethod
+        def all(cls, browser):
+            return [("a", "b")]
+
+    class TestView(View):
+        param = TestParam()
+
+    view = TestView(browser)
+
+    # Test missing parameter error
+    with pytest.raises(TypeError, match="You did not pass the required parameter param2"):
+        view.param(param1="test")
+
+    # Test accessing attribute before calling
+    with pytest.raises(AttributeError, match="This is not an instance of TestParam"):
+        view.param.some_attr
