@@ -143,3 +143,34 @@ def managed_browser(window_manager: WindowManager, testing_page_url: str) -> Ite
     br = window_manager.current
     br.goto(testing_page_url, wait_until="domcontentloaded")
     yield br
+
+
+@pytest.fixture(scope="function")
+def isolated_browser_context(
+    playwright_browser_instance: PlaywrightBrowser,
+) -> Iterator[BrowserContext]:
+    """Creates an isolated browser context for tests that need to close pages."""
+    context = playwright_browser_instance.new_context(
+        viewport={"width": 1280, "height": 720},
+    )
+    try:
+        yield context
+    finally:
+        context.close()
+
+
+@pytest.fixture(scope="function")
+def isolated_window_manager(
+    isolated_browser_context: BrowserContext, testing_page_url: str
+) -> Iterator[WindowManager]:
+    """Provides an isolated WindowManager for tests that close pages."""
+
+    page = isolated_browser_context.new_page()
+    page.goto(testing_page_url)
+
+    manager = WindowManager(isolated_browser_context, page, browser_class=CustomBrowser)
+    try:
+        yield manager
+    finally:
+        # Clean up all pages managed by this WindowManager
+        manager.close_extra_pages(current=True)

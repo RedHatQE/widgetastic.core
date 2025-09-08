@@ -6,6 +6,7 @@ from widgetastic.widget import Text
 from widgetastic.widget import Select
 from widgetastic.widget import TextInput
 from widgetastic.widget import Checkbox
+from widgetastic.exceptions import FrameNotFoundError
 
 
 def test_basic_iframe_access(browser):
@@ -197,15 +198,14 @@ def test_iframe_error_handling(browser):
         nonexistent_element = Text(".//nonexistent")
         valid_element = Text(".//h3")
 
-    # Test invalid iframe reference - Playwright throws a specific Error
+    # Test invalid iframe reference - should raise our custom FrameNotFoundError
     invalid_view = InvalidIFrameView(browser)
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(FrameNotFoundError) as exc_info:
         _ = invalid_view.some_element.is_displayed
 
-    # Verify it's a Playwright frame-related error
+    # Verify it's our custom frame-related error with appropriate message
     error_message = str(exc_info.value)
-    assert "Failed to find frame" in error_message
-    assert "nonexistent_iframe" in error_message
+    assert "Failed to find frame" in error_message or "Frame not found" in error_message
 
     # Test nonexistent element in valid iframe
     iframe_view = IFrameView(browser)

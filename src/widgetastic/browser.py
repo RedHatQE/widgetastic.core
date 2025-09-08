@@ -12,9 +12,6 @@ Key Features:
 - Plugin system for extending browser behavior
 - Frame-aware element operations
 - Network activity monitoring and page safety checks
-
-TODO Items:
-- Alert handling implementation (currently placeholder)
 """
 
 import inspect
@@ -45,6 +42,7 @@ from wait_for import TimedOutError
 from .exceptions import LocatorNotImplemented
 from .exceptions import NoSuchElementException
 from .exceptions import WidgetOperationFailed
+from .exceptions import FrameNotFoundError
 
 
 from .log import create_widget_logger
@@ -75,7 +73,11 @@ class DefaultPlugin:
 
     @cached_property
     def logger(self):
-        """Logger with prepended plugin name."""
+        """Logger with prepended plugin name.
+
+        Returns:
+            Logger instance with the plugin name prepended
+        """
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
     def ensure_page_safe(self, timeout: Union[int, None] = None) -> None:
@@ -145,41 +147,42 @@ class Browser:
     It provides intelligent element handling, robust interaction patterns, and comprehensive
     workarounds for common web testing challenges.
 
-    **Key Improvements Over Standard Playwright:**
+    Key Improvements Over Standard Playwright:
 
-    **Smart Element Selection:**
+    - Smart Element Selection:
     When multiple elements match a locator, this wrapper intelligently selects the visible and
     interactable one rather than just the first match. This solves common issues where the first
     element might be hidden behind overlays or in collapsed sections.
 
-    **Robust Text Handling:**
+    - Robust Text Handling:
     Unlike standard approaches that might fail with overlaid or dynamically loaded text, this
     wrapper uses multiple strategies including JavaScript evaluation to reliably extract text
     content from any element, regardless of CSS styling or positioning.
 
-    **Normalized Text Operations:**
+    - Normalized Text Operations:
     All text operations automatically normalize whitespace using XPath's normalize-space logic.
     When writing XPath expressions, use ``normalize-space(.)="foo"`` patterns for reliable
     text matching across different browsers and rendering engines.
 
-    **Enhanced Click Operations:**
+    - Enhanced Click Operations:
     Implements a robust clicking strategy that handles complex UI scenarios like overlays,
     animations, and dynamically positioned elements. Uses intelligent scrolling and positioning
     to ensure reliable interactions.
 
-    **Smart Form Handling:**
+    - Smart Form Handling:
     Automatically detects form input types and applies appropriate interaction strategies.
     Handles file uploads, date pickers, and other specialized input types without manual
     configuration.
 
-    **Frame Context Management:**
+    - Frame Context Management:
     Provides seamless iframe handling with automatic context switching and restoration.
 
-    **Network Activity Monitoring:**
+    - Network Activity Monitoring:
     Integrates page safety checks that wait for network activity to stabilize before
     proceeding with interactions, reducing flaky tests caused by timing issues.
 
-    **Practical Usage Examples:**
+
+    Practical Usage Examples:
 
     .. code-block:: python
 
@@ -225,69 +228,7 @@ class Browser:
         self.logger = logger or null_logger
         self.extra_objects = extra_objects or {}
 
-    @property
-    def url(self) -> str:
-        """Current page URL. Can be read to get current location or set to navigate."""
-        result = self.page.url
-        self.logger.debug("current_url -> %r", result)
-        return result
-
-    @url.setter
-    def url(self, address: str) -> None:
-        """Navigate to the specified URL."""
-        self.logger.info("Opening URL: %r", address)
-        self.goto(address, wait_until=None)
-
-    def goto(
-        self, address: str, *, wait_until: Optional[str] = "domcontentloaded", **kwargs
-    ) -> None:
-        """Navigate to the specified URL with configurable wait conditions.
-
-        Args:
-            address: URL to navigate to
-            wait_until: Wait condition before considering navigation successful.
-                       Options: "commit", "domcontentloaded", "load", "networkidle", None
-            **kwargs: Additional arguments passed to page.goto()
-        """
-        self.logger.info("Opening URL: %r (wait_until=%s)", address, wait_until)
-        self.page.goto(address, wait_until=wait_until, **kwargs)
-
-    @property
-    def title(self) -> str:
-        """Current page title as displayed in the browser tab."""
-        current_title = self.page.title()
-        self.logger.info("Current title: %r", current_title)
-        return current_title
-
-    @property
-    def handles_alerts(self) -> bool:
-        """Returns True as Playwright automatically handles alerts.
-
-        TODO: Implement explicit alert handling methods for better control.
-        """
-        self.logger.info("Playwright always handle alerts.")
-        return True
-
-    @property
-    def browser_type(self) -> str:
-        """Browser engine name (chromium, firefox)."""
-        return self.page.context.browser.browser_type.name
-
-    def close(self) -> None:
-        """Close browser page."""
-        self.page.close()
-
-    @property
-    def is_browser_closed(self) -> bool:
-        """Check browser/page is closed."""
-        return self.page.is_closed()
-
-    @property
-    def browser_version(self) -> int:
-        """Major version number of the browser engine."""
-        version_str = self.page.context.browser.version
-        return int(version_str.split(".")[0])
-
+    # ======================== BROWSER & PAGE MANAGEMENT ========================
     @property
     def browser(self) -> "Browser":
         """Implemented so :py:class:`widgetastic.widget.View` does not have to check the
@@ -303,12 +244,121 @@ class Browser:
         """In order for :py:class:`widgetastic.utils.VersionPick` to work on
         :py:class:`widgetastic.widget.Widget` instances, you need to override this property
         that will enable this functionality.
+
+        Returns:
+            Product version string (must be implemented in subclasses)
+
+        Raises:
+            NotImplementedError: Always raised since this must be implemented in subclasses
         """
         raise NotImplementedError("You have to implement product_version")
 
+    def goto(
+        self, address: str, *, wait_until: Optional[str] = "domcontentloaded", **kwargs
+    ) -> None:
+        """Navigate to the specified URL with config supported by playwright.
+
+        Args:
+            address: URL to navigate to
+            wait_until: Wait condition before considering navigation successful.
+                       Options: "commit", "domcontentloaded", "load", "networkidle", None
+            **kwargs: Additional arguments passed to page.goto()
+        """
+        self.logger.info("Opening URL: %r (wait_until=%s)", address, wait_until)
+        self.page.goto(address, wait_until=wait_until, **kwargs)
+
+    @property
+    def url(self) -> str:
+        """Current page URL. Can be read to get current location or set to navigate.
+
+        Returns:
+            Current page URL as a string
+        """
+        result = self.page.url
+        self.logger.debug("current_url -> %r", result)
+        return result
+
+    @url.setter
+    def url(self, address: str) -> None:
+        """Navigate to the specified URL.
+
+        Args:
+            address: URL to navigate to
+        """
+        self.goto(address, wait_until=None)
+
+    @property
+    def title(self) -> str:
+        """Current page title as displayed in the browser tab.
+
+        Returns:
+            Page title as a string
+        """
+        current_title = self.page.title()
+        self.logger.info("Current title: %r", current_title)
+        return current_title
+
+    def refresh(self, *args, **kwargs) -> None:
+        """Triggers a page refresh.
+
+        Args:
+            timeout : Maximum operation time in milliseconds, defaults to 30 seconds.
+            wait_until : commit / domcontentloaded / load / networkidle / None
+        """
+        self.page.reload(*args, **kwargs)
+
+    def close(self) -> None:
+        """Close browser page."""
+        self.page.close()
+
+    @property
+    def is_browser_closed(self) -> bool:
+        """Check browser/page is closed.
+
+        Returns:
+            True if browser/page is closed, False otherwise
+        """
+        return self.page.is_closed()
+
+    @property
+    def browser_type(self) -> str:
+        """Browser engine name (chromium, firefox).
+
+        Returns:
+            Browser engine name as a string
+        """
+        return self.page.context.browser.browser_type.name
+
+    @property
+    def browser_version(self) -> int:
+        """Major version number of the browser engine.
+
+        Returns:
+            Major version number as an integer
+        """
+        version_str = self.page.context.browser.version
+        return int(version_str.split(".")[0])
+
+    def save_screenshot(self, filename: str) -> None:
+        """Saves a screenshot of the current page.
+
+        Args:
+            filename: Path where the screenshot will be saved
+        """
+        self.logger.debug("Saving screenshot to -> %r", filename)
+        self.page.screenshot(path=filename)
+
+    # ======================= ELEMENT DISCOVERY & WAITING =======================
     @staticmethod
     def _process_locator(locator: LocatorAlias) -> Union[Locator, SmartLocator, None]:
-        """Processes the locator so the :py:meth:`elements` gets exactly what it needs."""
+        """Processes the locator so the :py:meth:`elements` gets exactly what it needs.
+
+        Args:
+            locator: The locator to be processed
+
+        Returns:
+            Processed locator ready for use by elements() method
+        """
         if isinstance(locator, (Locator, ElementHandle)):
             return locator
 
@@ -363,8 +413,6 @@ class Browser:
             Returns empty list if no elements found (does not raise exception)
         """
         if force_check_safe:
-            import warnings
-
             warnings.warn("force_check_safe is deprecated.", DeprecationWarning)
 
         if check_safe:
@@ -389,12 +437,63 @@ class Browser:
                     root_element = self.active_context
             else:
                 root_element = self.active_context
-            result = root_element.locator(str(locator)).all()
+            try:
+                result = root_element.locator(str(locator)).all()
+            except PlaywrightError as e:
+                # Handle nonexistent iframe case - ensure consistent behavior across Playwright versions
+                if "Failed to find frame" in str(e):
+                    # Raise a specific frame error with clear semantics
+                    raise FrameNotFoundError(f"Failed to find frame: {str(e)}") from e
+                else:
+                    raise
+
+            if (
+                len(result) == 0
+                and isinstance(root_element, FrameLocator)
+                and root_element == self.active_context
+            ):
+                try:
+                    # Try to access the frame's document - this will fail if frame doesn't exist
+                    test_locator = root_element.locator("html, body").first
+                    test_locator.wait_for(state="attached", timeout=50)
+                except PlaywrightError:
+                    raise FrameNotFoundError("Frame not found: nonexistent frame context") from None
 
         if check_visibility:
             result = [loc for loc in result if loc.is_visible()]
 
         return result
+
+    def element(self, locator: LocatorAlias, *args, **kwargs) -> Locator:
+        """Find a single element matching the given locator.
+
+        Locates the first element that matches the provided locator. Uses SmartLocator
+        for automatic format detection and applies visibility checks if specified.
+
+        Args:
+            locator: Element locator (CSS, XPath, or SmartLocator compatible)
+            *args, **kwargs: Additional arguments passed to elements() method
+
+        Returns:
+            Playwright Locator object for the found element
+
+        Raises:
+            NoSuchElementException: If no matching element is found
+        """
+        try:
+            vcheck = self._locator_force_visibility_check(locator)
+            if vcheck is not None:
+                kwargs["check_visibility"] = vcheck
+
+            # Pass all arguments directly to the `elements` method, which contains
+            # the correct visibility filtering logic.
+            elements = self.elements(locator, *args, **kwargs)
+            if not elements:
+                raise NoSuchElementException(f"Could not find an element {repr(locator)}")
+
+            return elements[0]
+        except IndexError:
+            raise NoSuchElementException(f"Could not find an element {repr(locator)}") from None
 
     def wait_for_element(
         self,
@@ -445,73 +544,339 @@ class Browser:
                 ) from None
             return None
 
-    def element(self, locator: LocatorAlias, *args, **kwargs) -> Locator:
-        """Find a single element matching the given locator.
-
-        Locates the first element that matches the provided locator. Uses SmartLocator
-        for automatic format detection and applies visibility checks if specified.
+    # ==================== ELEMENT STATE & PROPERTY QUERIES ====================
+    def is_displayed(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is displayed (visible).
 
         Args:
-            locator: Element locator (CSS, XPath, or SmartLocator compatible)
-            *args, **kwargs: Additional arguments passed to elements() method
+            locator: Element locator to check visibility for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
 
         Returns:
-            Playwright Locator object for the found element
+            True if element is visible, False otherwise
 
         Raises:
-            NoSuchElementException: If no matching element is found
+            PlaywrightError: If the frame context is invalid (nonexistent iframe)
         """
         try:
-            vcheck = self._locator_force_visibility_check(locator)
-            if vcheck is not None:
-                kwargs["check_visibility"] = vcheck
+            return self.element(locator, *args, **kwargs).is_visible()
+        except NoSuchElementException:
+            return False
+        except (PlaywrightError, FrameNotFoundError) as e:
+            # Re-raise frame-related errors to ensure consistent behavior across Playwright versions.
+            if (
+                isinstance(e, FrameNotFoundError)
+                or "Frame not found" in str(e)
+                or "Failed to find frame" in str(e)
+            ):
+                raise
+            else:
+                return False
 
-            # Pass all arguments directly to the `elements` method, which contains
-            # the correct visibility filtering logic.
-            elements = self.elements(locator, *args, **kwargs)
-            if not elements:
-                raise NoSuchElementException(f"Could not find an element {repr(locator)}")
+    def is_enabled(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is enabled.
 
-            return elements[0]
-        except IndexError:
-            raise NoSuchElementException(f"Could not find an element {repr(locator)}") from None
+        Args:
+            locator: Element locator to check enabled state for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
 
-    def perform_click(self) -> None:
-        """No longer needed in Playwright. Kept for API compatibility."""
-        warnings.warn(
-            message="perform_click is a no-op in Playwright. Use .click() on a widget or with browser.",
-            category=DeprecationWarning,
+        Returns:
+            True if element is enabled, False otherwise
+        """
+        try:
+            return self.element(locator, *args, **kwargs).is_enabled()
+        except NoSuchElementException:
+            return False
+
+    def is_disabled(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is disabled.
+
+        Args:
+            locator: Element locator to check disabled state for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if element is disabled, False otherwise
+        """
+        try:
+            return self.element(locator, *args, **kwargs).is_disabled()
+        except NoSuchElementException:
+            return False
+
+    def is_hidden(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is hidden.
+
+        Args:
+            locator: Element locator to check visibility for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if element is hidden, False otherwise
+        """
+        try:
+            return self.element(locator, *args, **kwargs).is_hidden()
+        except NoSuchElementException:
+            return False
+
+    def is_editable(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is editable.
+
+        Args:
+            locator: Element locator to check editable state for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if element is editable, False otherwise
+        """
+        try:
+            return self.element(locator, *args, **kwargs).is_editable()
+        except NoSuchElementException:
+            return False
+
+    def is_checked(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Check if the element represented by the locator is checked (checkbox or radio input).
+
+        Args:
+            locator: Element locator to check checked state for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if element is checked, False otherwise
+        """
+        try:
+            return self.element(locator, *args, **kwargs).is_checked()
+        except NoSuchElementException:
+            return False
+
+    def is_selected(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Checks if a checkbox or radio button is selected/checked.
+
+        Args:
+            locator: Element locator to check selection state for
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if element is selected/checked, False otherwise
+        """
+        if self.type(locator) in ["checkbox", "radio"]:
+            return self.is_checked(locator, *args, **kwargs)
+        else:
+            return self.element(locator, *args, **kwargs).evaluate("el => el.selected")
+
+    def text(self, locator: LocatorAlias, *args, **kwargs) -> str:
+        """Returns the text inside the element, normalized.
+
+        Args:
+            locator: Element locator to get text from
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            Normalized text content of the element
+        """
+        text_content = self.element(locator, *args, **kwargs).text_content() or ""
+        return normalize_space(text_content)
+
+    def input_value(self, locator: LocatorAlias, *args, **kwargs) -> str:
+        """Returns the input value inside the element, normalized.
+
+        Args:
+            locator: Element locator to get input value from
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            Normalized input value of the element
+        """
+        value = self.element(locator, *args, **kwargs).input_value() or ""
+        return normalize_space(value)
+
+    def tag(self, *args, **kwargs) -> str:
+        """Returns the tag name of the element.
+
+        Args:
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+
+        Returns:
+            Tag name of the element in lowercase
+        """
+        return self.element(*args, **kwargs).evaluate("el => el.tagName.toLowerCase()")
+
+    def type(self, *args, **kwargs) -> str:
+        """Returns the type of the element.
+
+        Args:
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+
+        Returns:
+            Type attribute value of the element
+        """
+        return self.element(*args, **kwargs).evaluate("el=>el.type")
+
+    def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
+        """Return a set of classes attached to the element.
+
+        Args:
+            locator: Element locator to get classes from
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            Set of CSS class names attached to the element
+        """
+        class_string = self.get_attribute("class", locator, *args, **kwargs)
+        return set(class_string.split()) if class_string else set()
+
+    def attributes(self, locator: LocatorAlias, *args, **kwargs) -> Dict:
+        """Return a dict of attributes attached to the element.
+
+        This implementation uses Playwright's .evaluate() method to execute a
+        self-contained JavaScript function directly on the element.
+
+        Args: See :py:meth:`elements`
+
+        Returns:
+            A :py:class:`dict` of attributes and respective values.
+        """
+        el = self.element(locator, *args, **kwargs)
+
+        js_function = """
+            el => {
+                const items = {};
+                for (let i = 0; i < el.attributes.length; i++) {
+                    items[el.attributes[i].name] = el.attributes[i].value;
+                }
+                return items;
+            }
+        """
+        result = el.evaluate(js_function)
+        self.logger.debug("css attributes for %r => %r", locator, result)
+        return result
+
+    def get_attribute(self, attr: str, *args, **kwargs) -> Optional[str]:
+        """Returns the value of an element's attribute.
+
+        Uses .input_value() for the 'value' attribute for better reliability.
+        """
+        el = self.element(*args, **kwargs)
+        if attr == "value" and self.browser.tag(el) in ("input", "textarea", "select"):
+            return el.input_value()
+        return el.get_attribute(attr)
+
+    def set_attribute(self, attr: str, value: str, *args, **kwargs) -> None:
+        """Sets an attribute on an element to the given value.
+
+        Args:
+            attr: Attribute name to set
+            value: Value to set for the attribute
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+        """
+        js_function = "(el, {attr, value}) => el.setAttribute(attr, value)"
+
+        self.element(*args, **kwargs).evaluate(
+            js_function,
+            {"attr": attr, "value": value},  # This is the object passed to the function
         )
-        self.logger.warning(
-            "perform_click is a no-op in Playwright. Use .click() on a widget or with browser."
-        )
+        self.logger.debug("set attribute for %r => %r=%r", args, attr, value)
 
-    def perform_double_click(self) -> None:
-        """No longer needed in Playwright. Kept for API compatibility."""
-        warnings.warn(
-            message="perform_double_click is a no-op in Playwright. Use .double_click().",
-            category=DeprecationWarning,
-        )
-        self.logger.warning("perform_double_click is a no-op in Playwright. Use .double_click().")
+    # ================== ELEMENT GEOMETRY & VISUAL PROPERTIES ==================
+    def size_of(self, *args, **kwargs) -> Size:
+        """Returns element's size as a tuple of width/height.
 
-    def click(self, locator: LocatorAlias, no_wait_after: bool = False, *args, **kwargs) -> None:
+        Args:
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+
+        Returns:
+            Size object containing width and height
+        """
+        box = self.element(*args, **kwargs).bounding_box()
+        return Size(box["width"], box["height"]) if box else Size(0, 0)
+
+    def location_of(self, *args, **kwargs) -> Location:
+        """Returns element's location as a tuple of x/y.
+
+        Args:
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+
+        Returns:
+            Location object containing x and y coordinates
+        """
+        box = self.element(*args, **kwargs).bounding_box()
+        return Location(box["x"], box["y"]) if box else Location(0, 0)
+
+    def middle_of(self, *args, **kwargs) -> Location:
+        """Returns element's middle point as a tuple of x/y.
+
+        Args:
+            *args: Arguments passed to element() method
+            **kwargs: Keyword arguments passed to element() method
+
+        Returns:
+            Location object containing center x and y coordinates
+        """
+        size = self.size_of(*args, **kwargs)
+        location = self.location_of(*args, **kwargs)
+        return Location(int(location.x + size.width / 2), int(location.y + size.height / 2))
+
+    def highlight(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Highlight the corresponding element(s) on the screen.
+
+        Args:
+            locator: Element locator to highlight
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
+        self.logger.debug("highlight: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.highlight()
+
+    # ====================== MOUSE & POINTER INTERACTIONS ======================
+    def click(
+        self,
+        locator: LocatorAlias,
+        button: str = "left",
+        no_wait_after: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
         """Click on an element specified by the locator.
 
         Args:
             locator: Element locator to click on
+            button: Mouse button to click with ("left", "right", or "middle")
             no_wait_after: If True, don't wait for page events after click
             ignore_ajax: If True, expect blocking dialogs (passed via kwargs)
         """
-        self.logger.debug("click: %r", locator)
+        # Validate button parameter
+        valid_buttons = ["left", "right", "middle"]
+        if button not in valid_buttons:
+            raise ValueError(
+                f"Invalid button '{button}'. Must be one of: {', '.join(valid_buttons)}"
+            )
+
+        self.logger.debug("click: %r with %s button", locator, button)
         ignore_ajax = kwargs.pop("ignore_ajax", False)
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el, locator)
+
         # If ignore_ajax is True, it's a signal that a blocking dialog is expected.
         # We pass no_wait_after=True to prevent a timeout.
         if ignore_ajax or no_wait_after:
-            el.click(no_wait_after=True)
+            el.click(button=button, no_wait_after=True)
         else:
-            el.click()
+            el.click(button=button)
             try:
                 self.plugin.ensure_page_safe()
             except TimedOutError:
@@ -519,7 +884,13 @@ class Browser:
         self.plugin.after_click(el, locator)
 
     def double_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Double-click on an element specified by the locator."""
+        """Double-click on an element specified by the locator.
+
+        Args:
+            locator: Element locator to double-click on
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
         self.logger.debug("double_click: %r", locator)
         ignore_ajax = kwargs.pop("ignore_ajax", False)
         el = self.element(locator, *args, **kwargs)
@@ -532,79 +903,71 @@ class Browser:
                 self.plugin.after_click_safe_timeout(el, locator)
         self.plugin.after_click(el, locator)
 
-    def check(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Check an element (Checkboxes/ Radio buttons) specified by the locator."""
-        self.logger.debug("check: %r", locator)
-        el = self.element(locator, *args, **kwargs)
-        el.check()
+    def right_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Right-click (context click) on an element specified by the locator.
 
-    def uncheck(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Uncheck an element (Checkboxes/ Radio buttons) specified by the locator."""
-        self.logger.debug("uncheck: %r", locator)
-        el = self.element(locator, *args, **kwargs)
-        el.uncheck()
-
-    def raw_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Alias for the standard click method in Playwright."""
+        Args:
+            locator: Element locator to right-click on
+            *args, **kwargs: Additional arguments passed to click method
+        """
+        kwargs["button"] = "right"
         self.click(locator, *args, **kwargs)
 
-    def is_displayed(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is displayed (visible)."""
-        try:
-            return self.element(locator, *args, **kwargs).is_visible()
-        except NoSuchElementException:
-            return False
+    def middle_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Middle-click on an element specified by the locator.
 
-    def is_checked(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is checked (checkbox or radio input)."""
-        try:
-            return self.element(locator, *args, **kwargs).is_checked()
-        except NoSuchElementException:
-            return False
+        Args:
+            locator: Element locator to middle-click on
+            *args, **kwargs: Additional arguments passed to click method
+        """
+        kwargs["button"] = "middle"
+        self.click(locator, *args, **kwargs)
 
-    def is_selected(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Checks if a checkbox or radio button is selected/checked."""
-        if self.type(locator) in ["checkbox", "radio"]:
-            return self.is_checked(locator, *args, **kwargs)
-        else:
-            return self.element(locator, *args, **kwargs).evaluate("el => el.selected")
+    def raw_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Alias for the standard click method in Playwright.
 
-    def is_enabled(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is enabled."""
-        try:
-            return self.element(locator, *args, **kwargs).is_enabled()
-        except NoSuchElementException:
-            return False
+        Args:
+            locator: Element locator to click on
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
+        self.click(locator, *args, **kwargs)
 
-    def is_disabled(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is disabled."""
-        try:
-            return self.element(locator, *args, **kwargs).is_disabled()
-        except NoSuchElementException:
-            return False
+    def perform_click(self) -> None:
+        """No longer needed in Playwright. Kept for API compatibility.
 
-    def is_hidden(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is hidden."""
-        try:
-            return self.element(locator, *args, **kwargs).is_hidden()
-        except NoSuchElementException:
-            return False
+        This method exists for backward compatibility but performs no action.
+        """
+        warnings.warn(
+            message="perform_click is a no-op in Playwright. Use .click() on a widget or with browser.",
+            category=DeprecationWarning,
+        )
+        self.logger.warning(
+            "perform_click is a no-op in Playwright. Use .click() on a widget or with browser."
+        )
 
-    def is_editable(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Check if the element represented by the locator is editable."""
-        try:
-            return self.element(locator, *args, **kwargs).is_editable()
-        except NoSuchElementException:
-            return False
+    def perform_double_click(self) -> None:
+        """No longer needed in Playwright. Kept for API compatibility.
 
-    def highlight(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Highlight the corresponding element(s) on the screen."""
-        self.logger.debug("highlight: %r", locator)
-        el = self.element(locator, *args, **kwargs)
-        el.highlight()
+        This method exists for backward compatibility but performs no action.
+        """
+        warnings.warn(
+            message="perform_double_click is a no-op in Playwright. Use .double_click().",
+            category=DeprecationWarning,
+        )
+        self.logger.warning("perform_double_click is a no-op in Playwright. Use .double_click().")
 
     def hover(self, locator: LocatorAlias, *args, **kwargs) -> Locator:
-        """Hover over the matching element represented by the locator."""
+        """Hover over the matching element represented by the locator.
+
+        Args:
+            locator: Element locator to hover over
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            The target element's Locator object
+        """
         self.logger.debug("hover: %r", locator)
         el = self.element(locator, *args, **kwargs)
         el.hover()
@@ -642,50 +1005,8 @@ class Browser:
             self.browser.highlight(el)
         return el
 
-    def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
-        """Drags the source element and drops it into target."""
-        self.logger.debug("drag_and_drop %r to %r", source, target)
-        self.element(source).drag_to(self.element(target))
-
-    def drag_and_drop_by_offset(self, source: LocatorAlias, by_x: int, by_y: int) -> None:
-        """Drags the source element and drops it by a given offset.
-
-        Note: Playwright's primary drag/drop is element-to-element. This implementation
-        simulates the offset drag.
-        """
-        self.logger.debug("drag_and_drop_by_offset %r X:%r Y:%r", source, by_x, by_y)
-        source_el = self.element(source)
-        source_box = source_el.bounding_box()
-        if source_box:
-            self.page.mouse.move(
-                source_box["x"] + source_box["width"] / 2,
-                source_box["y"] + source_box["height"] / 2,
-            )
-            self.page.mouse.down()
-            self.page.mouse.move(
-                source_box["x"] + source_box["width"] / 2 + by_x,
-                source_box["y"] + source_box["height"] / 2 + by_y,
-            )
-            self.page.mouse.up()
-
-    def drag_and_drop_to(
-        self,
-        source: LocatorAlias,
-        to_x: Optional[int] = None,
-        to_y: Optional[int] = None,
-    ) -> None:
-        """Drags an element to a target location specified by ``to_x`` and ``to_y``"""
-        self.logger.debug("drag_and_drop_to %r X:%r Y:%r", source, to_x, to_y)
-        if to_x is None and to_y is None:
-            raise TypeError("You need to pass either to_x or to_y or both")
-        middle = self.middle_of(source)
-        self.drag_and_drop_by_offset(
-            source, (to_x or middle.x) - middle.x, (to_y or middle.y) - middle.y
-        )
-
     def move_by_offset(self, origin: LocatorAlias, x: int, y: int) -> None:
-        """
-        Moves the mouse to the center of an origin element and then moves by a given offset.
+        """Moves the mouse to the center of an origin element and then moves by a given offset.
 
         This is the recommended stateless approach for precise mouse control, like for
         hovering over different parts of a graph to trigger tooltips.
@@ -713,161 +1034,7 @@ class Browser:
         # Perform the move
         self.page.mouse.move(new_x, new_y)
 
-    def execute_script(self, script: str, *args, silent=False, **kwargs) -> Any:
-        """
-        Executes a Selenium-style script in a Playwright context.
-
-        This method acts as a compatibility layer. It takes a script written for Selenium
-        (which uses the special 'arguments' object) and wraps it in a function that
-        Playwright can execute correctly. Widgets are automatically resolved to the
-        necessary ElementHandles for use in the script.
-
-        Args:
-            script: The JavaScript string to execute.
-            *args: Arguments to be passed to the script, accessible via `arguments[i]`.
-            silent: If True, suppress debug logging for this call.
-        """
-        if not silent:
-            self.logger.debug("execute_script: %r", script)
-        from .widget.base import Widget
-
-        # Process arguments: Widgets/Locators must be resolved to ElementHandles for Playwright's evaluate method.
-        processed_args = []
-        for arg in args:
-            if isinstance(arg, (Widget, Locator)):
-                # .element_handle() is required to pass a node into the page context
-                processed_args.append(self.element(arg).element_handle())
-            else:
-                processed_args.append(arg)
-
-        # Create a JS function that wraps the original script. It takes a single array of our processed arguments.
-        js_wrapper_function = f"""
-            (args) => {{
-                const arguments = args;
-                {dedent(script)}
-            }}
-        """
-        return self.page.evaluate(js_wrapper_function, processed_args)
-
-    def refresh(self, *args, **kwargs) -> None:
-        """Triggers a page refresh.
-
-        Args:
-            timeout : Maximum operation time in milliseconds, defaults to 30 seconds.
-            wait_until : commit / domcontentloaded / load / networkidle / None
-        """
-        self.page.reload(*args, **kwargs)
-
-    def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
-        """Return a set of classes attached to the element."""
-        class_string = self.get_attribute("class", locator, *args, **kwargs)
-        return set(class_string.split()) if class_string else set()
-
-    def tag(self, *args, **kwargs) -> str:
-        """Returns the tag name of the element."""
-        return self.element(*args, **kwargs).evaluate("el => el.tagName.toLowerCase()")
-
-    def type(self, *args, **kwargs) -> str:
-        """Returns the type of the element."""
-        return self.element(*args, **kwargs).evaluate("el=>el.type")
-
-    def text(self, locator: LocatorAlias, *args, **kwargs) -> str:
-        """Returns the text inside the element, normalized."""
-        text_content = self.element(locator, *args, **kwargs).text_content() or ""
-        return normalize_space(text_content)
-
-    def input_value(self, locator: LocatorAlias, *args, **kwargs) -> str:
-        """Returns the input value inside the element, normalized."""
-        value = self.element(locator, *args, **kwargs).input_value() or ""
-        return normalize_space(value)
-
-    def attributes(self, locator: LocatorAlias, *args, **kwargs) -> Dict:
-        """Return a dict of attributes attached to the element.
-
-        This implementation uses Playwright's .evaluate() method to execute a
-        self-contained JavaScript function directly on the element.
-
-        Args: See :py:meth:`elements`
-
-        Returns:
-            A :py:class:`dict` of attributes and respective values.
-        """
-        el = self.element(locator, *args, **kwargs)
-
-        # This JS function is executed in the browser in the context of the element (`el`).
-        # It iterates through all attributes and returns them as a simple object.
-        js_function = """
-            el => {
-                const items = {};
-                for (let i = 0; i < el.attributes.length; i++) {
-                    items[el.attributes[i].name] = el.attributes[i].value;
-                }
-                return items;
-            }
-        """
-        result = el.evaluate(js_function)
-        self.logger.debug("css attributes for %r => %r", locator, result)
-        return result
-
-    def get_attribute(self, attr: str, *args, **kwargs) -> Optional[str]:
-        """
-        Returns the value of an element's attribute.
-        Uses .input_value() for the 'value' attribute for better reliability.
-        """
-        el = self.element(*args, **kwargs)
-        if attr == "value" and self.browser.tag(el) in ("input", "textarea", "select"):
-            return el.input_value()
-        return el.get_attribute(attr)
-
-    def set_attribute(self, attr: str, value: str, *args, **kwargs) -> None:
-        """Sets an attribute on an element to the given value."""
-        js_function = "(el, {attr, value}) => el.setAttribute(attr, value)"
-
-        self.element(*args, **kwargs).evaluate(
-            js_function,
-            {"attr": attr, "value": value},  # This is the object passed to the function
-        )
-        self.logger.debug("set attribute for %r => %r=%r", args, attr, value)
-
-    def size_of(self, *args, **kwargs) -> Size:
-        """Returns element's size as a tuple of width/height."""
-        box = self.element(*args, **kwargs).bounding_box()
-        return Size(box["width"], box["height"]) if box else Size(0, 0)
-
-    def location_of(self, *args, **kwargs) -> Location:
-        """Returns element's location as a tuple of x/y."""
-        box = self.element(*args, **kwargs).bounding_box()
-        return Location(box["x"], box["y"]) if box else Location(0, 0)
-
-    def middle_of(self, *args, **kwargs) -> Location:
-        """Returns element's middle point as a tuple of x/y."""
-        size = self.size_of(*args, **kwargs)
-        location = self.location_of(*args, **kwargs)
-        return Location(int(location.x + size.width / 2), int(location.y + size.height / 2))
-
-    def clear(self, locator: LocatorAlias, *args, **kwargs) -> bool:
-        """Clears a text input with given locator."""
-        self.logger.debug("clear: %r", locator)
-        el = self.element(locator, *args, **kwargs)
-        self.plugin.before_keyboard_input(el, None)
-        el.clear()
-        self.plugin.after_keyboard_input(el, None)
-        return (el.input_value() or "") == ""
-
-    def fill(self, text: str, locator: LocatorAlias, sensitive=False, *args, **kwargs) -> None:
-        """fill to the element.
-
-        Args:
-            text: Text or file path to be inserted to the element.
-            sensitive: Bool, If is set to True do not log sensitive data.
-            *args: See :py:meth:`elements`
-            **kwargs: See :py:meth:`elements`
-        """
-        text = str(text) or ""
-        el = self.element(locator, *args, **kwargs)
-        self.logger.debug("fill %r to %r", "*" * len(text) if sensitive else text, locator)
-        el.fill(text)
-
+    # ========================= KEYBOARD & FORM INPUT =========================
     def send_keys(self, text: str, locator: LocatorAlias, sensitive=False, *args, **kwargs) -> None:
         """Send keys to element with intelligent input type detection and handling.
 
@@ -875,24 +1042,13 @@ class Browser:
         type and applies the appropriate interaction strategy. It solves common testing
         issues around file uploads, special key sequences, and element state management.
 
-        **Key Features:**
-        - **Automatic File Upload Detection**: Detects file input fields and uses proper
-          file upload methods instead of trying to type file paths as text
-        - **Keyboard Event Simulation**: Uses real keyboard events for text inputs to
-          trigger proper validation and event handlers
-        - **Element Positioning**: Automatically moves to element before typing to ensure
-          proper focus and visibility
-        - **Error Recovery**: Handles cases where elements become detached during typing
-        - **Sensitive Data Protection**: Masks sensitive input in logs when requested
+        Key Features:
+        - Automatic file upload detection
+        - Keyboard event simulation
+        - Element positioning
+        - Sensitive data protection
 
-        **Solved Problems:**
-        This method addresses several common Playwright issues:
-        - File upload confusion where file paths would be typed as text
-        - Missing keyboard events that don't trigger form validation
-        - Elements becoming unfocused during long typing sequences
-        - Sensitive data appearing in test logs and screenshots
-
-        **Usage Examples:**
+        Usage Examples:
 
         .. code-block:: python
 
@@ -928,21 +1084,17 @@ class Browser:
         self.logger.debug("send_keys %r to %r", "*" * len(text) if sensitive else text, locator)
 
         if is_file_input:
-            # Use Playwright's modern method for file uploads
             el.set_input_files(text)
         else:
             # Use .type() to simulate actual keystrokes for other inputs
             el.type(text)
 
-        # The original logic for the 'Enter' key is preserved for compatibility.
-        # Playwright's auto-waits often make this less necessary, but we keep it
-        # to avoid changing the framework's behavior.
-        if "Enter" not in text:  # A simplistic check for Keys.ENTER
+        if "Enter" not in text:
             try:
                 self.plugin.after_keyboard_input(el, text)
             except PlaywrightError as e:
                 # Catch potential errors if the element detaches after typing
-                if "is not a valid selector" in str(e):  # Example of a specific error
+                if "is not a valid selector" in str(e):
                     self.logger.warning(
                         "Element detached after send_keys, skipping after_keyboard_input hook."
                     )
@@ -955,12 +1107,61 @@ class Browser:
                 text,
             )
 
+    def fill(self, text: str, locator: LocatorAlias, sensitive=False, *args, **kwargs) -> None:
+        """Fill text into an element.
+
+        Args:
+            text: Text or file path to be inserted into the element
+            locator: Element locator to fill text into
+            sensitive: If True, masks the text in logs for security
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
+        text = str(text) or ""
+        el = self.element(locator, *args, **kwargs)
+        self.logger.debug("fill %r to %r", "*" * len(text) if sensitive else text, locator)
+        el.fill(text)
+
+    def clear(self, locator: LocatorAlias, *args, **kwargs) -> bool:
+        """Clears a text input with given locator.
+
+        Args:
+            locator: Element locator to clear text from
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            True if clearing was successful
+        """
+        self.logger.debug("clear: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        self.plugin.before_keyboard_input(el, None)
+        el.clear()
+        self.plugin.after_keyboard_input(el, None)
+        return (el.input_value() or "") == ""
+
     def send_keys_to_focused_element(self, *keys: str) -> None:
-        """Sends keys to the current focused element."""
-        self.page.keyboard.press("".join(keys))
+        """Sends keys to the current focused element.
+
+        Args:
+            *keys: Key sequences to send to the focused element
+        """
+        text = "".join(keys)
+        if len(text) == 1 and text in ["Enter", "Escape", "Tab", "Space"]:
+            # Handle special single keys
+            self.page.keyboard.press(text)
+        else:
+            # Handle regular text
+            self.page.keyboard.type(text)
 
     def copy(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Select all and copy to clipboard."""
+        """Select all and copy to clipboard.
+
+        Args:
+            locator: Element locator to copy content from
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
         self.logger.debug("copy: %r", locator)
         el = self.element(locator, *args, **kwargs)
         el.focus()
@@ -968,12 +1169,175 @@ class Browser:
         self.page.keyboard.press("Control+C")
 
     def paste(self, locator: LocatorAlias, *args, **kwargs) -> None:
-        """Paste from clipboard to current element."""
+        """Paste from clipboard to current element.
+
+        Args:
+            locator: Element locator to paste content into
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
         self.logger.debug("paste: %r", locator)
         el = self.element(locator, *args, **kwargs)
         el.focus()
         self.page.keyboard.press("Control+V")
 
+    # ======================== CHECKBOX & FORM CONTROLS ========================
+    def check(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Check an element (Checkboxes/ Radio buttons) specified by the locator.
+
+        Args:
+            locator: Element locator for checkbox/radio button to check
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
+        self.logger.debug("check: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.check()
+
+    def uncheck(self, locator: LocatorAlias, *args, **kwargs) -> None:
+        """Uncheck an element (Checkboxes/ Radio buttons) specified by the locator.
+
+        Args:
+            locator: Element locator for checkbox/radio button to uncheck
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+        """
+        self.logger.debug("uncheck: %r", locator)
+        el = self.element(locator, *args, **kwargs)
+        el.uncheck()
+
+    # ========================= DRAG & DROP OPERATIONS =========================
+    def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:
+        """Drags the source element and drops it into target.
+
+        Args:
+            source: Element locator to drag from
+            target: Element locator to drop to
+        """
+        self.logger.debug("drag_and_drop %r to %r", source, target)
+        self.element(source).drag_to(self.element(target))
+
+    def drag_and_drop_by_offset(self, source: LocatorAlias, by_x: int, by_y: int) -> None:
+        """Drags the source element and drops it by a given offset.
+
+        Args:
+            source: Element locator to drag from
+            by_x: Horizontal offset in pixels to drag by
+            by_y: Vertical offset in pixels to drag by
+
+        Note:
+            Playwright's primary drag/drop is element-to-element. This implementation
+            simulates the offset drag.
+        """
+        self.logger.debug("drag_and_drop_by_offset %r X:%r Y:%r", source, by_x, by_y)
+        source_el = self.element(source)
+        source_box = source_el.bounding_box()
+        if source_box:
+            self.page.mouse.move(
+                source_box["x"] + source_box["width"] / 2,
+                source_box["y"] + source_box["height"] / 2,
+            )
+            self.page.mouse.down()
+            self.page.mouse.move(
+                source_box["x"] + source_box["width"] / 2 + by_x,
+                source_box["y"] + source_box["height"] / 2 + by_y,
+            )
+            self.page.mouse.up()
+
+    def drag_and_drop_to(
+        self,
+        source: LocatorAlias,
+        to_x: Optional[int] = None,
+        to_y: Optional[int] = None,
+    ) -> None:
+        """Drags an element to a target location specified by ``to_x`` and ``to_y``.
+
+        Args:
+            source: Element locator to drag from
+            to_x: Target X coordinate (uses current X if None)
+            to_y: Target Y coordinate (uses current Y if None)
+
+        Raises:
+            TypeError: If both to_x and to_y are None
+        """
+        self.logger.debug("drag_and_drop_to %r X:%r Y:%r", source, to_x, to_y)
+        if to_x is None and to_y is None:
+            raise TypeError("You need to pass either to_x or to_y or both")
+        middle = self.middle_of(source)
+        self.drag_and_drop_by_offset(
+            source, (to_x or middle.x) - middle.x, (to_y or middle.y) - middle.y
+        )
+
+    # ========================= JAVASCRIPT EXECUTION =========================
+    def execute_script(self, script: str, *args, silent=False, **kwargs) -> Any:
+        """Executes a Selenium-style script in a Playwright context.
+
+        This method acts as a compatibility layer. It takes a script written for Selenium
+        (which uses the special 'arguments' object) and wraps it in a function that
+        Playwright can execute correctly. Widgets are automatically resolved to the
+        necessary ElementHandles for use in the script.
+
+        Args:
+            script: The JavaScript string to execute.
+            *args: Arguments to be passed to the script, accessible via `arguments[i]`.
+            silent: If True, suppress debug logging for this call.
+
+        Returns:
+            Result of the JavaScript execution
+        """
+        if not silent:
+            self.logger.debug("execute_script: %r", script)
+        from .widget.base import Widget
+
+        # Process arguments: Widgets/Locators must be resolved to ElementHandles for Playwright's evaluate method.
+        processed_args = []
+        for arg in args:
+            if isinstance(arg, (Widget, Locator)):
+                # .element_handle() is required to pass a node into the page context
+                processed_args.append(self.element(arg).element_handle())
+            else:
+                processed_args.append(arg)
+
+        # Create a JS function that wraps the original script. It takes a single array of our processed arguments.
+        js_wrapper_function = f"""
+            (args) => {{
+                const arguments = args;
+                {dedent(script)}
+            }}
+        """
+        return self.page.evaluate(js_wrapper_function, processed_args)
+
+    # =================== FRAME & WINDOW CONTEXT MANAGEMENT ===================
+    def switch_to_frame(self, locator: LocatorAlias) -> None:
+        """Switch browser context to the specified iframe.
+
+        Changes the active context for element operations to work within the iframe.
+        All subsequent element operations will be scoped to this frame until
+        switch_to_main_frame() is called.
+
+        Args:
+            locator: Locator for the iframe element to switch to
+        """
+        self.logger.debug("Switching to frame with locator: %r", locator)
+        self.active_context = self.active_context.frame_locator(str(SmartLocator(locator)))
+
+    def switch_to_main_frame(self) -> None:
+        """Switch browser context back to the main page (exit iframe context).
+
+        Resets the active context to the main page, exiting any iframe context.
+        """
+        self.logger.debug("Switching back to main frame")
+        self.active_context = self.page
+
+    def get_current_location(self) -> str:
+        """Returns the URL of the current page or frame.
+
+        Returns:
+            Current page or frame URL as a string
+        """
+        return self.execute_script("return self.location.toString()")
+
+    # ====================== ALERT HANDLING (TODO/FUTURE) ======================
     # TODO: Implement alert handling
     # def get_alert(self) -> Alert:
     #     """Returns the last detected alert object."""
@@ -1027,36 +1391,6 @@ class Browser:
     #         if squash:
     #             return False
     #         raise
-
-    def switch_to_frame(self, locator: LocatorAlias) -> None:
-        """Switch browser context to the specified iframe.
-
-        Changes the active context for element operations to work within the iframe.
-        All subsequent element operations will be scoped to this frame until
-        switch_to_main_frame() is called.
-
-        Args:
-            locator: Locator for the iframe element to switch to
-        """
-        self.logger.debug("Switching to frame with locator: %r", locator)
-        self.active_context = self.active_context.frame_locator(str(SmartLocator(locator)))
-
-    def switch_to_main_frame(self) -> None:
-        """Switch browser context back to the main page (exit iframe context).
-
-        Resets the active context to the main page, exiting any iframe context.
-        """
-        self.logger.debug("Switching back to main frame")
-        self.active_context = self.page
-
-    def get_current_location(self) -> str:
-        """Returns the URL of the current page or frame."""
-        return self.execute_script("return self.location.toString()")
-
-    def save_screenshot(self, filename: str) -> None:
-        """Saves a screenshot of the current page."""
-        self.logger.debug("Saving screenshot to -> %r", filename)
-        self.page.screenshot(path=filename)
 
 
 class BrowserParentWrapper:
@@ -1136,31 +1470,31 @@ class WindowManager:
         browser_class: Browser class to use for wrapping pages (defaults to Browser)
         **browser_kwargs: Additional arguments passed to Browser constructor
 
-    **Key Features:**
+    Key Features:
 
-    **Automatic Page Wrapping:**
+    - Automatic Page Wrapping:
     Every Playwright Page is automatically wrapped with a widgetastic Browser instance, providing
     the full widgetastic API for each tab/window. This eliminates the need to manually create
     Browser instances for new pages.
 
-    **Popup Detection and Management:**
+    - Popup Detection and Management:
     Automatically detects when new pages are opened (via popups, target="_blank" links, etc.)
     and immediately wraps them with Browser instances. No manual intervention required for
     popup handling.
 
-    **Intelligent Page Cleanup:**
+    - Intelligent Page Cleanup:
     Automatically removes closed pages from the managed collection and cleans up associated
     Browser instances to prevent memory leaks during long-running test sessions.
 
-    **Current Page Tracking:**
+    - Current Page Tracking:
     Maintains a reference to the currently active Browser instance, making it easy to work
     with the "focused" window while keeping track of all available windows.
 
-    **Seamless Context Switching:**
+    - Seamless Context Switching:
     Provides simple methods to switch between different pages/windows and automatically
     brings the target page to the front for user visibility during debugging.
 
-    **Practical Usage Examples:**
+    Practical Usage Examples:
 
     .. code-block:: python
 
@@ -1230,6 +1564,11 @@ class WindowManager:
         return self._browsers[page]
 
     def _on_new_page(self, page: Page):
+        """Handle new page/popup detection and wrapping.
+
+        Args:
+            page: The new Playwright Page instance to be wrapped
+        """
         self.current.logger.info("New page opened / popup detected: %s", page.url)
         self._wrap_page(page)
 
@@ -1450,7 +1789,7 @@ class WindowManager:
         """Cleanup all extra pages other than current page.
 
         Args:
-            current: Close current page as well. Default current page will not close.
+            current: Close current page as well. Default current page will not close
         """
         pages = list(self.all_pages)
 

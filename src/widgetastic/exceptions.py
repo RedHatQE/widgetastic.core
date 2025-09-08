@@ -49,6 +49,12 @@ class NoAlertPresentException(WidgetasticException):
     pass
 
 
+class FrameNotFoundError(WidgetasticException):
+    """Raised when trying to access elements in a nonexistent iframe or frame context."""
+
+    pass
+
+
 __all__ = [
     "WidgetasticException",
     "LocatorNotImplemented",
@@ -57,4 +63,5 @@ __all__ = [
     "RowNotFound",
     "NoSuchElementException",
     "NoAlertPresentException",
+    "FrameNotFoundError",
 ]

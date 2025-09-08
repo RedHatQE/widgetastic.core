@@ -15,7 +15,32 @@ from widgetastic.widget import Table
 from widgetastic.widget import Text
 from widgetastic.widget import TextInput
 from widgetastic.widget import View
+from widgetastic.widget import Widget
+from widgetastic.widget import BaseInput
+from widgetastic.widget import Image
 from widgetastic.widget.table import TableRow
+
+
+def test_base_input_constructor(browser):
+    """Test BaseInput constructor parameter validation and repr."""
+
+    # Just initialized with respective parameters
+    base_input = BaseInput(browser, locator=".//select[@id='input1']")
+    BaseInput(browser, id="input1")
+    BaseInput(browser, name="input1")
+
+    # Pass only one parameter validation
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, locator=".//select[@id='input1']", id="input1")
+
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, id="input1", name="input1")
+
+    with pytest.raises(TypeError, match="You can only pass one of name, id or locator!"):
+        BaseInput(browser, locator=".//select[@id='input1']", name="input1")
+
+    # Test repr
+    assert str(base_input) == "BaseInput(locator=\".//select[@id='input1']\")"
 
 
 def test_basic_widgets(browser):
@@ -863,9 +888,35 @@ def test_table_dynamic_add_assoc(browser):
     assert not view.fill(view.read())
 
 
+def test_select_constructor(browser):
+    """Test Select constructor parameter validation"""
+
+    # Just initialized with respective parameters
+    Select(browser, locator=".//select[@id='myselect']")
+    Select(browser, id="myselect")
+    Select(browser, name="myselect")
+
+    # Pass only one parameter validation
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, locator=".//select[@id='myselect']", id="myselect")
+
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, id="myselect", name="myselect")
+
+    with pytest.raises(
+        TypeError, match="You can only pass one of the params locator, id, name into Select"
+    ):
+        Select(browser, locator=".//select[@id='myselect']", name="myselect")
+
+
 def test_simple_select(browser):
     class TestForm(View):
         select = Select(name="testselect1")
+        no_pre_select = Select(name="testselect3")
 
     view = TestForm(browser)
 
@@ -898,6 +949,9 @@ def test_simple_select(browser):
     with pytest.raises(ValueError):
         view.select.select_by_visible_text("Bar", "Foo")
 
+    with pytest.raises(ValueError):
+        view.select.select_by_visible_text("Non Existing Option")
+
     view.select.fill("Foo")
     assert view.select.read() == "Foo"
 
@@ -921,6 +975,23 @@ def test_simple_select(browser):
 
     with pytest.raises(ValueError):
         view.select.fill(("a short tuple",))
+
+    # Test the IndexError case - no option is pre-selected
+    assert view.no_pre_select.first_selected_option is None
+    assert view.no_pre_select.all_selected_options == []
+    assert view.no_pre_select.read() is None
+
+    # Test fill() with actual change
+    assert view.no_pre_select.fill("Alpha")  # Changes from no selection to "Alpha"
+    assert view.no_pre_select.first_selected_option == "Alpha"
+    assert view.no_pre_select.read() == "Alpha"
+
+    # Test fill() with different value
+    assert view.no_pre_select.fill("Beta")  # Changes from "Alpha" to "Beta"
+    assert view.no_pre_select.read() == "Beta"
+
+    # Test fill() with same value
+    assert not view.no_pre_select.fill("Beta")  # No change needed
 
 
 def test_multi_select(browser):
@@ -1109,3 +1180,83 @@ def test_with_including(browser):
     assert form.fileinput.fill("/etc/resolv.conf")
     with pytest.raises(DoNotReadThisWidget):
         form.fileinput.read()
+
+
+def test_image(browser):
+    """Test Image widget properties"""
+
+    class TestForm(View):
+        full_image = Image(locator='.//img[@id="test-image-full"]')
+        src_only_image = Image(locator='.//img[@id="test-image-src-only"]')
+        alt_image = Image(locator='.//img[@id="test-image-alt"]')
+
+    view = TestForm(browser)
+
+    # Test all attributes
+    assert view.full_image.src.startswith("data:image/svg+xml")
+    assert view.full_image.alt == "Green test image"
+    assert view.full_image.title == "Image title"
+
+    # Test src only
+    assert view.src_only_image.src.startswith("data:image/svg+xml")
+    assert view.src_only_image.alt is None
+    assert view.src_only_image.title is None
+
+    # Test with alt
+    assert view.alt_image.src.startswith("data:image/svg+xml")
+    assert view.alt_image.alt == "Blue rectangle"
+    assert view.alt_image.title is None
+
+
+def test_widget_dimension_properties(browser):
+    """Test Widget width and height properties."""
+    exact_dimensions_widget = Text(browser, "#exact_dimensions")
+
+    assert exact_dimensions_widget.width == 100
+    assert exact_dimensions_widget.height == 50
+
+
+def test_widget_iteration_and_fill_handler_errors(browser):
+    """Test Widget __iter__ and _process_fill_handler errors."""
+
+    class TestView(View):
+        w1 = Widget()
+        w2 = Widget()
+
+    view = TestView(browser)
+
+    # Test iteration
+    widgets = list(view)
+    assert len(widgets) == 2
+
+    # Test _process_fill_handler
+    widget = Widget(browser)
+
+    # Test non-existent attribute
+    with pytest.raises(TypeError, match="missing_attr does not exist"):
+        widget._process_fill_handler("missing_attr")
+
+    # Test invalid handler type
+    with pytest.raises(TypeError, match="Fill handler must be callable or clickable"):
+        widget._process_fill_handler(123)
+
+
+def test_is_enabled_warning_non_form_element(browser):
+    """Test is_enabled warning for non-form elements."""
+
+    class TestWidget(Widget):
+        def __locator__(self):
+            return "//div[@id='test']"
+
+    widget = TestWidget(browser)
+
+    # Mock browser.tag to return non-form element
+    original_tag = browser.tag
+    browser.tag = lambda element: "div"
+
+    try:
+        # This should trigger warning and return True
+        result = widget.is_enabled
+        assert result is True
+    finally:
+        browser.tag = original_tag

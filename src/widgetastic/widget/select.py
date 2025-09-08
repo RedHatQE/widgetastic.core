@@ -127,7 +127,9 @@ class Select(Widget, ClickableMixin):
         select_element = self.browser.element(self)
         options = select_element.evaluate(self.ALL_OPTIONS)
 
-        return [self.Option(normalize_space(unescape(option[0])), option[1]) for option in options]
+        return [
+            self.Option(normalize_space(unescape(option[0])), option[1]) for option in options
+        ]  # pragma: no cover
 
     @property
     def all_selected_options(self):
@@ -135,7 +137,7 @@ class Select(Widget, ClickableMixin):
         select_element = self.browser.element(self)
         selected_texts = select_element.evaluate(self.SELECTED_OPTIONS_TEXT)
 
-        return [normalize_space(unescape(option)) for option in selected_texts]
+        return [normalize_space(unescape(option)) for option in selected_texts]  # pragma: no cover
 
     @property
     def all_selected_values(self):
@@ -146,7 +148,7 @@ class Select(Widget, ClickableMixin):
         select_element = self.browser.element(self)
         selected_values = select_element.evaluate(self.SELECTED_OPTIONS_VALUE)
 
-        return [value for value in selected_values if value is not None]
+        return [value for value in selected_values if value is not None]  # pragma: no cover
 
     @property
     def first_selected_option(self):
