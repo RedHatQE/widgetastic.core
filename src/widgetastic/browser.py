@@ -42,6 +42,7 @@ from wait_for import TimedOutError
 from .exceptions import LocatorNotImplemented
 from .exceptions import NoSuchElementException
 from .exceptions import WidgetOperationFailed
+from .exceptions import FrameNotFoundError
 
 
 from .log import create_widget_logger
@@ -436,7 +437,27 @@ class Browser:
                     root_element = self.active_context
             else:
                 root_element = self.active_context
-            result = root_element.locator(str(locator)).all()
+            try:
+                result = root_element.locator(str(locator)).all()
+            except PlaywrightError as e:
+                # Handle nonexistent iframe case - ensure consistent behavior across Playwright versions
+                if "Failed to find frame" in str(e):
+                    # Raise a specific frame error with clear semantics
+                    raise FrameNotFoundError(f"Failed to find frame: {str(e)}") from e
+                else:
+                    raise
+
+            if (
+                len(result) == 0
+                and isinstance(root_element, FrameLocator)
+                and root_element == self.active_context
+            ):
+                try:
+                    # Try to access the frame's document - this will fail if frame doesn't exist
+                    test_locator = root_element.locator("html, body").first
+                    test_locator.wait_for(state="attached", timeout=50)
+                except PlaywrightError:
+                    raise FrameNotFoundError("Frame not found: nonexistent frame context") from None
 
         if check_visibility:
             result = [loc for loc in result if loc.is_visible()]
@@ -534,11 +555,24 @@ class Browser:
 
         Returns:
             True if element is visible, False otherwise
+
+        Raises:
+            PlaywrightError: If the frame context is invalid (nonexistent iframe)
         """
         try:
             return self.element(locator, *args, **kwargs).is_visible()
         except NoSuchElementException:
             return False
+        except (PlaywrightError, FrameNotFoundError) as e:
+            # Re-raise frame-related errors to ensure consistent behavior across Playwright versions.
+            if (
+                isinstance(e, FrameNotFoundError)
+                or "Frame not found" in str(e)
+                or "Failed to find frame" in str(e)
+            ):
+                raise
+            else:
+                return False
 
     def is_enabled(self, locator: LocatorAlias, *args, **kwargs) -> bool:
         """Check if the element represented by the locator is enabled.
