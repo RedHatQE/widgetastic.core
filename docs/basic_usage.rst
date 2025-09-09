@@ -7,7 +7,7 @@ This sample only represents simple UI interaction.
 
 .. code-block:: python
 
-    from selenium import webdriver
+    from playwright.sync_api import sync_playwright
     from widgetastic.browser import Browser
     from widgetastic.widget import View, Text, TextInput
 
@@ -29,22 +29,33 @@ This sample only represents simple UI interaction.
             ROOT = 'div#somediv'
             another_text = Text(locator='#h2')  # See "Automatic simple CSS locator detection"
 
-    selenium = webdriver.Firefox()  # For example
-    browser = CustomBrowser(selenium)
+    # Initialize Playwright and create browser instance
+    with sync_playwright() as p:
+        playwright_browser = p.chromium.launch()  # or p.firefox.launch()
+        context = playwright_browser.new_context()
+        page = context.new_page()
+        browser = CustomBrowser(page)
 
-    # Now we have the widgetastic browser ready for work
-    # Let's instantiate a view.
-    a_view = MyView(browser)
-    # ^^ you would typically come up with some way of integrating this in your framework.
+        # Navigate
+        browser.url = "https://foo.com"
 
-    # The defined widgets now work as you would expect
-    a_view.read()  # returns a recursive dictionary of values that all widgets provide via read()
-    a_view.a_text.text  # Accesses the text
-    # but the .text is widget-specific, so you might like to use just .read()
-    a_view.fill({'an_input': 'foo'})  # Fills an_input with foo and returns boolean whether anything changed
-    # Basically equivalent to:
-    a_view.an_input.fill('foo')  # Since views just dispatch fill to the widgets based on the order
-    a_view.an_input.is_displayed
+        # Now we have the widgetastic browser ready for work
+        # Let's instantiate a view.
+        a_view = MyView(browser)
+        # ^^ you would typically come up with some way of integrating this in your framework.
+
+        # The defined widgets now work as you would expect
+        a_view.read()  # returns a recursive dictionary of values that all widgets provide via read()
+        a_view.a_text.text  # Accesses the text
+        # but the .text is widget-specific, so you might like to use just .read()
+        a_view.fill({'an_input': 'foo'})  # Fills an_input with foo and returns boolean whether anything changed
+        # Basically equivalent to:
+        a_view.an_input.fill('foo')  # Since views just dispatch fill to the widgets based on the order
+        a_view.an_input.is_displayed
+
+        # Clean up resources
+        context.close()
+        playwright_browser.close()
 
 
 Typically, you want to incorporate a system that would do the navigation (like
