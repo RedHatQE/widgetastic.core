@@ -48,6 +48,10 @@ def test_widget_extra_data(browser):
     assert dir(view.extra) == ["testobject"]
     assert view.extra.testobject == 2
 
+    # Test missing extra object error
+    with pytest.raises(AttributeError, match="Extra object 'missing' was not found"):
+        view.extra.missing
+
 
 def test_included_widgets(browser):
     class MyWidget(Widget):
@@ -93,3 +97,27 @@ def test_included_widgets(browser):
     assert testw.beef.id == "beef"
     assert isinstance(testw.bob, MyWidget)
     assert testw.bob.id == "bob"
+
+
+def test_widget_missing_includer_error(browser):
+    """Test _get_included_widget error when includer not found."""
+    widget = Widget(browser)
+    with pytest.raises(ValueError, match="Could not find includer #999"):
+        widget._get_included_widget(999, "test", False)
+
+
+def test_flush_widget_cache_with_attribute_error(browser):
+    """Test flush_widget_cache exception handling."""
+
+    class MockWidget:
+        def flush_widget_cache(self):
+            raise AttributeError("test error")
+
+    widget = Widget(browser)
+    widget._widget_cache["key1"] = MockWidget()
+    widget._initialized_included_widgets["key2"] = MockWidget()
+
+    # Should handle AttributeErrors gracefully
+    widget.flush_widget_cache()
+    assert len(widget._widget_cache) == 0
+    assert len(widget._initialized_included_widgets) == 0

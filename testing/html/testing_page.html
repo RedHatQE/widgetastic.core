@@ -1,341 +1,1522 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-  <title>Test page</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widgetastic.Core - Testing Page</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"
     integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      font-weight: 300;
+    }
+
+    .header .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .section {
+      background: white;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .section-header {
+      background-color: #495057;
+      color: white;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .section-content {
+      padding: 25px;
+    }
+
+    .widget-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .widget-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .widget-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #495057;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #e7f3ff;
+    }
+
+    .widget-description {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      font-style: italic;
+    }
+
+    input, select, button, textarea {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 2px solid #ced4da;
+      border-radius: 4px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      margin: 5px;
+    }
+
+    input:focus, select:focus, button:focus, textarea:focus {
+      outline: none;
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    input:disabled, select:disabled, button:disabled {
+      background-color: #e9ecef;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #007bff;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+
+    button.clicked {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: inline-block;
+      font-weight: 500;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+
+    fieldset {
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    legend {
+      padding: 0 10px;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 14px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .alert-section {
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .visibility-demo {
+      background-color: #f8f9fa;
+      border: 2px dashed #dee2e6;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+
+    .ouia-section {
+      background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+
+    .ouia-section h3 {
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .iframe-container {
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .code-example {
+      background-color: #f8f9fa;
+      border-left: 4px solid #007bff;
+      padding: 10px 15px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #495057;
+      border-radius: 0 4px 4px 0;
+    }
+
+    hr {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+      margin: 30px 0;
+    }
+
+    .hidden-content {
+      display: none;
+    }
+
+    #invisible_appear_p {
+      background-color: #17a2b8;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    #exact_dimensions {
+      background-color: #20c997;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1 id="hello" class="foo bar">Hello</h1>
-  <h2 style="display: none;" id="invisible">This is invisible</h2>
-  <div id="random_visibility">
-    <p>One</p>
-    <p>Two</p>
-    <p style="display: none;">Three</p>
-    <p>Four</p>
-    <p style="display: none;">Five</p>
+  <div class="header">
+    <h1 id="wt-core-title" class="foo bar">Widgetastic.Core - Testing Page</h1>
+    <p class="subtitle">Interactive demonstrations for widget automation and testing</p>
   </div>
-  <div id="visible_invisible">
-    <p style="display: none;" class="invisible">Invisible</p>
-    <p class="visible">Visible</p>
-  </div>
-  <div id="invisible_appear">
-    <p style="display: none;" id="invisible_appear_p">baf</p>
-    <button
-      onclick="var p = document.getElementById('invisible_appear_p'); p.style.display='none'; setTimeout(function(){ var p = document.getElementById('invisible_appear_p'); p.style.display='inline'; }, 3000);"
-      id="invisible_appear_button">
-      Show Invisible
-    </button>
-  </div>
-  <button id="a_button" onclick="this.className += ' clicked'">Button</button>
-  <select id="myselect">
-    <option value="test" id="myoption">myoption</option>
-  </select>
-  <input type='text' id='input' />
-  <input type='text' id='input_paste' />
-  <input type='number' id='input_number' />
-  <input type='file' id='fileinput' />
-  <input type='color' id='colourinput' />
+  <!-- Visibility Testing Section -->
+  <div class="section">
+    <div class="section-header">Element Visibility & State Testing</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Visible & Hidden Elements</div>
+        <div class="widget-description">Tests for elements with display: none and visibility states</div>
+        <h2 class="foo bar wt-invisible" style="display: none;" id="invisible">This is invisible</h2>
 
-  <button id="alert_button" onclick="alertFunction()">Alert</button>
-  <p id="alert_out"></p>
+        <div class="visibility-demo">
+          <strong>Mixed Visibility Container:</strong>
+          <div id="random_visibility">
+            <p>One (visible)</p>
+            <p>Two (visible)</p>
+            <p style="display: none;">Three (hidden)</p>
+            <p>Four (visible)</p>
+            <p style="display: none;">Five (hidden)</p>
+          </div>
+        </div>
+
+        <div class="visibility-demo">
+          <strong>Visibility Classes:</strong>
+          <div id="visible_invisible">
+            <p style="display: none;" class="invisible">Invisible content</p>
+            <p class="visible">Visible content</p>
+          </div>
+        </div>
+
+        <div class="visibility-demo">
+          <strong>Dynamic Visibility:</strong>
+          <div id="invisible_appear">
+            <p style="display: none;" id="invisible_appear_p">Dynamic content appears here</p>
+            <button onclick="var p = document.getElementById('invisible_appear_p'); p.style.display='none'; setTimeout(function(){ var p = document.getElementById('invisible_appear_p'); p.style.display='inline'; }, 3000);" id="invisible_appear_button">
+              Show Element (3s delay)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Interactive Buttons</div>
+        <div class="widget-description">Buttons with state changes and click handlers</div>
+        <button id="a_button" onclick="this.className += ' clicked'">Click Me (State Changes)</button>
+        <div class="code-example">Button adds 'clicked' class when pressed</div>
+        <button id='disabled_button' disabled>Disabled Button</button>
+        <div class="code-example">Button in disabled state - cannot be clicked</div>
+        <button id="multi_button" onmousedown="handleButtonClick(event)">Multi-Click Test</button>
+        <div id="click_result" style="margin-left: 10px; font-weight: bold; color: #007bff;">Ready</div>
+        <div class="code-example">Button detects left, right, and middle mouse clicks</div>
+      </div>
+    </div>
+  </div>
+  <!-- Basic Input Widgets Section -->
+  <div class="section">
+    <div class="section-header">Input Widgets & Controls</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Basic Select Widget</div>
+        <div class="widget-description">Simple dropdown selection with options</div>
+        <div class="form-row">
+          <label>Select Widget:</label>
+          <select id="myselect" name="myselect">
+            <option value="test" id="myoption">myoption</option>
+          </select>
+        </div>
+        <div class="code-example">Select(id="myselect")</div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Input Variations</div>
+        <div class="widget-description">Different types of inputs fields for various use cases</div>
+        <div class="form-row">
+          <label>Standard Text:</label>
+          <input type='text' id='input' placeholder="Standard text input" />
+        </div>
+        <div class="form-row">
+          <label>Paste Target:</label>
+          <input type='text' id='input_paste' placeholder="For paste operations" />
+        </div>
+        <div class="form-row">
+          <label>Number Input:</label>
+          <input type='number' id='input_number' placeholder="Numbers only" />
+        </div>
+        <div class="form-row">
+          <label>File Upload:</label>
+          <input type='file' id='fileinput' />
+        </div>
+        <div class="form-row">
+          <label>Color Picker:</label>
+          <input type='color' id='colourinput' value="#007bff" />
+        </div>
+
+        <div class="form-row">
+          <label>Editable Content:</label>
+          <div id='editable_content' contenteditable="true" style="border: 1px solid #ccc; padding: 8px; min-height: 30px;">Editable content here</div>
+        </div>
+        <div class="form-row">
+          <label>Hidden Input:</label>
+          <input type='text' id='hidden_input' style="display: none;" value="hidden" />
+        </div>
+        <div class="form-row">
+          <label>Textarea:</label>
+          <textarea id='textarea_input' placeholder="Multi-line text"></textarea>
+        </div>
+        <div class="code-example">
+          TextInput(id="input")<br>
+          TextInput(id="input_paste")<br>
+          TextInput(id="input_number")  # HTML type=number<br>
+          FileInput(id="fileinput")<br>
+          ColourInput(id="colourinput")<br>
+          Text(id="editable_content")  # Editable content<br>
+          TextInput(id="textarea_input")  # Textarea element
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Alert & Dialog Handling</div>
+        <div class="widget-description">JavaScript alert, prompt, and confirm dialog interactions</div>
+        <div class="alert-section">
+          <button id="alert_button" onclick="alertFunction()">Trigger Prompt Dialog</button>
+          <p id="alert_out" style="margin-top: 10px; font-weight: 500;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+  // Enhanced drag and drop functionality
+  let draggedElement = null;
+  let dragStartCoords = null;
+  let dropCount = 0;
+
+  // Track mouse coordinates
+  document.addEventListener('mousemove', function(e) {
+    const mouseCoords = document.getElementById('mouse_coords');
+    if (mouseCoords) {
+      mouseCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+  });
+
+  // Enhanced Drag and Drop Event Handlers
+  function handleDragStart(e) {
+    draggedElement = e.target;
+    dragStartCoords = {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    // Visual feedback
+    e.target.style.opacity = '0.6';
+    e.target.style.transform = 'scale(0.95)';
+
+    // Update coordinates display
+    const startCoords = document.getElementById('drag_start_coords');
+    if (startCoords) {
+      startCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+
+    logDragAction(`Started dragging ${e.target.id || 'element'} from (${e.clientX}, ${e.clientY})`);
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.dataTransfer.setData('text/plain', e.target.id);
+  }
+
+  function handleDragEnd(e) {
+    // Reset visual feedback
+    e.target.style.opacity = '1';
+    e.target.style.transform = 'scale(1)';
+
+    const endCoords = document.getElementById('drag_end_coords');
+    const offsetCoords = document.getElementById('drag_offset');
+
+    if (endCoords) {
+      endCoords.textContent = `(${e.clientX}, ${e.clientY})`;
+    }
+
+    if (offsetCoords && dragStartCoords) {
+      const offsetX = e.clientX - dragStartCoords.x;
+      const offsetY = e.clientY - dragStartCoords.y;
+      offsetCoords.textContent = `(${offsetX}, ${offsetY})`;
+    }
+
+    logDragAction(`Ended dragging ${e.target.id || 'element'} at (${e.clientX}, ${e.clientY})`);
+
+    draggedElement = null;
+    dragStartCoords = null;
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    e.preventDefault();
+    // Visual feedback for drop zone
+    if (e.target.classList.contains('drop-area') || e.target.closest('.drop-area')) {
+      const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+      dropArea.style.borderColor = '#28a745';
+      dropArea.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.textContent = 'Ready to drop!';
+        status.style.color = '#28a745';
+      }
+    }
+  }
+
+  function handleDragLeave(e) {
+    // Only handle if we're actually leaving the drop zone
+    const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+    if (dropArea && !dropArea.contains(e.relatedTarget)) {
+      dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
+      dropArea.style.backgroundColor = '';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.textContent = 'Ready';
+        status.style.color = '';
+      }
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+
+    const dropArea = e.target.classList.contains('drop-area') ? e.target : e.target.closest('.drop-area');
+    if (dropArea) {
+      dropCount++;
+
+      // Visual feedback
+      dropArea.style.borderColor = '#007bff';
+      dropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+
+      const status = document.getElementById('drop_status');
+      if (status) {
+        status.innerHTML = `✅ Dropped!<br><small>Count: ${dropCount}</small>`;
+        status.style.color = '#007bff';
+      }
+
+      const draggedId = e.dataTransfer.getData('text/plain');
+      logDragAction(`Dropped ${draggedId || 'element'} in drop zone at (${e.clientX}, ${e.clientY})`);
+    }
+  }
+
+  // Simple Sortable List Handlers - Enhanced for browser automation compatibility
+  let draggedSortItem = null;
+
+  function simpleSortStart(e) {
+    draggedSortItem = e.target;
+    e.target.style.opacity = '0.6';
+    e.target.style.transform = 'scale(0.95)';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', e.target.dataset.sortId || '');
+    logDragAction(`Started sorting: ${e.target.querySelector('span:last-child').textContent.trim()}`);
+  }
+
+  function simpleSortOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Simple visual feedback
+    if (e.target.classList.contains('sortable-item') || e.target.closest('.sortable-item')) {
+      const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+      if (targetItem !== draggedSortItem) {
+        targetItem.style.borderColor = '#007bff';
+        targetItem.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+      }
+    }
+  }
+
+  function simpleSortLeave(e) {
+    if (e.target.classList.contains('sortable-item') || e.target.closest('.sortable-item')) {
+      const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+      if (targetItem !== draggedSortItem) {
+        targetItem.style.borderColor = '#dee2e6';
+        targetItem.style.backgroundColor = '';
+      }
+    }
+  }
+
+  function simpleSortDrop(e) {
+    e.preventDefault();
+
+    if (!draggedSortItem) return;
+
+    const targetItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+    if (!targetItem || targetItem === draggedSortItem) {
+      resetSortItemStyles();
+      return;
+    }
+
+    const container = document.getElementById('sortable_list');
+    const allItems = [...container.querySelectorAll('.sortable-item')];
+    const draggedIndex = allItems.indexOf(draggedSortItem);
+    const targetIndex = allItems.indexOf(targetItem);
+
+    // Simple reordering: insert dragged item before or after target
+    if (draggedIndex < targetIndex) {
+      // Moving down: insert after target
+      container.insertBefore(draggedSortItem, targetItem.nextSibling);
+    } else {
+      // Moving up: insert before target
+      container.insertBefore(draggedSortItem, targetItem);
+    }
+
+    logDragAction(`Moved item from position ${draggedIndex} to position ${targetIndex}`);
+    resetSortItemStyles();
+  }
+
+  function resetSortItemStyles() {
+    document.querySelectorAll('.sortable-item').forEach(item => {
+      item.style.opacity = '1';
+      item.style.transform = 'scale(1)';
+      item.style.borderColor = '#dee2e6';
+      item.style.backgroundColor = '';
+    });
+    draggedSortItem = null;
+  }
+
+  // Enhanced drag and drop compatibility for browser automation
+  // Add programmatic drag and drop support for testing
+  function simulateDragDrop(sourceEl, targetEl) {
+    // Simulate drag start
+    const dragStartEvent = new DragEvent('dragstart', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: new DataTransfer()
+    });
+    sourceEl.dispatchEvent(dragStartEvent);
+
+    // Simulate drag over on target
+    const dragOverEvent = new DragEvent('dragover', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    targetEl.dispatchEvent(dragOverEvent);
+
+    // Simulate drop
+    const dropEvent = new DragEvent('drop', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    targetEl.dispatchEvent(dropEvent);
+
+    // Simulate drag end
+    const dragEndEvent = new DragEvent('dragend', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dragStartEvent.dataTransfer
+    });
+    sourceEl.dispatchEvent(dragEndEvent);
+  }
+
+  // Fallback mechanism for browser automation
+  // If HTML5 drag events don't work, use direct DOM manipulation
+  function automationFallbackDragDrop(sourceSelector, targetSelector) {
+    const source = document.querySelector(sourceSelector);
+    const target = document.querySelector(targetSelector);
+
+    if (!source || !target) return false;
+
+    const container = document.getElementById('sortable_list');
+    const allItems = [...container.querySelectorAll('.sortable-item')];
+    const sourceIndex = allItems.indexOf(source);
+    const targetIndex = allItems.indexOf(target);
+
+    // Perform the reordering
+    if (sourceIndex < targetIndex) {
+      container.insertBefore(source, target.nextSibling);
+    } else {
+      container.insertBefore(source, target);
+    }
+
+    logDragAction(`Automation moved item from position ${sourceIndex} to position ${targetIndex}`);
+    return true;
+  }
+
+  // Helper function to get current sortable order for testing
+  function getSortableOrder() {
+    const items = document.querySelectorAll('#sortable_list .sortable-item span:last-child');
+    return Array.from(items).map(item => item.textContent.trim());
+  }
+
+  // Logging function
+  function logDragAction(message) {
+    const log = document.getElementById('drag_log');
+    if (log) {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+
+      // Remove placeholder text if exists
+      const placeholder = log.querySelector('div[style*="italic"]');
+      if (placeholder) {
+        placeholder.remove();
+      }
+
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function clearDragLog() {
+    const log = document.getElementById('drag_log');
+    if (log) {
+      log.innerHTML = '<div style="color: #6c757d; font-style: italic;">Drag and drop actions will be logged here...</div>';
+    }
+  }
+
+  function resetDropStatus() {
+    const dropArea = document.getElementById('drop_target');
+    const status = document.getElementById('drop_status');
+
+    if (dropArea) {
+      dropArea.style.borderColor = 'rgba(255,255,255,0.5)';
+      dropArea.style.backgroundColor = '';
+    }
+
+    if (status) {
+      status.textContent = 'Ready';
+      status.style.color = '';
+    }
+
+    dropCount = 0;
+  }
+
   function alertFunction() {
     var txt;
     var widget = prompt("Please enter widget name:", "TextBox");
     if (widget == null || widget == "") {
       txt = "User dismissed alert.";
     } else {
-      txt = "User accepted alert:"+ widget;
+      txt = "User accepted alert: " + widget;
     }
     document.getElementById("alert_out").innerHTML = txt;
   }
+
+  function handleButtonClick(event) {
+    var result = document.getElementById("click_result");
+    var clickType = "";
+
+    switch(event.button) {
+      case 0:
+        clickType = "left click";
+        break;
+      case 1:
+        clickType = "middle click";
+        break;
+      case 2:
+        clickType = "right click";
+        break;
+      default:
+        clickType = "unknown click";
+    }
+
+    result.textContent = clickType;
+    event.preventDefault();
+  }
   </script>
 
-  <form id="testform">
-    <h3>test test</h3>
-    <input name="input1" type="text" />
-    <input name="input1_disabled" type="text" disabled />
-    <input id="input2" type="checkbox" />
-    <input id="input2_disabled" type="checkbox" disabled />
-  </form>
-  <hr />
-  <table id="with-thead">
-    <thead>
-      <tr>
-        <th>&nbsp;</th>
-        <th>Column 1</th>
-        <th>Column 2</th>
-        <th>Column 3</th>
-        <th>Column 4</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr data-test='abc-123'>
-        <td>asdf</td>
-        <td>qwer</td>
-        <td>yxcv</td>
-        <td>uiop</td>
-        <td><input type="checkbox" id='abc-123'></td>
-      </tr>
-      <tr data-test='abc-345'>
-        <td>foo_x</td>
-        <td>bar_x</td>
-        <td>baz_x</td>
-        <td>bat_x</td>
-        <td><input type="checkbox" id='abc-345'></td>
-      </tr>
-      <tr data-test='def-345'>
-        <td>foo_y</td>
-        <td>bar_y</td>
-        <td>baz_y</td>
-        <td>bat_y</td>
-        <td><input type="checkbox" id='def-345'></td>
-      </tr>
+  <!-- Form Elements & Checkboxes Section -->
+  <div class="section">
+    <div class="section-header">Form Elements & Input States</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Form with Mixed Input Types</div>
+        <div class="widget-description">Form containing text inputs and checkboxes with enabled/disabled states</div>
+        <form id="testform">
+          <h3>Form Testing Examples</h3>
+          <div class="form-group">
+            <label>Text Input (Enabled):</label>
+            <input name="input1" id="input1" type="text" placeholder="Enter text here" />
+          </div>
+          <div class="form-group">
+            <label>Text Input (Disabled):</label>
+            <input name="input1_disabled" type="text" disabled placeholder="Disabled input" />
+          </div>
+          <div class="form-group">
+            <label>
+              <input id="input2" type="checkbox" />
+              Checkbox (Enabled)
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input id="input2_disabled" type="checkbox" disabled />
+              Checkbox (Disabled)
+            </label>
+          </div>
+        </form>
+        <div class="code-example">
+          TextInput(name="input1")<br>
+          Checkbox(id="input2")
+        </div>
+      </div>
 
-    </tbody>
-  </table>
-  <hr />
-  <table id="without_thead">
-    <thead></thead>
-    <tbody>
-      <tr>
-        <th>Date</th>
-        <th>Event</th>
-      </tr>
-      <tr>
-        <td>27.02.2017, 12:19:30</td>
-        <td>Some Event</td>
-      </tr>
-    </tbody>
-  </table>
-  <hr />
-  <select name="testselect1">
-    <option value="foo">Foo</option>
-    <option value="bar"> Bar </option>
-  </select>
-  <select name="testselect2" multiple class="xfoo xbar">
-    <option value="foo">Foo</option>
-    <option value="bar"> Bar </option>
-    <option value="baz">Baz</option>
-  </select>
-  <div id="bogus">
-    <span class="lookmeup">BAD</span>
-  </div>
-  <div id="proper">
-    <div class="c1">
-      <span class="lookmeup">C1</span>
-    </div>
-    <div class="c2">
-      <span class="lookmeup">C2</span>
-    </div>
-    <div class="c3">
-      <span class="lookmeup">C3</span>
+      <div class="widget-group">
+        <div class="widget-title">Radio Button Groups</div>
+        <div class="widget-description">Radio button selection with grouped options</div>
+        <fieldset>
+          <legend>Radio Button Selection:</legend>
+          <div style="margin: 10px 0;">
+            <input type="radio" id="choice1" name="radio_input" value="x" checked>
+            <label for="choice1" style="margin-left: 8px;">Option X</label>
+          </div>
+          <div style="margin: 10px 0;">
+            <input type="radio" id="choice2" name="radio_input" value="y">
+            <label for="choice2" style="margin-left: 8px;">Option Y</label>
+          </div>
+        </fieldset>
+        <div class="code-example">Radio buttons with name="radio_input" grouping</div>
+      </div>
     </div>
   </div>
-  <p>
-    <input name="fill_with_1" type="text">
-    <input name="fill_with_2" type="text">
-    <input name="fill_with_3" type="text">
-    <button id="fill_with_button_1" onclick="this.className += ' clicked'">Click 1</button>
-    <button id="fill_with_button_2" onclick="this.className += ' clicked'">Click 2</button>
-  </p>
-  <div id="exact_dimensions" style="width: 42px; height: 69px;">Foo</div>
-  <table id="withwidgets">
-    <thead>
-      <tr>
-        <th>&nbsp;</th>
-        <th>Column 2</th>
-        <th>Column 3</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>foo</td>
-        <td><input name="foo_r1" name="foo_r1" type="text"></td>
-        <td>foo col 3</td>
-      </tr>
-      <tr>
-        <td>bar</td>
-        <td>bar col 2</td>
-        <td><input name="bar_r2" name="bar_r2" type="text"></td>
-      </tr>
-    </tbody>
-  </table>
-  <div id="switchabletesting">
-    <select id="switchabletesting-select">
-      <option>foo</option>
-      <option>bar</option>
-    </select>
 
-    <h3 id="switchabletesting-1">footest</h3>
-    <h3 id="switchabletesting-2">bartest</h3>
-    <input id="switchabletesting-3" type="checkbox" />
-    <input id="switchabletesting-4" type="checkbox" />
+  <!-- Table Widget Examples Section -->
+  <div class="section">
+    <div class="section-header">Table Widget Examples</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Standard Table with Header</div>
+        <div class="widget-description">Table with proper thead/tbody structure and embedded widgets</div>
+        <table id="with-thead">
+          <thead>
+            <tr>
+              <th>&nbsp;</th>
+              <th>Column 1</th>
+              <th>Column 2</th>
+              <th>Column 3</th>
+              <th>Column 4</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-test='abc-123'>
+              <td>asdf</td>
+              <td>qwer</td>
+              <td>yxcv</td>
+              <td>uiop</td>
+              <td><input type="checkbox" id='abc-123'></td>
+            </tr>
+            <tr data-test='abc-345'>
+              <td>foo_x</td>
+              <td>bar_x</td>
+              <td>baz_x</td>
+              <td>bat_x</td>
+              <td><input type="checkbox" id='abc-345'></td>
+            </tr>
+            <tr data-test='def-345'>
+              <td>foo_y</td>
+              <td>bar_y</td>
+              <td>baz_y</td>
+              <td>bat_y</td>
+              <td><input type="checkbox" id='def-345'></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="code-example">Table(id="with-thead") - Standard table with proper header structure</div>
+      </div>
 
+      <div class="widget-group">
+        <div class="widget-title">Table Without Proper Header</div>
+        <div class="widget-description">Table structure with empty thead and headers in tbody</div>
+        <table id="without_thead">
+          <thead></thead>
+          <tbody>
+            <tr>
+              <th>Date</th>
+              <th>Event</th>
+            </tr>
+            <tr>
+              <td>27.02.2017, 12:19:30</td>
+              <td>Some Event</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="code-example">Table(id="without_thead") - Headers defined in tbody instead of thead</div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Select Dropdowns</div>
+        <div class="widget-description">Single and multiple selection dropdowns</div>
+        <div class="form-row">
+          <label>Single Select:</label>
+          <select name="testselect1">
+            <option value="foo">Foo</option>
+            <option value="bar"> Bar </option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Multiple Select:</label>
+          <select name="testselect2" multiple class="xfoo xbar" size="3">
+            <option value="foo">Foo</option>
+            <option value="bar"> Bar </option>
+            <option value="baz">Baz</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>No Selection Select:</label>
+          <select name="testselect3">
+            <option value="alpha">Alpha</option>
+            <option value="beta">Beta</option>
+            <option value="gamma">Gamma</option>
+          </select>
+        </div>
+        <script>
+          // Force the select to have no selection initially
+          document.addEventListener('DOMContentLoaded', function() {
+            const select = document.querySelector('select[name="testselect3"]');
+            select.selectedIndex = -1;
+          });
+        </script>
+        <div class="code-example">
+          Select(name="testselect1") - Single selection<br>
+          Select(name="testselect2") - Multiple selection<br>
+          Select(name="testselect3") - No pre-selected option (tests IndexError case)
+        </div>
+      </div>
+          </div>
+    </div>
+
+  <!-- Image Testing Section -->
+  <div class="section">
+    <div class="section-header">Image Widget Testing</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Image Elements</div>
+        <div class="widget-description">Testing image widget properties: src, alt, title</div>
+
+        <div class="form-row">
+          <label>Full Image:</label>
+          <img id="test-image-full"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%234CAF50'/%3E%3C/svg%3E"
+               alt="Green test image"
+               title="Image title"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="form-row">
+          <label>Src Only:</label>
+          <img id="test-image-src-only"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%23FF5722'/%3E%3C/svg%3E"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="form-row">
+          <label>With Alt:</label>
+          <img id="test-image-alt"
+               src="data:image/svg+xml,%3Csvg width='100' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='50' fill='%232196F3'/%3E%3C/svg%3E"
+               alt="Blue rectangle"
+               style="border: 1px solid #ddd; margin: 5px;">
+        </div>
+
+        <div class="code-example">
+          Image(id="test-image-full") - Full attributes<br>
+          Image(id="test-image-src-only") - Source only<br>
+          Image(id="test-image-alt") - With alt text
+        </div>
+      </div>
+    </div>
   </div>
 
-  <table border="1" cellspacing="0" id="dynamic">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-      </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
+  <!-- Locator Testing Section -->
+  <div class="section">
+    <div class="section-header">Locator & Element Finding Examples</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Locator Disambiguation</div>
+        <div class="widget-description">Testing proper element selection with similar classes/selectors</div>
+        <div class="visibility-demo">
+          <strong>Ambiguous Locator (BAD):</strong>
+          <div id="bogus">
+            <span class="lookmeup">BAD</span>
+          </div>
+        </div>
+        <div class="visibility-demo">
+          <strong>Specific Locators (GOOD):</strong>
+          <div id="proper">
+            <div class="c1">
+              <span class="lookmeup">C1</span>
+            </div>
+            <div class="c2">
+              <span class="lookmeup">C2</span>
+            </div>
+            <div class="c3">
+              <span class="lookmeup">C3</span>
+            </div>
+          </div>
+        </div>
+        <div class="code-example">
+          Text(".//div[@class='c1']//span[@class='lookmeup']")  # Returns "You looked me up!"<br>
+          Text(".//span[@class='lookmeup']")  # Ambiguous - matches multiple elements
+        </div>
+      </div>
 
-  <button type="button" class='addmore' id='dynamicadd'>Add More</button>
-  <script>
-    var i = 1;
-    $(".addmore").on('click', function () {
-      $('#dynamic').append(
-        '<tr><td>' + i + '.</td><td><input type="text"/></td><td><input type="text"/></td></tr>'
-      );
-      i++;
-    });
-  </script>
+      <div class="widget-group">
+        <div class="widget-title">Fill Operations & Batch Actions</div>
+        <div class="widget-description">Testing form filling and multiple widget interactions</div>
+        <div class="form-row">
+          <input name="fill_with_1" type="text" placeholder="Input 1">
+          <input name="fill_with_2" type="text" placeholder="Input 2">
+          <input name="fill_with_3" type="text" placeholder="Input 3">
+        </div>
+        <div class="form-row">
+          <button id="fill_with_button_1" onclick="this.className += ' clicked'">Click 1</button>
+          <button id="fill_with_button_2" onclick="this.className += ' clicked'">Click 2</button>
+        </div>
+        <div class="code-example">
+          view.fill({"fill_with_1": "value1", "fill_with_2": "value2", "fill_with_3": "value3"})
+        </div>
+      </div>
 
-  <table class="table table-striped table-bordered" border="1" id="rowcolspan_table">
-    <caption>Some caption</caption>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Username</th>
-        <th>Widget</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr data-test="abc-123">
-        <td>1</td>
-        <td>Mark</td>
-        <td>Otto</td>
-        <td>@mdo</td>
-        <td><input name="widget1" type="text" value="widget1"></td>
-      </tr>
-      <tr data-test="abc-345">
-        <td>2</td>
-        <td>Jacob</td>
-        <td>Thornton</td>
-        <td>@fat</td>
-        <td><input name="widget2" type="text" value="widget2"></td>
-      </tr>
-      <tr data-test="def-345">
-        <td>3</td>
-        <td colspan="2">Larry the Bird</td>
-        <td>@slacker</td>
-        <td><input name="widget3" type="text" value="widget3"></td>
-      </tr>
-      <tr>
-        <td rowspan="2">4</td>
-        <td rowspan="2">Pete Savage</td>
-        <td></td>
-        <td>@psav</td>
-        <td><input name="widget41" type="text" value="widget41"></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td>@psav1</td>
-        <td><input name="widget42" type="text" value="widget42"></td>
-      </tr>
+      <div class="widget-group">
+        <div class="widget-title">Element Dimensions Testing</div>
+        <div class="widget-description">Widget with exact pixel dimensions for size testing</div>
+        <div id="exact_dimensions" style="width: 100px; height: 50px;">Fixed Size</div>
+        <div class="code-example">
+          browser.size_of("#exact_dimensions") returns (100, 50)
+        </div>
+      </div>
 
-      <tr>
-        <td rowspan="2">5</td>
-        <td rowspan="2" colspan="2">Mike Shriver</td>
-        <td>@mshriver</td>
-        <td><input name="widget51" type="text" value="widget51"></td>
-      </tr>
-      <tr>
-        <td>@iamhero</td>
-        <td><input name="widget52" type="text" value="widget52"></td>
-      </tr>
-      <tr>
-        <td>6</td>
-        <td colspan="2">
-          <input name="some_input_obj" type="text">
-        </td>
-        <td>@blabla</td>
-        <td><input name="widget6" type="text" value="widget6"></td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="widget-group">
+        <div class="widget-title">Drag and Drop Testing</div>
+        <div class="widget-description">Interactive drag and drop elements with comprehensive visual feedback</div>
 
-  <br><br>
-  <table class="table table-striped table-bordered" border="1" id="multiple_tbody_table">
-    <caption>Some caption</caption>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Username</th>
-        <th>Widget</th>
-      </tr>
-    </thead>
-    <tbody data-test="abc-123">
-      <tr>
-        <td>1</td>
-        <td>Mark</td>
-        <td>Otto</td>
-        <td>@mdo</td>
-        <td><input name="widget1" type="text" value="widget1"></td>
-      </tr>
-      <tr hidden>
-        <td colspan="5">
-          <p>some hidden content row 1</p>
-        </td>
-      </tr>
-    </tbody>
-    <tbody data-test="abc-345">
-      <tr>
-        <td>2</td>
-        <td>Jacob</td>
-        <td>Thornton</td>
-        <td>@fat</td>
-        <td><input name="widget2" type="text" value="widget2"></td>
-      </tr>
-      <tr hidden>
-        <td colspan="5">
-          <p>some hidden content row 2</p>
-        </td>
-      </tr>
-    </tbody>
-    <tbody data-test="def-345">
-      <tr>
-        <td>3</td>
-        <td colspan="2">Larry the Bird</td>
-        <td>@slacker</td>
-        <td><input name="widget3" type="text" value="widget3"></td>
-      </tr>
-      <tr hidden>
-        <td colspan="5">
-          <p>some hidden content row 3</p>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <iframe src="iframe_page.html" height="600" width="800" name="some_iframe"></iframe>
-  <br />
-  <div data-ouia-component-type="TestView" data-ouia-component-id="ouia">
-    <p>OUIA Examples</p>
-    <select data-ouia-component-type="PF/Select" data-ouia-component-id="some_id" data-ouia-safe="true">
-      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="first option">
-        first option
-      </option>
-      <option value="test" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="second option">
-        second option
-      </option>
-    </select>
-    <button data-ouia-component-type="PF/Button" data-ouia-component-id="This is a button" data-ouia-safe="false">This is a button</button>
-    <span data-ouia-component-type="Text" data-ouia-component-id="unique_id" data-ouia-safe="true">Some text</span>
-    <input type='text' data-ouia-component-type="TextInput" data-ouia-component-id="unique_id" data-ouia-safe="true" />
-    <input data-ouia-component-type="CheckBox" data-ouia-component-id="unique_id" data-ouia-safe="true" type="checkbox" />
+        <!-- Two-column layout: Left for drag/drop, Right for reference/log -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
+
+          <!-- Left Column: Drag and Drop Elements -->
+          <div class="left-column">
+            <!-- Basic Drag and Drop -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Basic Drag and Drop</h4>
+              <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div class="drag-container">
+                  <div id="drag_source" class="draggable-item" style="width: 100px; height: 100px; background: linear-gradient(135deg, #007bff, #0056b3); color: white; display: flex; align-items: center; justify-content: center; cursor: move; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.3s ease; user-select: none;" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 16px; font-weight: bold;">📦</div>
+                      <div style="font-size: 11px; margin-top: 2px;">Drag Me</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Source</div>
+                </div>
+
+                <div class="drop-zone">
+                  <div id="drop_target" class="drop-area" style="width: 120px; height: 120px; background: linear-gradient(135deg, #6c757d, #5a6268); color: white; display: flex; align-items: center; justify-content: center; border: 3px dashed rgba(255,255,255,0.5); border-radius: 12px; transition: all 0.3s ease; position: relative;" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 20px; margin-bottom: 3px;">🎯</div>
+                      <div style="font-size: 12px;">Drop Zone</div>
+                      <div id="drop_status" style="font-size: 9px; opacity: 0.8; margin-top: 3px;">Ready</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Target</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Draggable Item for Offset Testing -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Offset Testing Item</h4>
+              <div style="display: flex; justify-content: center;">
+                <div class="drag-container">
+                  <div id="drag_source2" class="draggable-item" style="width: 80px; height: 80px; background: linear-gradient(135deg, #28a745, #1e7e34); color: white; display: flex; align-items: center; justify-content: center; cursor: move; border-radius: 8px; font-size: 12px; transition: all 0.3s ease; user-select: none;" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <div style="text-align: center;">
+                      <div style="font-size: 14px;">📋</div>
+                      <div style="font-size: 10px; margin-top: 2px;">Offset</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">For drag_and_drop_by_offset()</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sortable List -->
+            <div class="drag-drop-section">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Sortable List</h4>
+              <div id="sortable_list" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="sortable-item" data-sort-id="item-1" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>First Item</span>
+                </div>
+                <div class="sortable-item" data-sort-id="item-2" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>Second Item</span>
+                </div>
+                <div class="sortable-item" data-sort-id="item-3" style="padding: 12px; background: linear-gradient(90deg, #e9ecef, #f8f9fa); border: 1px solid #dee2e6; border-radius: 6px; cursor: move; display: flex; align-items: center; transition: all 0.3s ease; font-size: 13px;" draggable="true" ondragstart="simpleSortStart(event)" ondragover="simpleSortOver(event)" ondragleave="simpleSortLeave(event)" ondrop="simpleSortDrop(event)">
+                  <span style="margin-right: 8px; color: #6c757d;">⋮⋮</span>
+                  <span>Third Item</span>
+                </div>
+              </div>
+              <div style="margin-top: 8px; font-size: 11px; color: #666; text-align: center;">Drag items to reorder</div>
+            </div>
+          </div>
+
+          <!-- Right Column: Position Reference and Action Log -->
+          <div class="right-column">
+            <!-- Position Reference & Hover Testing -->
+            <div class="drag-drop-section" style="margin-bottom: 30px;">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Position Reference & Hover</h4>
+              <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                <div style="position: relative;">
+                  <div id="position_reference" style="width: 120px; height: 120px; background: linear-gradient(135deg, #ffc107, #e0a800); color: black; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <div style="text-align: center;">
+                      <div style="font-size: 18px;">📍</div>
+                      <div style="font-size: 12px; font-weight: bold;">Reference</div>
+                      <div style="font-size: 10px;">Point (0,0)</div>
+                    </div>
+                    <div id="hover_target" style="position: absolute; top: -20px; right: -20px; width: 35px; height: 35px; background: linear-gradient(135deg, #dc3545, #c82333); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                      <div style="text-align: center;">
+                        <div style="font-size: 12px;">👆</div>
+                        <div style="font-size: 7px;">Hover</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Coordinate Display -->
+              <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                <h5 style="margin: 0 0 10px 0; font-size: 13px; color: #495057;">Live Coordinates</h5>
+                <div id="drag_coordinates" style="font-family: monospace; font-size: 11px; color: #495057; line-height: 1.5;">
+                  <div>Mouse: <span id="mouse_coords">(0, 0)</span></div>
+                  <div>Drag Start: <span id="drag_start_coords">(-, -)</span></div>
+                  <div>Drag End: <span id="drag_end_coords">(-, -)</span></div>
+                  <div>Offset: <span id="drag_offset">(-, -)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Log -->
+            <div class="drag-drop-section">
+              <h4 style="margin: 0 0 15px 0; color: #495057;">Action Log</h4>
+              <div id="drag_log" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.4;">
+                <div style="color: #6c757d; font-style: italic;">Drag and drop actions will be logged here...</div>
+              </div>
+              <div style="margin-top: 8px;">
+                <button onclick="clearDragLog()" style="padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px;">Clear Log</button>
+                <button onclick="resetDropStatus()" style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Reset Drop Status</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-example">
+          browser.drag_and_drop("#drag_source", "#drop_target")<br>
+          browser.drag_and_drop_by_offset("#drag_source2", 50, 30)<br>
+          browser.drag_and_drop_to("#drag_source2", to_x=200, to_y=150)
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Advanced Table Examples Section -->
+  <div class="section">
+    <div class="section-header">Advanced Table Operations</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Table with Embedded Widgets</div>
+        <div class="widget-description">Table containing input widgets within cells</div>
+        <table id="withwidgets">
+          <thead>
+            <tr>
+              <th>&nbsp;</th>
+              <th>Column 2</th>
+              <th>Column 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>foo</td>
+              <td><input name="foo_r1" type="text" placeholder="foo row input"></td>
+              <td>foo col 3</td>
+            </tr>
+            <tr>
+              <td>bar</td>
+              <td>bar col 2</td>
+              <td><input name="bar_r2" type="text" placeholder="bar row input"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="code-example">
+          table = Table(id="table_with_widgets")<br>
+          table[0].foo_r1.fill("foo value")<br>
+          table[1].bar_r2.fill("bar value")
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Switchable Content Testing</div>
+        <div class="widget-description">Dynamic content switching based on selection</div>
+        <div id="switchabletesting">
+          <div class="form-row">
+            <label>Switch Content:</label>
+            <select id="switchabletesting-select">
+              <option>foo</option>
+              <option>bar</option>
+            </select>
+          </div>
+          <div style="margin: 15px 0;">
+            <h3 id="switchabletesting-1" style="color: #007bff;">footest</h3>
+            <h3 id="switchabletesting-2" style="color: #28a745;">bartest</h3>
+            <div style="margin-top: 10px;">
+              <label><input id="switchabletesting-3" type="checkbox" /> Foo Option</label>
+              <label><input id="switchabletesting-4" type="checkbox" /> Bar Option</label>
+            </div>
+          </div>
+        </div>
+        <div class="code-example">
+          widget = ConditionalSwitchableView(reference="#conditional_selector")<br>
+          widget.fill("Show Value 2")  # Changes visibility
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Dynamic Table Content</div>
+        <div class="widget-description">Table with JavaScript-generated rows and dynamic content</div>
+        <table border="1" cellspacing="0" id="dynamic">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <div style="margin: 15px 0;">
+          <button type="button" class='addmore' id='dynamicadd'>Add New Row</button>
+        </div>
+        <div class="code-example">
+          table = Table(id="dynamic")<br>
+          browser.click("#dynamicadd")  # Adds new row dynamically<br>
+          len(table.rows)  # Returns current row count
+        </div>
+      </div>
+
+      <script>
+        var i = 1;
+        $(".addmore").on('click', function () {
+          $('#dynamic').append(
+            '<tr><td>' + i + '.</td><td><input type="text" placeholder="First name"/></td><td><input type="text" placeholder="Last name"/></td></tr>'
+          );
+          i++;
+        });
+      </script>
+
+      <div class="widget-group">
+        <div class="widget-title">Complex Table with Rowspan/Colspan</div>
+        <div class="widget-description">Advanced table structure with merged cells and embedded widgets</div>
+        <table class="table table-striped table-bordered" border="1" id="rowcolspan_table">
+          <caption>Some caption</caption>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Username</th>
+              <th>Widget</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-test="abc-123">
+              <td>1</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td><input name="widget1" type="text" value="widget1"></td>
+            </tr>
+            <tr data-test="abc-345">
+              <td>2</td>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+              <td><input name="widget2" type="text" value="widget2"></td>
+            </tr>
+            <tr data-test="def-345">
+              <td>3</td>
+              <td colspan="2">Larry the Bird</td>
+              <td>@slacker</td>
+              <td><input name="widget3" type="text" value="widget3"></td>
+            </tr>
+            <tr>
+              <td rowspan="2">4</td>
+              <td rowspan="2">Pete Savage</td>
+              <td></td>
+              <td>@psav</td>
+              <td><input name="widget41" type="text" value="widget41"></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>@psav1</td>
+              <td><input name="widget42" type="text" value="widget42"></td>
+            </tr>
+            <tr>
+              <td rowspan="2">5</td>
+              <td rowspan="2" colspan="2">Mike Shriver</td>
+              <td>@mshriver</td>
+              <td><input name="widget51" type="text" value="widget51"></td>
+            </tr>
+            <tr>
+              <td>@iamhero</td>
+              <td><input name="widget52" type="text" value="widget52"></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td colspan="2">
+                <input name="some_input_obj" type="text" placeholder="Embedded input">
+              </td>
+              <td>@blabla</td>
+              <td><input name="widget6" type="text" value="widget6"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="code-example">
+          table = Table(id="rowspan_table")<br>
+          table[0][0].text  # "widget1" (spans 2 rows)<br>
+          table[2][0].text  # "widget3" (spans 2 cols)
+        </div>
+      </div>
+
+      <div class="widget-group">
+        <div class="widget-title">Comprehensive Edge Case Testing Table</div>
+        <div class="widget-description">Single table designed to test multiple edge cases and error conditions</div>
+
+        <!-- Comprehensive Edge Case Table -->
+        <table id="edge_case_test_table" style="margin: 15px 0;">
+          <caption>Comprehensive Edge Case Testing</caption>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Key</th>          <!-- For duplicate key testing -->
+              <th>Name</th>         <!-- Duplicate header to test warning -->
+              <th>Name</th>         <!-- Duplicate header! -->
+              <th>Input</th>        <!-- For widget testing -->
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-test="row-1" data-category="active">
+              <td>1</td>
+              <td>duplicate</td>    <!-- Duplicate key for associative testing -->
+              <td>First</td>
+              <td>First-Copy</td>
+              <td><input type="text" value="input1" /></td>
+              <td>Active</td>
+            </tr>
+            <tr data-test="row-2" data-category="inactive">
+              <td>2</td>
+              <td>duplicate</td>    <!-- Duplicate key! -->
+              <td>Second</td>
+              <td>Second-Copy</td>
+              <td><input type="text" value="input2" /></td>
+              <td>Inactive</td>
+            </tr>
+            <tr data-test="row-3" data-category="processed">
+              <td>3</td>
+              <td>unique</td>
+              <td>Third</td>
+              <td>Third-Copy</td>
+              <td><input type="checkbox" /></td>
+              <td>Processed</td>
+            </tr>
+            <tr data-test="row-4" data-category="pending">
+              <td>4</td>
+              <td>another</td>
+              <td>Fourth</td>
+              <td>Fourth-Copy</td>
+              <td><input type="text" value="input4" /></td>
+              <td>Pending</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="code-example">
+          Comprehensive edge case testing table covers:<br>
+          - Duplicate headers: "Name" appears twice (columns 2 and 3)<br>
+          - Duplicate keys: "duplicate" value in Key column (rows 1 and 2)<br>
+          - Widget elements: Text inputs and checkboxes in Input column (column 4)<br>
+          - Row attributes: data-test and data-category for filter testing<br>
+          - Unique statuses: Active, Inactive, Processed, Pending for normal testing
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multiple TBody Table Section -->
+  <div class="section">
+    <div class="section-header">Multiple TBody Table Structure</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Table with Multiple TBody Elements</div>
+        <div class="widget-description">Advanced table with multiple tbody sections for grouped data</div>
+        <table class="table table-striped table-bordered" border="1" id="multiple_tbody_table">
+          <caption>Some caption</caption>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Username</th>
+              <th>Widget</th>
+            </tr>
+          </thead>
+          <tbody data-test="abc-123">
+            <tr>
+              <td>1</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td><input name="widget1" type="text" value="widget1"></td>
+            </tr>
+            <tr hidden>
+              <td colspan="5" style="background-color: #f8f9fa; font-style: italic;">
+                <p>Hidden expandable content for row 1</p>
+              </td>
+            </tr>
+          </tbody>
+          <tbody data-test="abc-345">
+            <tr>
+              <td>2</td>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+              <td><input name="widget2" type="text" value="widget2"></td>
+            </tr>
+            <tr hidden>
+              <td colspan="5" style="background-color: #f8f9fa; font-style: italic;">
+                <p>Hidden expandable content for row 2</p>
+              </td>
+            </tr>
+          </tbody>
+          <tbody data-test="def-345">
+            <tr>
+              <td>3</td>
+              <td colspan="2">Larry the Bird</td>
+              <td>@slacker</td>
+              <td><input name="widget3" type="text" value="widget3"></td>
+            </tr>
+            <tr hidden>
+              <td colspan="5" style="background-color: #f8f9fa; font-style: italic;">
+                <p>Hidden expandable content for row 3</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="code-example">
+          table = Table(id="multitbody")<br>
+          table.bodies[0]  # First tbody (data-test="first")<br>
+          table.bodies[1]  # Second tbody (data-test="second")
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- IFrame Testing Section -->
+  <div class="section">
+    <div class="section-header">IFrame & Nested Content</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="widget-title">Embedded IFrame Content</div>
+        <div class="widget-description">Testing widgets within iframe contexts and nested page structures</div>
+        <div class="iframe-container">
+          <iframe src="iframe_page.html" height="600" width="100%" name="some_iframe" style="border: none;"></iframe>
+        </div>
+        <div class="code-example">
+          with browser.switch_to_frame("some_iframe"):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;iframe_widget = Text("//h1")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;iframe_widget.text
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUIA Integration Examples -->
+  <div class="section">
+    <div class="section-header">OUIA (Open UI Automation) Examples</div>
+    <div class="section-content">
+      <div class="widget-group">
+        <div class="ouia-section">
+          <div data-ouia-component-type="TestView" data-ouia-component-id="ouia">
+            <h3>OUIA Widget Examples</h3>
+            <p style="margin-bottom: 20px; opacity: 0.9;">
+              OUIA provides standardized attributes for component identification and automation
+            </p>
+
+            <div class="form-row" style="flex-wrap: wrap; gap: 20px;">
+              <div>
+                <label style="color: white; display: block; margin-bottom: 5px;">OUIA Select:</label>
+                <select data-ouia-component-type="PF/Select" data-ouia-component-id="some_id" data-ouia-safe="true">
+                  <option value="first" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="first option">
+                    first option
+                  </option>
+                  <option value="second" data-ouia-component-type="PF/SelectOption" data-ouia-component-id="second option">
+                    second option
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label style="color: white; display: block; margin-bottom: 5px;">OUIA Button:</label>
+                <button data-ouia-component-type="PF/Button" data-ouia-component-id="This is a button" data-ouia-safe="false">
+                  OUIA Button
+                </button>
+              </div>
+
+              <div>
+                <label style="color: white; display: block; margin-bottom: 5px;">OUIA Text Input:</label>
+                <input type='text' data-ouia-component-type="TextInput" data-ouia-component-id="unique_id" data-ouia-safe="true" placeholder="OUIA text input" />
+              </div>
+
+              <div>
+                <label style="color: white; display: block; margin-bottom: 5px;">
+                  <input data-ouia-component-type="CheckBox" data-ouia-component-id="unique_id" data-ouia-safe="true" type="checkbox" />
+                  OUIA Checkbox
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <span data-ouia-component-type="Text" data-ouia-component-id="unique_id" data-ouia-safe="true" style="background-color: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 4px;">
+                OUIA Text Widget
+              </span>
+            </div>
+
+            <div class="code-example" style="background-color: rgba(255,255,255,0.1); border-left-color: white; color: white; margin-top: 20px;">
+              # Uses data-ouia-component-id <br>
+              Button("This is a button") <br>
+              Select("some_id") <br>
+              Text(component_id="unique_id", component_type="Text")<br>
+              Button("This is a button")
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </body>
-
 </html>

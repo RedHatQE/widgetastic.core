@@ -124,3 +124,12 @@ def test_versionpick_in_methods(browser):
         )
         == 2
     )
+
+
+def test_version_pick_repr():
+    """Test VersionPick __repr__ method."""
+
+    vp = VersionPick({"1.0": "old", "2.0": "new"})
+    repr_str = repr(vp)
+    assert "VersionPick" in repr_str
+    assert "1.0" in repr_str

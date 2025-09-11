@@ -11,20 +11,22 @@ class Checkbox(OUIAGenericWidget):
     """
 
     @property
-    def selected(self):
-        return self.browser.is_selected(self)
+    def selected(self) -> bool:
+        return self.browser.is_checked(self)
 
-    def read(self):
+    def read(self) -> bool:
         return self.selected
 
-    def fill(self, value):
+    def fill(self, value: bool | str) -> bool:
         value = bool(value)
         current_value = self.selected
         if value == current_value:
             return False
+
+        if value:
+            self.browser.check(self)
         else:
-            self.click()
-            if self.selected != value:
-                # TODO: More verbose here
-                raise WidgetOperationFailed("Failed to set the checkbox to requested value.")
-            return True
+            self.browser.uncheck(self)
+        if self.selected != value:
+            raise WidgetOperationFailed("Failed to set the checkbox to requested value.")
+        return True

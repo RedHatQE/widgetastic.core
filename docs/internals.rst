@@ -3,15 +3,15 @@ Internal structure of Widgetastic
 
 Widgetastic consists of 2 main parts:
 
-* `Selenium browser wrapper`_
+* `Playwright browser wrapper`_
 * `Widget system`_
 
-.. `Selenium browser wrapper`:
+.. `Playwright browser wrapper`:
 
-Selenium browser wrapper
-========================
+Playwright browser wrapper
+===========================
 
-This part of the framework serves the purpose of simplifying the interactions with Selenium and also handling some of the quirks we have discovered during development of our testing framework. It also supports "nesting" of the browsers in relation to specific widgets, so it is then easier in the widget layer to implement the lookup fencing. Majority of this functionality is implemented in :py:class:`widgetastic.browser.Browser`.
+This part of the framework serves the purpose of simplifying the interactions with Playwright and also handling some of the quirks we have discovered during development of our testing framework. It also supports "nesting" of the browsers in relation to specific widgets, so it is then easier in the widget layer to implement the lookup fencing. Majority of this functionality is implemented in :py:class:`widgetastic.browser.Browser`.
 
 Lookup fencing is a technique that enables the programmer to write locators that are relative to its hosting object. When such locator gets resolved, the parent element is resolved first (and it continues recursively until you hit an "unwrapped" browser that is just a browser). This behaviour is not visible to the outside under normal circumstances and it is achieved by :py:class:`widgetastic.browser.BrowserParentWrapper`.
 
@@ -29,20 +29,17 @@ the pattern of `tagname#id.class1.class2` where the tag is optional and at least
 is present, it considers it a CSS locator.
 
 If you want to use a complex CSS locator or a different lookup type, you can use
-`selenium-smart-locator <https://pypi.python.org/pypi/selenium-smart-locator>`_ library that is used
-underneath to process all the locators. You can consult the documentation and pass instances of
-``Locator`` instead of a string.
-
-This library is already in the requirements, so it is not necessary to install it.
+the built-in ``SmartLocator`` functionality that processes all the locators. You can pass instances of
+``SmartLocator`` or raw locator strings, and the system will automatically handle the conversion.
 
 .. `Automatic visibility precedence selection`:
 
 Automatic visibility precedence selection
 -----------------------------------------
 
-Under normal circumstances, Selenium's ``find_element`` always returns the first element from the query result. But what if there are multiple elements matching the query, the first one being for some reason invisible, and the second one displayed?
+Under normal circumstances, Playwright's ``locator.all()`` returns all elements from the query result. But what if there are multiple elements matching the query, the first one being for some reason invisible, and the second one displayed?
 
-Widgetastic's :py:meth:`widgetastic.browser.Browser.element`, :py:meth:`widgetastic.browser.Browser.elements`, and :py:meth:`widgetastic.browser.Browser.wait_for_element` browser methods allow for visibility checking in this case. If the keyword argument ``check_visiblity=True`` is passed to ``elements``, if ``visible=True`` is passed to ``wait_for_elements``, or if the locator object (e.g., a :py:class:`widgetastic.widget.Widget` object) passed to ``element`` contains a ``__locator__`` method as well as a ``CHECK_VISIBILITY=True`` attribute, then the method will return only the visible matching element(s).
+Widgetastic's :py:meth:`widgetastic.browser.Browser.element`, :py:meth:`widgetastic.browser.Browser.elements`, and :py:meth:`widgetastic.browser.Browser.wait_for_element` browser methods allow for visibility checking in this case. If the keyword argument ``check_visiblity=True`` is passed to ``elements``, if ``visible=True`` is passed to ``wait_for_element``, or if the locator object (e.g., a :py:class:`widgetastic.widget.Widget` object) passed to ``element`` contains a ``__locator__`` method as well as a ``CHECK_VISIBILITY=True`` attribute, then the method will return only the visible matching element(s).
 
 .. `Widget system`:
 

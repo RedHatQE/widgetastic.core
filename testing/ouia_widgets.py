@@ -6,14 +6,9 @@ class Button(OUIAGenericWidget):
     OUIA_COMPONENT_TYPE = "PF/Button"
 
 
-class SelectOption(OUIAGenericWidget):
-    OUIA_COMPONENT_TYPE = "PF/SelectOption"
-
-
 class Select(OUIAGenericView):
     OUIA_COMPONENT_TYPE = "PF/Select"
-    first_option = SelectOption("first option")  # type: ignore
-    second_option = SelectOption("second option")  # type: ignore
 
     def choose(self, option):
-        getattr(self, option).click()
+        el = self.browser.element(self)
+        return el.select_option(option)
