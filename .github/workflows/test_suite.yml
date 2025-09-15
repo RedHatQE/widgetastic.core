@@ -15,11 +15,49 @@ on:
     - cron: 59 23 * * 5
 
 jobs:
+  setup-browsers:
+    name: 🌐 Setup Playwright Browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      playwright-version: ${{ steps.playwright-version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Playwright
+        run: pip install playwright
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pip show playwright | grep Version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-browsers
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-
+
+      - name: Install browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: |
+          playwright install chromium firefox
+          playwright install-deps
+
   tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: setup-browsers
     strategy:
       matrix:
         browser: [chromium, firefox]
@@ -34,11 +72,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Playwright and ${{ matrix.browser }} browser
-        run: |
-          pip install playwright
-          playwright install ${{ matrix.browser }}
-          playwright install-deps
+      - name: Install Playwright
+        run: pip install playwright
+
+      - name: Restore Playwright browsers cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ needs.setup-browsers.outputs.playwright-version }}-browsers
+          fail-on-cache-miss: true
 
       - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
         run: |
@@ -86,7 +128,7 @@ jobs:
     name: 💻 Platform-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
-    needs: [tests]
+    needs: [setup-browsers, tests]
     strategy:
       matrix:
         os: [windows-latest, macos-latest]    # We are running test on ubuntu linux.
@@ -111,7 +153,7 @@ jobs:
     name: ⚙️ Build & Verify Package
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [tests, docs]
+    needs: [setup-browsers, tests, docs]
 
     steps:
       - name: Checkout
