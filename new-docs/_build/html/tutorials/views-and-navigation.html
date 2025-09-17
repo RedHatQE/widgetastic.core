@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Views and Navigation &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Browser Methods and Elements" href="browser-methods.html" />
+    <link rel="prev" title="Basic Widgets Tutorial" href="basic-widgets.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Views and Navigation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-views">Understanding Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#view-hierarchy-and-nesting">View Hierarchy and Nesting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parametrized-views">Parametrized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditional-views">Conditional Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#view-level-operations">View-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#view-state-and-validation">View State and Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#navigation-patterns">Navigation Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices-for-views">Best Practices for Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-view-patterns">Common View Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Views and Navigation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/views-and-navigation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="views-and-navigation">
+<h1>Views and Navigation<a class="headerlink" href="#views-and-navigation" title="Link to this heading"></a></h1>
+<p>Views are the cornerstone of widgetastic’s architecture. They organize widgets into logical groups that represent pages, sections, or components of your application. This tutorial covers different types of views and navigation patterns.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Prerequisites</strong>: Complete <a class="reference internal" href="basic-widgets.html"><span class="doc">Basic Widgets Tutorial</span></a> tutorial first.</p>
+</div>
+<section id="understanding-views">
+<h2>Understanding Views<a class="headerlink" href="#understanding-views" title="Link to this heading"></a></h2>
+<p>A <strong>View</strong> is a container that groups related widgets together. Think of it as representing a page, dialog, or section of your web application.</p>
+<p><strong>Basic View Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TestingPageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Page title</span>
+    <span class="n">main_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;h1#wt-core-title&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Form elements</span>
+    <span class="n">text_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+    <span class="n">submit_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;a_button&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check element visibility</span>
+    <span class="n">non_existing_element</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;.//div[@id=&quot;non-existing-element&quot;]&#39;</span><span class="p">)</span>
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">TestingPageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Check if elements exist on page</span>
+<span class="n">page</span><span class="o">.</span><span class="n">main_title</span><span class="o">.</span><span class="n">is_displayed</span>        <span class="c1"># True</span>
+<span class="n">page</span><span class="o">.</span><span class="n">non_existing_element</span><span class="o">.</span><span class="n">is_displayed</span>        <span class="c1"># False</span>
+
+<span class="c1"># Read page content</span>
+<span class="n">title</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">main_title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title: </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Widgetastic.Core - Testing Page&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="view-hierarchy-and-nesting">
+<h2>View Hierarchy and Nesting<a class="headerlink" href="#view-hierarchy-and-nesting" title="Link to this heading"></a></h2>
+<p>Views can contain other views, creating hierarchical structures that mirror your application’s layout.</p>
+<p><strong>Nested Views</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">HeaderView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;.header&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;h1&quot;</span><span class="p">)</span>
+    <span class="n">subtitle</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;.subtitle&quot;</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FormView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;#testform&quot;</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">)</span>
+    <span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MainPageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">HeaderView</span><span class="p">()</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">FormView</span><span class="p">()</span>
+
+    <span class="c1"># Page-level elements</span>
+    <span class="n">alert_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;alert_button&quot;</span><span class="p">)</span>
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">MainPageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Access nested elements</span>
+<span class="n">page</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">page</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">username</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;test_user&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>ROOT Locator</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ROOT</span></code> attribute defines the container for a view. All widgets in that view are searched within this container.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SectionView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;.section-content&quot;</span>  <span class="c1"># All widgets scoped to this section</span>
+
+    <span class="c1"># These widgets are found within .section-content</span>
+    <span class="n">input_field</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;a_button&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="parametrized-views">
+<h2>Parametrized Views<a class="headerlink" href="#parametrized-views" title="Link to this heading"></a></h2>
+<p>Use parametrized views for repeated UI patterns that differ only in parameters.</p>
+<p><strong>ParametrizedView Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametrizedLocator</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TableRowView</span><span class="p">(</span><span class="n">ParametrizedView</span><span class="p">):</span>
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;row_id&quot;</span><span class="p">,)</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ParametrizedLocator</span><span class="p">(</span><span class="s2">&quot;//tr[@data-test=&#39;</span><span class="si">{row_id}</span><span class="s2">&#39;]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Widgets within each row</span>
+    <span class="n">first_column</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;.//td[1]&quot;</span><span class="p">)</span>
+    <span class="n">second_column</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;.//td[2]&quot;</span><span class="p">)</span>
+    <span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;.//input[@type=&#39;checkbox&#39;]&quot;</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TablePageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Individual rows</span>
+    <span class="n">row_abc123</span> <span class="o">=</span> <span class="n">TableRowView</span><span class="p">(</span><span class="s2">&quot;abc-123&quot;</span><span class="p">)</span>
+    <span class="n">row_abc345</span> <span class="o">=</span> <span class="n">TableRowView</span><span class="p">(</span><span class="s2">&quot;abc-345&quot;</span><span class="p">)</span>
+    <span class="n">row_def345</span> <span class="o">=</span> <span class="n">TableRowView</span><span class="p">(</span><span class="s2">&quot;def-345&quot;</span><span class="p">)</span>
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">TablePageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Access specific rows</span>
+<span class="n">page</span><span class="o">.</span><span class="n">row_abc123</span><span class="o">.</span><span class="n">first_column</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># &quot;asdf&quot;</span>
+<span class="n">page</span><span class="o">.</span><span class="n">row_abc345</span><span class="o">.</span><span class="n">checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Or create dynamically</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_row</span><span class="p">(</span><span class="n">row_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">TableRowView</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">row_id</span><span class="o">=</span><span class="n">row_id</span><span class="p">)</span>
+
+<span class="n">dynamic_row</span> <span class="o">=</span> <span class="n">get_row</span><span class="p">(</span><span class="s2">&quot;abc-123&quot;</span><span class="p">)</span>
+<span class="n">dynamic_row</span><span class="o">.</span><span class="n">first_column</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="conditional-views">
+<h2>Conditional Views<a class="headerlink" href="#conditional-views" title="Link to this heading"></a></h2>
+<p>Handle dynamic UI sections that change based on application state using conditional views.</p>
+<p><strong>ConditionalSwitchableView Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConditionalSwitchableView</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SwitchableContentView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">selector</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;switchabletesting-select&quot;</span><span class="p">)</span>
+
+    <span class="n">content</span> <span class="o">=</span> <span class="n">ConditionalSwitchableView</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="s2">&quot;selector&quot;</span><span class="p">)</span>
+
+    <span class="nd">@content</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">FooContent</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+        <span class="n">foo_heading</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;switchabletesting-1&quot;</span><span class="p">)</span>
+        <span class="n">foo_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;switchabletesting-3&quot;</span><span class="p">)</span>
+
+    <span class="nd">@content</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">BarContent</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+        <span class="n">bar_heading</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;switchabletesting-2&quot;</span><span class="p">)</span>
+        <span class="n">bar_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;switchabletesting-4&quot;</span><span class="p">)</span>
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">SwitchableContentView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Switch content by changing selector</span>
+<span class="n">page</span><span class="o">.</span><span class="n">selector</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">foo_heading</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># &quot;footest&quot;</span>
+<span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">foo_checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Switch to bar content</span>
+<span class="n">page</span><span class="o">.</span><span class="n">selector</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">bar_heading</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># &quot;bartest&quot;</span>
+<span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">bar_checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="view-level-operations">
+<h2>View-Level Operations<a class="headerlink" href="#view-level-operations" title="Link to this heading"></a></h2>
+<p>Views support batch operations on all their widgets.</p>
+<p><strong>Reading Entire Views</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FormView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">)</span>
+    <span class="n">enabled_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Form submission</span>
+    <span class="n">submit_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;a_button&quot;</span><span class="p">)</span>
+
+<span class="n">form</span> <span class="o">=</span> <span class="n">FormView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Read all fillable widgets in the view</span>
+<span class="n">current_values</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">current_values</span><span class="p">)</span>
+<span class="c1"># {&#39;username&#39;: &#39;current_value&#39;, &#39;enabled_checkbox&#39;: True}</span>
+</pre></div>
+</div>
+<p><strong>Filling Entire Views</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fill multiple widgets at once</span>
+<span class="n">form_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;john_doe&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;enabled_checkbox&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+
+<span class="n">form</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">form_data</span><span class="p">)</span>
+
+<span class="c1"># Verify the fill</span>
+<span class="k">assert</span> <span class="n">form</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="o">==</span> <span class="n">form_data</span>
+</pre></div>
+</div>
+</section>
+<section id="view-state-and-validation">
+<h2>View State and Validation<a class="headerlink" href="#view-state-and-validation" title="Link to this heading"></a></h2>
+<p>Views can validate their state and provide information about their widgets.</p>
+<p><strong>View State Checking</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">visible_element</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;visible_invisible&quot;</span><span class="p">)</span>
+    <span class="n">hidden_element</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;invisible&quot;</span><span class="p">)</span>
+    <span class="n">form_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">)</span>
+    <span class="n">disabled_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1_disabled&quot;</span><span class="p">)</span>
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">PageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Check widget display status</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visible element displayed: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">visible_element</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hidden element displayed: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">hidden_element</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>    <span class="c1"># False</span>
+
+<span class="c1"># Check widget enabled status</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Form input enabled: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">form_input</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>        <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disabled input enabled: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">disabled_input</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># False</span>
+</pre></div>
+</div>
+</section>
+<section id="navigation-patterns">
+<h2>Navigation Patterns<a class="headerlink" href="#navigation-patterns" title="Link to this heading"></a></h2>
+<p>Use views to create navigation patterns and page transitions.</p>
+<p><strong>Page Navigation Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">NavigationView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">navigate_to_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Navigate to different sections of the page&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">section_name</span> <span class="o">==</span> <span class="s2">&quot;forms&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FormSectionView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">section_name</span> <span class="o">==</span> <span class="s2">&quot;tables&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TableSectionView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">section_name</span> <span class="o">==</span> <span class="s2">&quot;images&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ImageSectionView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown section: </span><span class="si">{</span><span class="n">section_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FormSectionView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;.section:has(.section-header:contains(&#39;Input Widgets&#39;))&quot;</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TableSectionView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;.section:has(.section-header:contains(&#39;Table Widget&#39;))&quot;</span>
+    <span class="n">main_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;with-thead&quot;</span><span class="p">)</span>
+
+<span class="c1"># Navigation workflow</span>
+<span class="n">nav</span> <span class="o">=</span> <span class="n">NavigationView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Navigate to forms section</span>
+<span class="n">forms_page</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">navigate_to_section</span><span class="p">(</span><span class="s2">&quot;forms&quot;</span><span class="p">)</span>
+<span class="n">forms_page</span><span class="o">.</span><span class="n">username</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;test_user&quot;</span><span class="p">)</span>
+
+<span class="c1"># Navigate to tables section</span>
+<span class="n">tables_page</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">navigate_to_section</span><span class="p">(</span><span class="s2">&quot;tables&quot;</span><span class="p">)</span>
+<span class="n">row_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables_page</span><span class="o">.</span><span class="n">main_table</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices-for-views">
+<h2>Best Practices for Views<a class="headerlink" href="#best-practices-for-views" title="Link to this heading"></a></h2>
+<p><strong>1. Use Descriptive Names</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Clear purpose</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoginFormView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserProfileSettingsView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="c1"># Avoid: Generic names</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">View1</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p><strong>2. Logical Widget Grouping</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Group related functionality</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">search_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">)</span>
+    <span class="n">search_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;search-btn&quot;</span><span class="p">)</span>
+    <span class="n">results_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
+
+<span class="c1"># Don&#39;t mix unrelated widgets</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BadView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">login_field</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;login&quot;</span><span class="p">)</span>      <span class="c1"># Login functionality</span>
+    <span class="n">checkout_btn</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;checkout&quot;</span><span class="p">)</span>     <span class="c1"># Shopping functionality</span>
+    <span class="n">settings_link</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;a#settings&quot;</span><span class="p">)</span>      <span class="c1"># Settings functionality</span>
+</pre></div>
+</div>
+<p><strong>3. Use ROOT for Scoping</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Scope widgets to specific sections</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SidebarView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;#sidebar&quot;</span>
+
+    <span class="n">menu_item1</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;a[href=&#39;/dashboard&#39;]&quot;</span><span class="p">)</span>
+    <span class="n">menu_item2</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;a[href=&#39;/profile&#39;]&quot;</span><span class="p">)</span>
+
+<span class="c1"># This prevents finding elements in other page sections</span>
+</pre></div>
+</div>
+<p><strong>4. Handle Dynamic Content</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DynamicContentView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_loading</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if content is still loading&quot;&quot;&quot;</span>
+        <span class="n">loading_indicator</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;.loading-spinner&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loading_indicator</span><span class="o">.</span><span class="n">is_displayed</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wait for dynamic content to load&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loading</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="common-view-patterns">
+<h2>Common View Patterns<a class="headerlink" href="#common-view-patterns" title="Link to this heading"></a></h2>
+<p><strong>Modal Dialog View</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ModalDialogView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="s2">&quot;.modal-dialog&quot;</span>
+
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;h4.modal-title&quot;</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;.modal-body&quot;</span><span class="p">)</span>
+    <span class="n">ok_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s2">&quot;.btn-primary&quot;</span><span class="p">)</span>
+    <span class="n">cancel_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s2">&quot;.btn-secondary&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close modal using OK button&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ok_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close modal using Cancel button&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Pagination View</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PaginatedTableView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;data-table&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Pagination controls</span>
+    <span class="n">previous_btn</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s2">&quot;.pagination .prev&quot;</span><span class="p">)</span>
+    <span class="n">next_btn</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s2">&quot;.pagination .next&quot;</span><span class="p">)</span>
+    <span class="n">page_info</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;.pagination .info&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">go_to_next_page</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Navigate to next page if available&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_btn</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_btn</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loading</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">go_to_previous_page</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Navigate to previous page if available&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_btn</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">previous_btn</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loading</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>Views are essential for organizing and structuring your automation code:</p>
+<ul class="simple">
+<li><p><strong>Basic Views</strong>: Container for related widgets</p></li>
+<li><p><strong>Nested Views</strong>: Hierarchical page structures</p></li>
+<li><p><strong>Parametrized Views</strong>: Handle repeated UI patterns</p></li>
+<li><p><strong>Conditional Views</strong>: Adapt to dynamic content</p></li>
+<li><p><strong>View Operations</strong>: Batch read/fill operations</p></li>
+<li><p><strong>Navigation</strong>: Structured page transitions</p></li>
+</ul>
+<p><strong>Next Step</strong>: Learn <a class="reference internal" href="browser-methods.html"><span class="doc">Browser Methods and Elements</span></a> to master browser interactions and element operations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="basic-widgets.html" class="btn btn-neutral float-left" title="Basic Widgets Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="browser-methods.html" class="btn btn-neutral float-right" title="Browser Methods and Elements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

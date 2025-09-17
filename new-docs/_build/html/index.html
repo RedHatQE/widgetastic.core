@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Widgetastic.Core Documentation &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=249f3023"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="getting-started/installation.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="#" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Widgetastic.Core Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="widgetastic-core-documentation">
+<h1>Widgetastic.Core Documentation<a class="headerlink" href="#widgetastic-core-documentation" title="Link to this heading"></a></h1>
+<a class="reference external image-reference" href="https://pypi.org/project/widgetastic.core"><img alt="Python supported versions" src="https://img.shields.io/pypi/pyversions/widgetastic.core.svg?style=flat" />
+</a>
+<a class="reference external image-reference" href="https://pypi.org/project/widgetastic.core"><img alt="https://badge.fury.io/py/widgetastic.core.svg" src="https://badge.fury.io/py/widgetastic.core.svg" />
+</a>
+<a class="reference external image-reference" href="https://github.com/RedHatQE/widgetastic.core/actions?query=workflow%3A%22%F0%9F%95%B5%EF%B8%8F+Test+suite%22"><img alt="https://github.com/RedHatQE/widgetastic.core/workflows/%F0%9F%95%B5%EF%B8%8F%20Test%20suite/badge.svg?branch=master" src="https://github.com/RedHatQE/widgetastic.core/workflows/%F0%9F%95%B5%EF%B8%8F%20Test%20suite/badge.svg?branch=master" />
+</a>
+<p><strong>Making testing of UIs fantastic.</strong></p>
+<p>Widgetastic is a Python library designed to abstract web UI widgets into a nice object-oriented layer.
+This library includes the core classes and some basic widgets that are universal enough to exist in this
+core repository.</p>
+<p>Built on top of Microsoft’s <strong>Playwright</strong>, Widgetastic provides a robust, modern approach to web UI automation
+that handles the complexities of modern web applications while maintaining clean, readable test code.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This documentation covers widgetastic.core, the foundation library. For framework-specific widgets
+(like those for PatternFly, Bootstrap, etc.), check out the ecosystem of widgetastic extensions.</p>
+</div>
+<section id="why-widgetastic">
+<h2>Why Widgetastic?<a class="headerlink" href="#why-widgetastic" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><strong>🎯 Widget-Focused Approach</strong></dt><dd><p>Model your UI components as reusable widgets with consistent read/fill interfaces</p>
+</dd>
+<dt><strong>🚀 Built on Playwright</strong></dt><dd><p>Leverage the speed, reliability, and modern web support of Microsoft Playwright</p>
+</dd>
+<dt><strong>🧩 Intelligent Element Selection</strong></dt><dd><p>Automatically finds visible, interactable elements when multiple matches exist</p>
+</dd>
+<dt><strong>📊 Robust Text Handling</strong></dt><dd><p>Reliable text extraction from any element, regardless of CSS styling or positioning</p>
+</dd>
+<dt><strong>⚡ Smart Locators</strong></dt><dd><p>Automatic detection of CSS, XPath, and other locator types with Playwright compatibility</p>
+</dd>
+<dt><strong>🔄 Version Picking</strong></dt><dd><p>Handle UI changes across product versions with intelligent widget selection</p>
+</dd>
+<dt><strong>🎭 Advanced Views</strong></dt><dd><p>Support for parametrized, conditional, and nested views for complex UI patterns</p>
+</dd>
+</dl>
+</section>
+<section id="quick-example">
+<h2>Quick Example<a class="headerlink" href="#quick-example" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">Button</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LoginView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;username&#39;</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;password&#39;</span><span class="p">)</span>
+    <span class="n">submit</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s1">&#39;Log In&#39;</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s1">&#39;.flash-message&#39;</span><span class="p">)</span>
+
+<span class="c1"># Initialize with Playwright</span>
+<span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">()</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+    <span class="n">wt_browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+    <span class="c1"># Use the view</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="n">LoginView</span><span class="p">(</span><span class="n">wt_browser</span><span class="p">)</span>
+    <span class="n">login</span><span class="o">.</span><span class="n">fill</span><span class="p">({</span>
+        <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="s1">&#39;secret&#39;</span>
+    <span class="p">})</span>
+    <span class="n">login</span><span class="o">.</span><span class="n">submit</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">login</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Login result: </span><span class="si">{</span><span class="n">login</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation-contents">
+<h2>Documentation Contents<a class="headerlink" href="#documentation-contents" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#installation-methods">Installation Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#playwright-setup">Playwright Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/concepts.html">Core Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#the-widget-philosophy">The Widget Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#the-view-paradigm">The View Paradigm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#the-browser-wrapper">The Browser Wrapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#locators-and-smart-detection">Locators and Smart Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#the-read-fill-interface">The Read/Fill Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#element-lifecycle-and-caching">Element Lifecycle and Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#version-picking">Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#parametrized-views">Parametrized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#conditional-views">Conditional Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#ouia-support">OUIA Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#error-handling-and-logging">Error Handling and Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#key-takeaways">Key Takeaways</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/concepts.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/first-steps.html">First Steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#your-first-script">Your First Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#breaking-down-the-example">Breaking Down the Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#common-patterns">Common Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#adding-error-handling">Adding Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#adding-logging">Adding Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#working-with-different-browsers">Working with Different Browsers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#next-steps">Next Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/first-steps.html#troubleshooting-tips">Troubleshooting Tips</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/index.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#what-you-ll-learn">What You’ll Learn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#minute-start">5-Minute Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#examples-by-use-case">Examples by Use Case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#quick-reference">Quick Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#success-stories">Success Stories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#common-use-cases">Common Use Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#integration-examples">Integration Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/index.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/basic-example.html">Basic Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#the-complete-example">The Complete Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#running-the-example">Running the Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#key-learning-points">Key Learning Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#customizing-the-example">Customizing the Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#common-adaptations">Common Adaptations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/basic-example.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart/common-patterns.html">Common Patterns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#form-automation-patterns">Form Automation Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#data-extraction-patterns">Data Extraction Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#navigation-patterns">Navigation Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#wait-and-timing-patterns">Wait and Timing Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#error-handling-patterns">Error Handling Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#testing-integration-patterns">Testing Integration Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart/common-patterns.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/index.html#complete-learning-path">Complete Learning Path</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/basic-widgets.html">Basic Widgets Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#setting-up-your-environment">Setting Up Your Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#understanding-the-testing-page-structure">Understanding the Testing Page Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#text-widget-reading-content-from-pages">Text Widget - Reading Content from Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#textinput-widget-form-field-automation">TextInput Widget - Form Field Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#checkbox-widget-boolean-state-management">Checkbox Widget - Boolean State Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#select-widget-dropdown-management">Select Widget - Dropdown Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/basic-widgets.html#image-widget-image-attribute-access">Image Widget - Image Attribute Access</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/views-and-navigation.html">Views and Navigation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#understanding-views">Understanding Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#view-hierarchy-and-nesting">View Hierarchy and Nesting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#parametrized-views">Parametrized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#conditional-views">Conditional Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#view-level-operations">View-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#view-state-and-validation">View State and Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#navigation-patterns">Navigation Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#best-practices-for-views">Best Practices for Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#common-view-patterns">Common View Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/views-and-navigation.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/browser-methods.html">Browser Methods and Elements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#browser-class-overview">Browser Class Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#element-finding-and-selection">Element Finding and Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#element-interaction-methods">Element Interaction Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#element-state-checking">Element State Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#wait-strategies">Wait Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#form-and-input-operations">Form and Input Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#file-upload-operations">File Upload Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#drag-and-drop-operations">Drag and Drop Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#screenshot-and-visual-operations">Screenshot and Visual Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#alert-and-dialog-handling">Alert and Dialog Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#mouse-and-keyboard-operations">Mouse and Keyboard Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#scroll-and-viewport-operations">Scroll and Viewport Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#advanced-browser-operations">Advanced Browser Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#performance-and-debugging">Performance and Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#error-handling-patterns">Error Handling Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/browser-methods.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/fill-strategies.html">Fill Strategies Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#understanding-fill-operations">Understanding Fill Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#setting-up-fill-strategy-environment">Setting Up Fill Strategy Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#basic-fill-strategies">Basic Fill Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#advanced-fill-patterns">Advanced Fill Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#complex-form-fill-scenarios">Complex Form Fill Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#performance-optimized-fill-strategies">Performance-Optimized Fill Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#best-practices-for-fill-strategies">Best Practices for Fill Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/fill-strategies.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/advanced-widgets.html">Advanced Widgets Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#setting-up-advanced-widget-environment">Setting Up Advanced Widget Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#table-widget-fundamentals">Table Widget Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#tables-with-embedded-widgets">Tables with Embedded Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#complex-table-structures">Complex Table Structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#drag-and-drop-operations">Drag and Drop Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#advanced-interaction-patterns">Advanced Interaction Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#edge-cases-and-error-handling">Edge Cases and Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#complete-advanced-automation-example">Complete Advanced Automation Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#best-practices-for-advanced-widgets">Best Practices for Advanced Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/advanced-widgets.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/iframe-handling.html">IFrame Handling Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#understanding-iframes-in-web-automation">Understanding IFrames in Web Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#setting-up-iframe-testing-environment">Setting Up Iframe Testing Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#basic-iframe-access">Basic IFrame Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#nested-iframe-navigation">Nested IFrame Navigation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#iframe-context-isolation">IFrame Context Isolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#multiple-iframe-switching">Multiple IFrame Switching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#iframe-error-handling">IFrame Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#complex-iframe-scenarios">Complex IFrame Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#best-practices-for-iframe-handling">Best Practices for IFrame Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#troubleshooting-iframe-issues">Troubleshooting IFrame Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/iframe-handling.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/window-management.html">Window Management Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#understanding-window-management-in-widgetastic">Understanding Window Management in Widgetastic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#setting-up-window-management">Setting Up Window Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#basic-window-operations">Basic Window Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#window-management-with-views">Window Management with Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#handling-popups-and-new-tabs">Handling Popups and New Tabs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#cross-window-automation-workflows">Cross-Window Automation Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#window-lifecycle-management">Window Lifecycle Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#advanced-window-management">Advanced Window Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#real-world-window-management-patterns">Real-World Window Management Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#best-practices-summary">Best Practices Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/window-management.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/ouia-automation.html">OUIA (Open UI Automation) Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#understanding-ouia-standards">Understanding OUIA Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#setting-up-ouia-environment">Setting Up OUIA Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#ouia-generic-widgets">OUIA Generic Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#ouia-views-and-component-hierarchies">OUIA Views and Component Hierarchies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#ouia-safe-state-management">OUIA Safe State Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#advanced-ouia-patterns">Advanced OUIA Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#ouia-integration-with-standard-widgets">OUIA Integration with Standard Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#ouia-best-practices">OUIA Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/ouia-automation.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/version-picking.html">Version Picking Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#understanding-version-picking">Understanding Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#setting-up-version-picking-environment">Setting Up Version Picking Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#basic-version-picking">Basic Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#dynamic-version-detection">Dynamic Version Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#complex-version-picking-scenarios">Complex Version Picking Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#testing-across-multiple-versions">Testing Across Multiple Versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#best-practices-for-version-picking">Best Practices for Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/version-picking.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/custom-widgets.html">Custom Widget Development Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#understanding-widget-architecture">Understanding Widget Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#setting-up-custom-widget-environment">Setting Up Custom Widget Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#simple-custom-widget-development">Simple Custom Widget Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#complex-custom-widget-with-multiple-elements">Complex Custom Widget with Multiple Elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#advanced-custom-widget-patterns">Advanced Custom Widget Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#custom-widget-with-logging-and-debugging">Custom Widget with Logging and Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#widget-testing-and-quality-assurance">Widget Testing and Quality Assurance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#best-practices-for-custom-widgets">Best Practices for Custom Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/custom-widgets.html#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-reference/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#core-components">Core Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#quick-reference">Quick Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#api-organization">API Organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#inheritance-hierarchy">Inheritance Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#method-categories">Method Categories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#parameter-types">Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#usage-patterns">Usage Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#version-compatibility">Version Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#contributing-to-documentation">Contributing to Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/index.html#getting-started-with-the-api">Getting Started with the API</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="community-and-support">
+<h2>Community and Support<a class="headerlink" href="#community-and-support" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>GitHub Repository</strong>: <a class="reference external" href="https://github.com/RedHatQE/widgetastic.core">RedHatQE/widgetastic.core</a></p></li>
+<li><p><strong>Issue Tracker</strong>: <a class="reference external" href="https://github.com/RedHatQE/widgetastic.core/issues">Report bugs and request features</a></p></li>
+<li><p><strong>PyPI Package</strong>: <a class="reference external" href="https://pypi.org/project/widgetastic.core/">widgetastic.core</a></p></li>
+</ul>
+</section>
+<section id="projects-using-widgetastic">
+<h2>Projects using Widgetastic<a class="headerlink" href="#projects-using-widgetastic" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>ManageIQ <a class="reference external" href="https://github.com/ManageIQ/integration_tests">integration_tests</a></p></li>
+<li><p>Satellite <a class="reference external" href="https://github.com/SatelliteQE/airgun">airgun</a></p></li>
+<li><p>Cloud Services (insights-qe)</p></li>
+<li><p>Windup <a class="reference external" href="https://github.com/windup/windup_integration_test">integration_test</a></p></li>
+</ul>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
+<p>Licensed under Apache License, Version 2.0</p>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

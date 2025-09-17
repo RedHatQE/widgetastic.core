@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Core Concepts" href="concepts.html" />
+    <link rel="prev" title="Widgetastic.Core Documentation" href="../index.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-methods">Installation Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pypi-installation-recommended">PyPI Installation (Recommended)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#development-installation">Development Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#playwright-setup">Playwright Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/getting-started/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><strong>Python Version</strong></dt><dd><p>Widgetastic.core requires Python 3 (For specific versions please check pyproject.toml). We recommend using the latest stable version of Python.</p>
+</dd>
+<dt><strong>System Requirements</strong></dt><dd><ul class="simple">
+<li><p>Windows, macOS, or Linux</p></li>
+<li><p>Internet connection for browser downloads (first-time setup)</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="installation-methods">
+<h2>Installation Methods<a class="headerlink" href="#installation-methods" title="Link to this heading"></a></h2>
+<section id="pypi-installation-recommended">
+<h3>PyPI Installation (Recommended)<a class="headerlink" href="#pypi-installation-recommended" title="Link to this heading"></a></h3>
+<p>The easiest way to install widgetastic.core is using pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>widgetastic.core
+</pre></div>
+</div>
+<p>This will install the core library with all required dependencies.</p>
+</section>
+<section id="development-installation">
+<h3>Development Installation<a class="headerlink" href="#development-installation" title="Link to this heading"></a></h3>
+<p>If you want to contribute to the project or need the latest development features:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/RedHatQE/widgetastic.core.git
+<span class="nb">cd</span><span class="w"> </span>widgetastic.core
+
+<span class="c1"># Create virtual environment and activate it</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv_wt
+<span class="nb">source</span><span class="w"> </span>.venv_wt/bin/activate
+
+<span class="c1"># Install in editable mode</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+
+<span class="c1"># Or with development dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="playwright-setup">
+<h2>Playwright Setup<a class="headerlink" href="#playwright-setup" title="Link to this heading"></a></h2>
+<p>Widgetastic.core uses Playwright as its browser automation engine. After installing widgetastic.core,
+you need to install browser binaries:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install browser binaries (required for first-time setup)</span>
+playwright<span class="w"> </span>install
+
+<span class="c1"># Or install specific browsers only like chromium / firefox</span>
+playwright<span class="w"> </span>install<span class="w"> </span>chromium
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Browser installation may take several minutes and requires internet connectivity.</p>
+</div>
+</section>
+<section id="verifying-installation">
+<h2>Verifying Installation<a class="headerlink" href="#verifying-installation" title="Link to this heading"></a></h2>
+<p>Create a simple test script to verify everything is working:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># test_installation.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">Text</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_widgetastic</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s1">&#39;https://example.com&#39;</span><span class="p">)</span>
+
+        <span class="n">wt_browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+        <span class="n">view</span> <span class="o">=</span> <span class="n">TestView</span><span class="p">(</span><span class="n">wt_browser</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title: </span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Widgetastic is working correctly!&quot;</span><span class="p">)</span>
+
+        <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test_widgetastic</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Run the script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>test_installation.py
+</pre></div>
+</div>
+<p>If you see “✅ Widgetastic is working correctly!” along with the page title, your installation is successful.</p>
+</section>
+<section id="optional-dependencies">
+<h2>Optional Dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading"></a></h2>
+<p>For additional functionality, you can install optional dependencies:</p>
+<p><strong>Documentation Building</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;widgetastic.core[docs]&quot;</span>
+</pre></div>
+</div>
+<p><strong>Development Tools</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;widgetastic.core[dev]&quot;</span>
+</pre></div>
+</div>
+<p><strong>Testing Dependencies</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;widgetastic.core[test]&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<p>Now that you have widgetastic.core installed:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="concepts.html"><span class="doc">Core Concepts</span></a> - Learn the core concepts and terminology</p></li>
+<li><p><a class="reference internal" href="first-steps.html"><span class="doc">First Steps</span></a> - Write your first widgetastic automation script</p></li>
+<li><p><a class="reference internal" href="../quickstart/index.html"><span class="doc">Quick Start</span></a> - Jump into practical examples</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Widgetastic.Core Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="concepts.html" class="btn btn-neutral float-right" title="Core Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

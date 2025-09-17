@@ -1,0 +1,863 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Version Picking Tutorial &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom Widget Development Tutorial" href="custom-widgets.html" />
+    <link rel="prev" title="OUIA (Open UI Automation) Tutorial" href="ouia-automation.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Version Picking Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-version-picking">Understanding Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-version-picking-environment">Setting Up Version Picking Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-version-picking">Basic Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-version-detection">Dynamic Version Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#complex-version-picking-scenarios">Complex Version Picking Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-across-multiple-versions">Testing Across Multiple Versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices-for-version-picking">Best Practices for Version Picking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Version Picking Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/version-picking.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="version-picking-tutorial">
+<h1>Version Picking Tutorial<a class="headerlink" href="#version-picking-tutorial" title="Link to this heading"></a></h1>
+<p>This tutorial demonstrates version picking in Widgetastic.core, a powerful feature for handling application evolution and multiple product versions. You’ll learn to create version-aware widgets and views that adapt to different application versions automatically.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Time Required</strong>: 35 minutes
+<strong>Prerequisites</strong>: Basic and advanced widgets tutorials
+<strong>Key Concept</strong>: Version-dependent widget behavior</p>
+</div>
+<section id="learning-objectives">
+<h2>Learning Objectives<a class="headerlink" href="#learning-objectives" title="Link to this heading"></a></h2>
+<p>By completing this tutorial, you will:</p>
+<ul class="simple">
+<li><p>✅ Understand version picking concepts and use cases</p></li>
+<li><p>✅ Implement version-aware widgets using VersionPick</p></li>
+<li><p>✅ Handle application evolution with minimal code changes</p></li>
+<li><p>✅ Create version detection strategies</p></li>
+<li><p>✅ Test across multiple application versions</p></li>
+</ul>
+</section>
+<section id="understanding-version-picking">
+<h2>Understanding Version Picking<a class="headerlink" href="#understanding-version-picking" title="Link to this heading"></a></h2>
+<p>Version picking allows widgets and views to adapt their behavior based on the application version being tested:</p>
+<p><strong>Why Version Picking is Important</strong>
+* <strong>Application Evolution</strong>: UI changes between software versions
+* <strong>Backward Compatibility</strong>: Support testing multiple versions simultaneously
+* <strong>Maintenance Efficiency</strong>: Single test suite for multiple product versions
+* <strong>Gradual Migration</strong>: Smooth transitions between widget implementations</p>
+<p><strong>How Version Picking Works</strong>
+* Define multiple implementations for the same logical widget
+* Associate each implementation with version ranges
+* Framework automatically selects correct implementation at runtime
+* Fallback to default implementation when no version matches</p>
+</section>
+<section id="setting-up-version-picking-environment">
+<h2>Setting Up Version Picking Environment<a class="headerlink" href="#setting-up-version-picking-environment" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">Button</span><span class="p">,</span> <span class="n">Select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">VersionPick</span><span class="p">,</span> <span class="n">Version</span>
+
+<span class="c1"># Custom browser with version information</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionedBrowser</span><span class="p">(</span><span class="n">Browser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Browser with version detection capabilities.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="n">product_version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_product_version</span> <span class="o">=</span> <span class="n">product_version</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">product_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the current product version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Version</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_product_version</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_versioned_browser</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Setup browser with specific version.&quot;&quot;&quot;</span>
+    <span class="n">test_page_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;testing/html/testing_page.html&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">test_page_url</span> <span class="o">=</span> <span class="n">test_page_path</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sync_playwright</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">browser_instance</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">browser_instance</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+
+    <span class="c1"># Create versioned browser</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="n">VersionedBrowser</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">product_version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">test_page_url</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">browser_instance</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="c1"># Test with different versions</span>
+<span class="n">browser_v1</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">bi1</span><span class="p">,</span> <span class="n">ctx1</span> <span class="o">=</span> <span class="n">setup_versioned_browser</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+<span class="n">browser_v2</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">bi2</span><span class="p">,</span> <span class="n">ctx2</span> <span class="o">=</span> <span class="n">setup_versioned_browser</span><span class="p">(</span><span class="s2">&quot;2.1.0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="basic-version-picking">
+<h2>Basic Version Picking<a class="headerlink" href="#basic-version-picking" title="Link to this heading"></a></h2>
+<p>Start with simple version-dependent widget definitions:</p>
+<p><strong>Simple Version Pick Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">VersionPick</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionedLoginForm</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Login form that evolved between versions.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Version 1.x used ID-based locators</span>
+    <span class="c1"># Version 2.x moved to name-based locators</span>
+    <span class="n">username_input</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">),</span>      <span class="c1"># Default/fallback (v1.x)</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">)</span>             <span class="c1"># Version 2.0.0+ (newer approach)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Submit button changed from ID to class in v2.x</span>
+    <span class="n">submit_button</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;a_button&quot;</span><span class="p">),</span>        <span class="c1"># v1.x implementation</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;.submit-btn&quot;</span><span class="p">)</span>          <span class="c1"># v2.x implementation (hypothetical)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># New field added in version 2.1.0</span>
+    <span class="n">remember_me</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="s2">&quot;2.1.0&quot;</span><span class="p">:</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>                <span class="c1"># Only exists in v2.1.0+</span>
+    <span class="p">})</span>
+
+<span class="c1"># Test with version 1.0.0 browser</span>
+<span class="n">login_form_v1</span> <span class="o">=</span> <span class="n">VersionedLoginForm</span><span class="p">(</span><span class="n">browser_v1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Browser v1 version: </span><span class="si">{</span><span class="n">browser_v1</span><span class="o">.</span><span class="n">product_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Username input locator (v1): </span><span class="si">{</span><span class="n">login_form_v1</span><span class="o">.</span><span class="n">username_input</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test with version 2.1.0 browser</span>
+<span class="n">login_form_v2</span> <span class="o">=</span> <span class="n">VersionedLoginForm</span><span class="p">(</span><span class="n">browser_v2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Browser v2 version: </span><span class="si">{</span><span class="n">browser_v2</span><span class="o">.</span><span class="n">product_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Username input locator (v2): </span><span class="si">{</span><span class="n">login_form_v2</span><span class="o">.</span><span class="n">username_input</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Demonstrate version-specific widgets</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">login_form_v1</span><span class="p">,</span> <span class="s1">&#39;remember_me&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">login_form_v1</span><span class="o">.</span><span class="n">remember_me</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;v1 has remember_me: False&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;v1 has remember_me: False&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">login_form_v2</span><span class="p">,</span> <span class="s1">&#39;remember_me&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">login_form_v2</span><span class="o">.</span><span class="n">remember_me</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;v2 has remember_me: True&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;v2 has remember_me: False&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Version Range Specifications</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">AdvancedVersionPicking</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Demonstrates various version picking strategies.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Range-based version picking</span>
+    <span class="n">text_widget</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;old-text&quot;</span><span class="p">),</span>        <span class="c1"># Default (&lt; 1.5.0)</span>
+        <span class="s2">&quot;1.5.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;medium-text&quot;</span><span class="p">),</span>              <span class="c1"># 1.5.0 &lt;= version &lt; 2.0.0</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;new-text&quot;</span><span class="p">)</span>                  <span class="c1"># 2.0.0+</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Specific version targeting</span>
+    <span class="n">feature_button</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="s2">&quot;1.2.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;button-v12&quot;</span><span class="p">),</span>               <span class="c1"># Only 1.2.0</span>
+        <span class="s2">&quot;1.3.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;button-v13&quot;</span><span class="p">),</span>               <span class="c1"># Only 1.3.0</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">Text</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;button-v2&quot;</span><span class="p">)</span>                 <span class="c1"># 2.0.0+</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Complex version logic with conditions</span>
+    <span class="n">conditional_input</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="c1"># Use old input for versions &lt; 1.8.0</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">),</span>
+
+        <span class="c1"># Use transitional input for 1.8.0-1.9.x</span>
+        <span class="s2">&quot;1.8.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;transitional_input&quot;</span><span class="p">),</span>
+
+        <span class="c1"># Use new input for 2.0.0+</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;input[data-testid=&#39;modern-input&#39;]&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+
+<span class="n">advanced_v1</span> <span class="o">=</span> <span class="n">AdvancedVersionPicking</span><span class="p">(</span><span class="n">browser_v1</span><span class="p">)</span>
+<span class="n">advanced_v2</span> <span class="o">=</span> <span class="n">AdvancedVersionPicking</span><span class="p">(</span><span class="n">browser_v2</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_version_selection</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test which widgets are selected for each version.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Test version 1.0.0 selections</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Version 1.0.0 Widget Selection ===&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># This will use the lowest version (default) implementations</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Text widget uses: </span><span class="si">{</span><span class="n">advanced_v1</span><span class="o">.</span><span class="n">text_widget</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conditional input uses: </span><span class="si">{</span><span class="n">advanced_v1</span><span class="o">.</span><span class="n">conditional_input</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error accessing v1 widgets: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test version 2.1.0 selections</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Version 2.1.0 Widget Selection ===&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># This will use version 2.0.0+ implementations</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Text widget uses: </span><span class="si">{</span><span class="n">advanced_v2</span><span class="o">.</span><span class="n">text_widget</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conditional input uses: </span><span class="si">{</span><span class="n">advanced_v2</span><span class="o">.</span><span class="n">conditional_input</span><span class="o">.</span><span class="n">locator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error accessing v2 widgets: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">test_version_selection</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="dynamic-version-detection">
+<h2>Dynamic Version Detection<a class="headerlink" href="#dynamic-version-detection" title="Link to this heading"></a></h2>
+<p>Implement strategies to automatically detect application version:</p>
+<p><strong>Browser-Based Version Detection</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SmartVersionBrowser</span><span class="p">(</span><span class="n">VersionedBrowser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Browser that automatically detects application version.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page</span><span class="p">):</span>
+        <span class="c1"># Start with unknown version</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">product_version</span><span class="o">=</span><span class="s2">&quot;0.0.0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detected_version</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">product_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect and return product version.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detected_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_detected_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_version</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Version</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_detected_version</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect application version using various strategies.&quot;&quot;&quot;</span>
+        <span class="c1"># Strategy 1: Check for version meta tag</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">version_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s1">&#39;meta[name=&quot;app-version&quot;]&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">version_meta</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">version_meta</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Strategy 2: Check JavaScript global variable</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return window.APP_VERSION || window.appVersion&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">version</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">version</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Strategy 3: Detect based on UI elements (feature detection)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If modern input exists, assume v2+</span>
+            <span class="n">modern_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s1">&#39;input[data-testid=&quot;modern-input&quot;]&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">modern_input</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;2.0.0&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Strategy 4: Check for version-specific CSS classes or IDs</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If new button class exists, assume v2+</span>
+            <span class="n">new_button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s1">&#39;.modern-button&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">new_button</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;2.0.0&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Strategy 5: Check page title or other content indicators</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+            <span class="k">if</span> <span class="s2">&quot;v2&quot;</span> <span class="ow">in</span> <span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;2.0&quot;</span> <span class="ow">in</span> <span class="n">title</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;2.0.0&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Default fallback</span>
+        <span class="k">return</span> <span class="s2">&quot;1.0.0&quot;</span>
+
+<span class="c1"># Test smart version detection</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_smart_version_detection</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test automatic version detection.&quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sync_playwright</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">browser_instance</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">browser_instance</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+
+    <span class="n">smart_browser</span> <span class="o">=</span> <span class="n">SmartVersionBrowser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+    <span class="c1"># Navigate to testing page</span>
+    <span class="n">test_page_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;testing/html/testing_page.html&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">smart_browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">test_page_path</span><span class="o">.</span><span class="n">as_uri</span><span class="p">())</span>
+
+    <span class="c1"># Get detected version</span>
+    <span class="n">detected_version</span> <span class="o">=</span> <span class="n">smart_browser</span><span class="o">.</span><span class="n">product_version</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auto-detected version: </span><span class="si">{</span><span class="n">detected_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Cleanup</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">browser_instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">detected_version</span>
+
+<span class="n">detected_version</span> <span class="o">=</span> <span class="n">test_smart_version_detection</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="complex-version-picking-scenarios">
+<h2>Complex Version Picking Scenarios<a class="headerlink" href="#complex-version-picking-scenarios" title="Link to this heading"></a></h2>
+<p>Handle advanced version picking use cases:</p>
+<p><strong>Widget Composition with Version Picking</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">VersionedFormWidget</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complex form that changed significantly between versions.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Form layout changed completely in v2</span>
+    <span class="n">form_container</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">View</span><span class="p">(</span><span class="n">ROOT</span><span class="o">=</span><span class="s2">&quot;#testform&quot;</span><span class="p">),</span>     <span class="c1"># v1: single form</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">View</span><span class="p">(</span><span class="n">ROOT</span><span class="o">=</span><span class="s2">&quot;#advanced-form&quot;</span><span class="p">)</span>          <span class="c1"># v2: advanced form (hypothetical)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Input strategy changed</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="c1"># v1: Simple ID-based inputs</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="p">{</span>
+            <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">),</span>
+            <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="c1"># v2: Advanced data-testid based inputs</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;input[data-testid=&quot;username&quot;]&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;input[data-testid=&quot;email&quot;]&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;input[data-testid=&quot;terms&quot;]&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;submit&#39;</span><span class="p">:</span> <span class="n">Button</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;button[data-testid=&quot;submit&quot;]&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get version-appropriate input widget.&quot;&quot;&quot;</span>
+        <span class="n">current_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span>
+        <span class="k">return</span> <span class="n">current_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill form using version-appropriate strategy.&quot;&quot;&quot;</span>
+        <span class="n">current_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">product_version</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">current_version</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;2.0.0&quot;</span><span class="p">):</span>
+            <span class="c1"># v2+ strategy: use advanced inputs</span>
+            <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">input_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">input_widget</span> <span class="ow">and</span> <span class="n">input_widget</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+                    <span class="n">changed</span> <span class="o">=</span> <span class="n">input_widget</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">input_widget</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Widget not available&#39;</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># v1 strategy: use basic inputs</span>
+            <span class="n">basic_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input</span><span class="p">(</span><span class="s1">&#39;checkbox&#39;</span><span class="p">)</span>
+            <span class="n">username_input</span><span class="p">,</span> <span class="n">checkbox_input</span> <span class="o">=</span> <span class="n">basic_inputs</span>
+
+            <span class="k">if</span> <span class="s1">&#39;username&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">username_input</span><span class="p">:</span>
+                <span class="n">changed</span> <span class="o">=</span> <span class="n">username_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">])</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">username_input</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+
+            <span class="k">if</span> <span class="s1">&#39;checkbox&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">checkbox_input</span><span class="p">:</span>
+                <span class="n">changed</span> <span class="o">=</span> <span class="n">checkbox_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;checkbox&#39;</span><span class="p">])</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;checkbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">checkbox_input</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+
+        <span class="k">return</span> <span class="n">results</span>
+
+<span class="c1"># Test with different versions</span>
+<span class="n">versioned_form_v1</span> <span class="o">=</span> <span class="n">VersionedFormWidget</span><span class="p">(</span><span class="n">browser_v1</span><span class="p">)</span>
+<span class="n">versioned_form_v2</span> <span class="o">=</span> <span class="n">VersionedFormWidget</span><span class="p">(</span><span class="n">browser_v2</span><span class="p">)</span>
+
+<span class="c1"># Test form filling with different versions</span>
+<span class="n">test_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;version_test_user&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;test@example.com&#39;</span>  <span class="c1"># Only available in v2+</span>
+<span class="p">}</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Version-Specific Form Filling ===&quot;</span><span class="p">)</span>
+<span class="n">v1_results</span> <span class="o">=</span> <span class="n">versioned_form_v1</span><span class="o">.</span><span class="n">fill_form</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;v1.0.0 fill results: </span><span class="si">{</span><span class="n">v1_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">v2_results</span> <span class="o">=</span> <span class="n">versioned_form_v2</span><span class="o">.</span><span class="n">fill_form</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;v2.1.0 fill results: </span><span class="si">{</span><span class="n">v2_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Method-Level Version Picking</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">VersionedBehaviorWidget</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget with version-dependent behavior methods.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Basic widget that exists in all versions</span>
+    <span class="n">main_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Version-specific behavior methods</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill data using version-appropriate method.&quot;&quot;&quot;</span>
+        <span class="n">current_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">product_version</span>
+
+        <span class="k">if</span> <span class="n">current_version</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;2.0.0&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_data_v2</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_data_v1</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_data_v1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;v1 fill strategy: simple fill.&quot;&quot;&quot;</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;v1_simple&#39;</span><span class="p">,</span> <span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_data_v2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;v2 fill strategy: fill with validation.&quot;&quot;&quot;</span>
+        <span class="c1"># v2 has client-side validation</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;v2_validated&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Value too short for v2&#39;</span><span class="p">}</span>
+
+        <span class="n">changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># v2 might have additional confirmation</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Hypothetical: v2 shows confirmation after fill</span>
+            <span class="n">confirm_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s1">&#39;.fill-confirmation&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">confirm_element</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;v2_validated&#39;</span><span class="p">,</span> <span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">,</span> <span class="s1">&#39;confirmed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;v2_validated&#39;</span><span class="p">,</span> <span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="n">changed</span><span class="p">}</span>
+
+    <span class="c1"># Version-specific validation</span>
+    <span class="n">validation_rules</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="p">{</span>
+            <span class="s1">&#39;min_length&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s1">&#39;required_fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;main_input&#39;</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;min_length&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s1">&#39;required_fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;main_input&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;format_validation&#39;</span><span class="p">:</span> <span class="kc">True</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate input using version-appropriate rules.&quot;&quot;&quot;</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_rules</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">rules</span><span class="p">[</span><span class="s1">&#39;min_length&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;valid&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Minimum length: </span><span class="si">{</span><span class="n">rules</span><span class="p">[</span><span class="s2">&quot;min_length&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;format_validation&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">isalnum</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;valid&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Only alphanumeric characters allowed in v2+&#39;</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;valid&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+<span class="c1"># Test version-specific behavior</span>
+<span class="n">behavior_v1</span> <span class="o">=</span> <span class="n">VersionedBehaviorWidget</span><span class="p">(</span><span class="n">browser_v1</span><span class="p">)</span>
+<span class="n">behavior_v2</span> <span class="o">=</span> <span class="n">VersionedBehaviorWidget</span><span class="p">(</span><span class="n">browser_v2</span><span class="p">)</span>
+
+<span class="n">test_values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ab&#39;</span><span class="p">,</span> <span class="s1">&#39;valid_input&#39;</span><span class="p">,</span> <span class="s1">&#39;test@123&#39;</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Version-Specific Behavior Testing ===&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">test_values</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Testing value: &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test v1 behavior</span>
+    <span class="n">v1_validation</span> <span class="o">=</span> <span class="n">behavior_v1</span><span class="o">.</span><span class="n">validate_input</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  v1 validation: </span><span class="si">{</span><span class="n">v1_validation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">v1_validation</span><span class="p">[</span><span class="s1">&#39;valid&#39;</span><span class="p">]:</span>
+        <span class="n">v1_fill</span> <span class="o">=</span> <span class="n">behavior_v1</span><span class="o">.</span><span class="n">fill_data</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  v1 fill result: </span><span class="si">{</span><span class="n">v1_fill</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test v2 behavior</span>
+    <span class="n">v2_validation</span> <span class="o">=</span> <span class="n">behavior_v2</span><span class="o">.</span><span class="n">validate_input</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  v2 validation: </span><span class="si">{</span><span class="n">v2_validation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">v2_validation</span><span class="p">[</span><span class="s1">&#39;valid&#39;</span><span class="p">]:</span>
+        <span class="n">v2_fill</span> <span class="o">=</span> <span class="n">behavior_v2</span><span class="o">.</span><span class="n">fill_data</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  v2 fill result: </span><span class="si">{</span><span class="n">v2_fill</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="testing-across-multiple-versions">
+<h2>Testing Across Multiple Versions<a class="headerlink" href="#testing-across-multiple-versions" title="Link to this heading"></a></h2>
+<p>Implement comprehensive version testing strategies:</p>
+<p><strong>Multi-Version Test Suite</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MultiVersionTestSuite</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test suite that runs across multiple application versions.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_versions</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_versions</span> <span class="o">=</span> <span class="n">test_versions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_version_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_function</span><span class="p">,</span> <span class="n">test_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run test function across all versions.&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_versions</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Testing </span><span class="si">{</span><span class="n">test_name</span><span class="si">}</span><span class="s2"> on version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2"> ---&quot;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Setup browser for this version</span>
+                <span class="n">browser</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bi</span><span class="p">,</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">setup_versioned_browser</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+                <span class="c1"># Run test</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">test_function</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+
+                <span class="c1"># Cleanup</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">bi</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_results</span><span class="p">[</span><span class="n">test_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_compatibility_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate compatibility report across versions.&quot;&quot;&quot;</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;total_tests&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_results</span><span class="p">),</span>
+            <span class="s1">&#39;version_coverage&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_versions</span><span class="p">),</span>
+            <span class="s1">&#39;compatibility_matrix&#39;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">test_name</span><span class="p">,</span> <span class="n">version_results</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">report</span><span class="p">[</span><span class="s1">&#39;compatibility_matrix&#39;</span><span class="p">][</span><span class="n">test_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">for</span> <span class="n">version</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">version_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;FAILED&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;PASSED&#39;</span>
+
+                <span class="n">report</span><span class="p">[</span><span class="s1">&#39;compatibility_matrix&#39;</span><span class="p">][</span><span class="n">test_name</span><span class="p">][</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+
+        <span class="k">return</span> <span class="n">report</span>
+
+<span class="c1"># Example version test functions</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_form_filling</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test form filling on specific version.&quot;&quot;&quot;</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">VersionedFormWidget</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+    <span class="n">test_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;user_v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">fill_form</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+
+    <span class="c1"># Check if filling worked</span>
+    <span class="n">success_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;error&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">r</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="n">success_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;filled_fields&#39;</span><span class="p">:</span> <span class="n">success_count</span><span class="p">,</span>
+        <span class="s1">&#39;total_fields&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_data</span><span class="p">),</span>
+        <span class="s1">&#39;details&#39;</span><span class="p">:</span> <span class="n">results</span>
+    <span class="p">}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_widget_selection</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that correct widgets are selected for version.&quot;&quot;&quot;</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">VersionedLoginForm</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+    <span class="c1"># Try to access version-specific widgets</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;username_accessible&#39;</span><span class="p">:</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="s1">&#39;username_input&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">username_input</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">,</span>
+        <span class="s1">&#39;submit_accessible&#39;</span><span class="p">:</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="s1">&#39;submit_button&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">submit_button</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Check version-specific widgets</span>
+    <span class="k">if</span> <span class="n">Version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;2.1.0&quot;</span><span class="p">):</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;remember_me_accessible&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="s1">&#39;remember_me&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">remember_me</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+        <span class="s1">&#39;accessible_widgets&#39;</span><span class="p">:</span> <span class="n">results</span>
+    <span class="p">}</span>
+
+<span class="c1"># Run multi-version tests</span>
+<span class="n">test_versions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;2.1.0&quot;</span><span class="p">]</span>
+<span class="n">test_suite</span> <span class="o">=</span> <span class="n">MultiVersionTestSuite</span><span class="p">(</span><span class="n">test_versions</span><span class="p">)</span>
+
+<span class="c1"># Run tests</span>
+<span class="n">form_results</span> <span class="o">=</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">run_version_tests</span><span class="p">(</span><span class="n">test_form_filling</span><span class="p">,</span> <span class="s2">&quot;form_filling&quot;</span><span class="p">)</span>
+<span class="n">widget_results</span> <span class="o">=</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">run_version_tests</span><span class="p">(</span><span class="n">test_widget_selection</span><span class="p">,</span> <span class="s2">&quot;widget_selection&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate compatibility report</span>
+<span class="n">compatibility_report</span> <span class="o">=</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">generate_compatibility_report</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Multi-Version Compatibility Report ===&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total tests: </span><span class="si">{</span><span class="n">compatibility_report</span><span class="p">[</span><span class="s1">&#39;total_tests&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Version coverage: </span><span class="si">{</span><span class="n">compatibility_report</span><span class="p">[</span><span class="s1">&#39;version_coverage&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">test_name</span><span class="p">,</span> <span class="n">version_results</span> <span class="ow">in</span> <span class="n">compatibility_report</span><span class="p">[</span><span class="s1">&#39;compatibility_matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">test_name</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">version</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">version_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices-for-version-picking">
+<h2>Best Practices for Version Picking<a class="headerlink" href="#best-practices-for-version-picking" title="Link to this heading"></a></h2>
+<p>Guidelines for effective version management:</p>
+<p><strong>Version Picking Best Practices</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Use semantic versioning consistently</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GoodVersionPractices</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># ✓ Good - Clear version boundaries</span>
+    <span class="n">widget</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;old-input&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;new-input&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;3.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;input[data-testid=&#39;modern-input&#39;]&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># ✗ Avoid - Too many micro-version distinctions</span>
+    <span class="c1"># bad_widget = VersionPick({</span>
+    <span class="c1">#     &quot;1.0.0&quot;: TextInput(id=&quot;input-v100&quot;),</span>
+    <span class="c1">#     &quot;1.0.1&quot;: TextInput(id=&quot;input-v101&quot;),</span>
+    <span class="c1">#     &quot;1.0.2&quot;: TextInput(id=&quot;input-v102&quot;),</span>
+    <span class="c1"># })</span>
+
+<span class="c1"># 2. Document version changes and rationale</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentedVersionChanges</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Form widget with documented version evolution.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Document why versions changed</span>
+    <span class="n">submit_button</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="c1"># v1.x: Used simple ID-based locator</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">Button</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span><span class="p">),</span>
+
+        <span class="c1"># v2.0: Moved to CSS class for styling consistency</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">Button</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;.submit-button&quot;</span><span class="p">),</span>
+
+        <span class="c1"># v3.0: Adopted data-testid for better testing</span>
+        <span class="s2">&quot;3.0.0&quot;</span><span class="p">:</span> <span class="n">Button</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;button[data-testid=&#39;submit&#39;]&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+
+<span class="c1"># 3. Provide fallback strategies</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FallbackVersionPicking</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Version picking with robust fallbacks.&quot;&quot;&quot;</span>
+
+    <span class="n">primary_input</span> <span class="o">=</span> <span class="n">VersionPick</span><span class="p">({</span>
+        <span class="c1"># Always provide a lowest version fallback</span>
+        <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">),</span>
+
+        <span class="c1"># Version-specific improvements</span>
+        <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;primary_input&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;3.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;input[data-testid=&#39;primary&#39;]&quot;</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">safe_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill with fallback error handling.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Log version and error for debugging</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">product_version</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fill failed for version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<span class="c1"># 4. Test version boundaries carefully</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_version_boundaries</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test edge cases around version boundaries.&quot;&quot;&quot;</span>
+    <span class="n">edge_versions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1.9.9&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0.1&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">edge_versions</span><span class="p">:</span>
+        <span class="n">browser</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bi</span><span class="p">,</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">setup_versioned_browser</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">form</span> <span class="o">=</span> <span class="n">FallbackVersionPicking</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">safe_fill</span><span class="p">(</span><span class="s2">&quot;boundary_test&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2"> fill result: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">bi</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+<span class="n">test_version_boundaries</span><span class="p">()</span>
+
+<span class="c1"># 5. Version picking performance considerations</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PerformantVersionPicking</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimize version picking for performance.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Cache version-dependent objects when possible</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_version_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_versioned_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get widget with caching for performance.&quot;&quot;&quot;</span>
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">widget_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">product_version</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">if</span> <span class="n">cache_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_version_cache</span><span class="p">:</span>
+            <span class="n">widget_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_widget_config</span><span class="p">(</span><span class="n">widget_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_version_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">widget_config</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_version_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_widget_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get widget configuration for current version.&quot;&quot;&quot;</span>
+        <span class="c1"># This would contain your VersionPick logic</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">VersionPick</span><span class="p">({</span>
+                <span class="n">Version</span><span class="o">.</span><span class="n">lowest</span><span class="p">():</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;2.0.0&quot;</span><span class="p">:</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">widget_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="final-cleanup">
+<h2>Final Cleanup<a class="headerlink" href="#final-cleanup" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Cleanup all browser instances</span>
+    <span class="k">for</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">bi</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">ctx1</span><span class="p">,</span> <span class="n">bi1</span><span class="p">,</span> <span class="n">p1</span><span class="p">),</span> <span class="p">(</span><span class="n">ctx2</span><span class="p">,</span> <span class="n">bi2</span><span class="p">,</span> <span class="n">p2</span><span class="p">)]:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">bi</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleanup error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>Version picking in Widgetastic.core provides:</p>
+<ul class="simple">
+<li><p><strong>Application Evolution Support</strong>: Handle UI changes across software versions</p></li>
+<li><p><strong>Backward Compatibility</strong>: Maintain single test suite for multiple versions</p></li>
+<li><p><strong>Automatic Selection</strong>: Framework chooses correct implementation at runtime</p></li>
+<li><p><strong>Flexible Strategies</strong>: Support for simple to complex version dependencies</p></li>
+<li><p><strong>Testing Efficiency</strong>: Comprehensive testing across version ranges</p></li>
+</ul>
+<p>Key takeaways:
+* Use VersionPick for widgets that change between application versions
+* Provide fallback implementations using Version.lowest()
+* Document version changes and their rationale clearly
+* Test version boundaries and edge cases thoroughly
+* Cache version-dependent objects for better performance
+* Implement version detection strategies for dynamic environments</p>
+<p>This completes the version picking tutorial. You can now handle application evolution gracefully and maintain robust automation across multiple product versions.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ouia-automation.html" class="btn btn-neutral float-left" title="OUIA (Open UI Automation) Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="custom-widgets.html" class="btn btn-neutral float-right" title="Custom Widget Development Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

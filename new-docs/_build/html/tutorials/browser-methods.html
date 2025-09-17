@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browser Methods and Elements &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fill Strategies Tutorial" href="fill-strategies.html" />
+    <link rel="prev" title="Views and Navigation" href="views-and-navigation.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Browser Methods and Elements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#browser-class-overview">Browser Class Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#element-finding-and-selection">Element Finding and Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#element-interaction-methods">Element Interaction Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#element-state-checking">Element State Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wait-strategies">Wait Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#form-and-input-operations">Form and Input Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#file-upload-operations">File Upload Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#drag-and-drop-operations">Drag and Drop Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#screenshot-and-visual-operations">Screenshot and Visual Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#alert-and-dialog-handling">Alert and Dialog Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mouse-and-keyboard-operations">Mouse and Keyboard Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scroll-and-viewport-operations">Scroll and Viewport Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-browser-operations">Advanced Browser Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-and-debugging">Performance and Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling-patterns">Error Handling Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Browser Methods and Elements</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/browser-methods.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="browser-methods-and-elements">
+<h1>Browser Methods and Elements<a class="headerlink" href="#browser-methods-and-elements" title="Link to this heading"></a></h1>
+<p>The Browser class is the foundation of widgetastic, providing methods for interacting with web pages and elements. This tutorial covers essential browser operations and element interaction patterns.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Prerequisites</strong>: Complete <a class="reference internal" href="basic-widgets.html"><span class="doc">Basic Widgets Tutorial</span></a> and <a class="reference internal" href="views-and-navigation.html"><span class="doc">Views and Navigation</span></a> tutorials first.</p>
+</div>
+<section id="browser-class-overview">
+<h2>Browser Class Overview<a class="headerlink" href="#browser-class-overview" title="Link to this heading"></a></h2>
+<p>The widgetastic Browser wraps Playwright’s <code class="docutils literal notranslate"><span class="pre">Page</span></code> object with additional intelligence for reliable automation.</p>
+<p><strong>Browser Initialization</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+
+<span class="c1"># Setup Playwright and create Browser</span>
+<span class="n">playwright</span> <span class="o">=</span> <span class="n">sync_playwright</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">browser_instance</span> <span class="o">=</span> <span class="n">playwright</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">context</span> <span class="o">=</span> <span class="n">browser_instance</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+
+<span class="c1"># Create widgetastic Browser</span>
+<span class="n">browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+<span class="c1"># Navigate to test page</span>
+<span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;file:///path/to/testing/html/testing_page.html&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="element-finding-and-selection">
+<h2>Element Finding and Selection<a class="headerlink" href="#element-finding-and-selection" title="Link to this heading"></a></h2>
+<p>The Browser provides sophisticated element finding with smart selection strategies.</p>
+<p><strong>Basic Element Finding</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find elements using different strategies</span>
+<span class="n">title_element</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;h1#wt-core-title&quot;</span><span class="p">)</span>
+<span class="n">text_input</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+<span class="n">button</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;//button[@id=&#39;a_button&#39;]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Check if elements exist</span>
+<span class="n">exists</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="s2">&quot;h1#wt-core-title&quot;</span><span class="p">)</span>  <span class="c1"># True</span>
+<span class="n">missing</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="s2">&quot;#non-existent&quot;</span><span class="p">)</span>    <span class="c1"># False</span>
+
+<span class="c1"># Find with timeout</span>
+<span class="n">dynamic_element</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;#invisible_appear_p&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Smart Element Selection</strong></p>
+<p>When multiple elements match, Browser intelligently selects the most suitable one:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Multiple elements with same class - selects visible, interactable one</span>
+<span class="n">sections</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;.section-header&quot;</span><span class="p">)</span>  <span class="c1"># Gets all matching elements</span>
+<span class="n">first_section</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;.section-header&quot;</span><span class="p">)</span>  <span class="c1"># Gets best single match</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span><span class="si">}</span><span class="s2"> sections&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selected section text: </span><span class="si">{</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">first_section</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="element-interaction-methods">
+<h2>Element Interaction Methods<a class="headerlink" href="#element-interaction-methods" title="Link to this heading"></a></h2>
+<p><strong>Clicking Elements</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic clicking</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>
+
+<span class="c1"># Click with specific button (left=0, middle=1, right=2)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#multi_button&quot;</span><span class="p">,</span> <span class="n">button</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Left click</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#multi_button&quot;</span><span class="p">,</span> <span class="n">button</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Right click</span>
+
+<span class="c1"># Click at specific coordinates (relative to element)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">,</span> <span class="n">x_offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">y_offset</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Force click (bypasses actionability checks)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#disabled_button&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Text Input Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clear and type text</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">,</span> <span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fill input (clears then types)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;New Value&quot;</span><span class="p">,</span> <span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+
+<span class="c1"># Type without clearing first</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="s2">&quot;Additional text&quot;</span><span class="p">,</span> <span class="s2">&quot;#input&quot;</span><span class="p">,</span> <span class="n">clear_first</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Sensitive data (not logged)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="s2">&quot;password123&quot;</span><span class="p">,</span> <span class="s2">&quot;#password&quot;</span><span class="p">,</span> <span class="n">sensitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Reading Element Content</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get text content</span>
+<span class="n">title_text</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;h1#wt-core-title&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title: </span><span class="si">{</span><span class="n">title_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get input values</span>
+<span class="n">input_value</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+<span class="n">number_value</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="s2">&quot;#input_number&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get element attributes</span>
+<span class="n">placeholder</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">,</span> <span class="s2">&quot;placeholder&quot;</span><span class="p">)</span>
+<span class="n">element_id</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get computed styles</span>
+<span class="n">color</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">get_css_value</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">,</span> <span class="s2">&quot;background-color&quot;</span><span class="p">)</span>
+<span class="n">display</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">get_css_value</span><span class="p">(</span><span class="s2">&quot;#invisible&quot;</span><span class="p">,</span> <span class="s2">&quot;display&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="element-state-checking">
+<h2>Element State Checking<a class="headerlink" href="#element-state-checking" title="Link to this heading"></a></h2>
+<p><strong>Visibility and Display States</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if element is visible on page</span>
+<span class="n">title_visible</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="s2">&quot;h1#wt-core-title&quot;</span><span class="p">)</span>     <span class="c1"># True</span>
+<span class="n">hidden_visible</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="s2">&quot;#invisible&quot;</span><span class="p">)</span>          <span class="c1"># False (display: none)</span>
+
+<span class="c1"># Check if element is in viewport</span>
+<span class="n">in_viewport</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_visible</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>
+
+<span class="c1"># Wait for element to appear</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span><span class="s2">&quot;#invisible_appear_p&quot;</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Interaction States</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if element can be interacted with</span>
+<span class="n">button_enabled</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>           <span class="c1"># True</span>
+<span class="n">disabled_enabled</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="s2">&quot;#disabled_button&quot;</span><span class="p">)</span>  <span class="c1"># False</span>
+
+<span class="c1"># Check checkbox/radio states</span>
+<span class="n">checkbox_checked</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">)</span>          <span class="c1"># False initially</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">)</span>
+<span class="n">checkbox_checked</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">)</span>          <span class="c1"># True after check</span>
+
+<span class="c1"># Check select values</span>
+<span class="n">selected_value</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">selected_option</span><span class="p">(</span><span class="s2">&quot;#myselect&quot;</span><span class="p">)</span>
+<span class="n">selected_text</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">selected_text</span><span class="p">(</span><span class="s2">&quot;#myselect&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="wait-strategies">
+<h2>Wait Strategies<a class="headerlink" href="#wait-strategies" title="Link to this heading"></a></h2>
+<p><strong>Smart Waiting</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wait for element to be actionable</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span><span class="s2">&quot;#dynamic_content&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+
+<span class="c1"># Wait for element to disappear</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span><span class="s2">&quot;#loading_spinner&quot;</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">)</span>
+
+<span class="c1"># Wait for specific text content</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_text</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="s2">&quot;Complete&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15000</span><span class="p">)</span>
+
+<span class="c1"># Wait for custom condition</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;#counter&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;100&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Network and Page State Waiting</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wait for network to be idle</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_network_idle</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+
+<span class="c1"># Wait for page load events</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_page_ready</span><span class="p">()</span>
+
+<span class="c1"># Wait for specific URL</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_url_contains</span><span class="p">(</span><span class="s2">&quot;/dashboard&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="form-and-input-operations">
+<h2>Form and Input Operations<a class="headerlink" href="#form-and-input-operations" title="Link to this heading"></a></h2>
+<p><strong>Checkbox and Radio Controls</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Checkbox operations</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">)</span>          <span class="c1"># Check checkbox</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">uncheck</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">)</span>        <span class="c1"># Uncheck checkbox</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">set_checked</span><span class="p">(</span><span class="s2">&quot;#input2&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># Set to specific state</span>
+
+<span class="c1"># Radio button selection</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;input[name=&#39;radio_input&#39;][value=&#39;x&#39;]&quot;</span><span class="p">)</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">selected_option</span><span class="p">(</span><span class="s2">&quot;input[name=&#39;radio_input&#39;]:checked&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Select Dropdown Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select by visible text</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">select_by_text</span><span class="p">(</span><span class="s2">&quot;#myselect&quot;</span><span class="p">,</span> <span class="s2">&quot;myoption&quot;</span><span class="p">)</span>
+
+<span class="c1"># Select by value</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">select_by_value</span><span class="p">(</span><span class="s2">&quot;#myselect&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">)</span>
+
+<span class="c1"># Multiple selection</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">select_multiple</span><span class="p">(</span><span class="s2">&quot;#multi_select&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;baz&quot;</span><span class="p">])</span>
+
+<span class="c1"># Get all options</span>
+<span class="n">options</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">select_options</span><span class="p">(</span><span class="s2">&quot;#myselect&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="file-upload-operations">
+<h2>File Upload Operations<a class="headerlink" href="#file-upload-operations" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Upload single file</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s2">&quot;#fileinput&quot;</span><span class="p">,</span> <span class="s2">&quot;/path/to/file.txt&quot;</span><span class="p">)</span>
+
+<span class="c1"># Upload multiple files</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">upload_files</span><span class="p">(</span><span class="s2">&quot;#fileinput&quot;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="s2">&quot;/path/to/file1.txt&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;/path/to/file2.pdf&quot;</span>
+<span class="p">])</span>
+
+<span class="c1"># Check uploaded file name</span>
+<span class="n">uploaded_files</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">uploaded_files</span><span class="p">(</span><span class="s2">&quot;#fileinput&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="drag-and-drop-operations">
+<h2>Drag and Drop Operations<a class="headerlink" href="#drag-and-drop-operations" title="Link to this heading"></a></h2>
+<p><strong>Basic Drag and Drop</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Drag from source to target</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">drag_and_drop</span><span class="p">(</span><span class="s2">&quot;#drag_source&quot;</span><span class="p">,</span> <span class="s2">&quot;#drop_target&quot;</span><span class="p">)</span>
+
+<span class="c1"># Drag by offset (pixels)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">drag_and_drop_by_offset</span><span class="p">(</span><span class="s2">&quot;#drag_source2&quot;</span><span class="p">,</span> <span class="n">x_offset</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">y_offset</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c1"># Drag to specific coordinates</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">drag_and_drop_to</span><span class="p">(</span><span class="s2">&quot;#drag_source&quot;</span><span class="p">,</span> <span class="n">to_x</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">to_y</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Advanced Drag Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get drag coordinates for verification</span>
+<span class="n">start_coords</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">element_coordinates</span><span class="p">(</span><span class="s2">&quot;#drag_source&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start position: </span><span class="si">{</span><span class="n">start_coords</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Perform drag with custom steps</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">drag_and_drop</span><span class="p">(</span><span class="s2">&quot;#drag_source&quot;</span><span class="p">,</span> <span class="s2">&quot;#drop_target&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Sortable list reordering</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">drag_and_drop</span><span class="p">(</span><span class="s2">&quot;.sortable-item[data-sort-id=&#39;item-1&#39;]&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;.sortable-item[data-sort-id=&#39;item-3&#39;]&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="screenshot-and-visual-operations">
+<h2>Screenshot and Visual Operations<a class="headerlink" href="#screenshot-and-visual-operations" title="Link to this heading"></a></h2>
+<p><strong>Taking Screenshots</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Full page screenshot</span>
+<span class="n">screenshot_bytes</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">()</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;page.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">screenshot_bytes</span><span class="p">)</span>
+
+<span class="c1"># Element screenshot</span>
+<span class="n">element_screenshot</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;button.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">element_screenshot</span><span class="p">)</span>
+
+<span class="c1"># Screenshot with options</span>
+<span class="n">full_page_screenshot</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="n">full_page</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Element Measurements</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get element size</span>
+<span class="n">size</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">size_of</span><span class="p">(</span><span class="s2">&quot;#exact_dimensions&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element size: </span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># (100, 50)</span>
+
+<span class="c1"># Get element position</span>
+<span class="n">position</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">coordinates_of</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Button position: </span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get bounding box</span>
+<span class="n">bbox</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">bounding_box</span><span class="p">(</span><span class="s2">&quot;#drag_source&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bounding box: </span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="alert-and-dialog-handling">
+<h2>Alert and Dialog Handling<a class="headerlink" href="#alert-and-dialog-handling" title="Link to this heading"></a></h2>
+<p><strong>JavaScript Alerts</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Handle alert dialogs</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#alert_button&quot;</span><span class="p">)</span>  <span class="c1"># Triggers alert</span>
+
+<span class="c1"># Accept alert</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">handle_alert</span><span class="p">(</span><span class="n">cancel</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Widget Name&quot;</span><span class="p">)</span>
+
+<span class="c1"># Cancel/dismiss alert</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">handle_alert</span><span class="p">(</span><span class="n">cancel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get alert text before handling</span>
+<span class="n">alert_text</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">alert_text</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Alert message: </span><span class="si">{</span><span class="n">alert_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Custom Dialog Handling</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Setup alert handler</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">handle_confirm</span><span class="p">(</span><span class="n">dialog</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dialog type: </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dialog message: </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">dialog</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>  <span class="c1"># or dialog.dismiss()</span>
+
+<span class="n">browser</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s2">&quot;dialog&quot;</span><span class="p">,</span> <span class="n">handle_confirm</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#confirm_button&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="mouse-and-keyboard-operations">
+<h2>Mouse and Keyboard Operations<a class="headerlink" href="#mouse-and-keyboard-operations" title="Link to this heading"></a></h2>
+<p><strong>Mouse Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Hover over elements</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">hover</span><span class="p">(</span><span class="s2">&quot;#hover_target&quot;</span><span class="p">)</span>
+
+<span class="c1"># Double click</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">double_click</span><span class="p">(</span><span class="s2">&quot;#double_click_area&quot;</span><span class="p">)</span>
+
+<span class="c1"># Right click (context menu)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">right_click</span><span class="p">(</span><span class="s2">&quot;#context_menu_trigger&quot;</span><span class="p">)</span>
+
+<span class="c1"># Mouse down/up for custom interactions</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">mouse_down</span><span class="p">(</span><span class="s2">&quot;#drag_handle&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">mouse_move</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>  <span class="c1"># Relative movement</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">mouse_up</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Keyboard Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Send key combinations</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_press</span><span class="p">(</span><span class="s2">&quot;Escape&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_press</span><span class="p">(</span><span class="s2">&quot;Control+A&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_press</span><span class="p">(</span><span class="s2">&quot;Control+C&quot;</span><span class="p">)</span>
+
+<span class="c1"># Type special characters</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_type</span><span class="p">(</span><span class="s2">&quot;Tab&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_type</span><span class="p">(</span><span class="s2">&quot;Enter&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_type</span><span class="p">(</span><span class="s2">&quot;ArrowDown&quot;</span><span class="p">)</span>
+
+<span class="c1"># Focus element first</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">key_type</span><span class="p">(</span><span class="s2">&quot;Control+A&quot;</span><span class="p">)</span>  <span class="c1"># Select all in focused input</span>
+</pre></div>
+</div>
+</section>
+<section id="scroll-and-viewport-operations">
+<h2>Scroll and Viewport Operations<a class="headerlink" href="#scroll-and-viewport-operations" title="Link to this heading"></a></h2>
+<p><strong>Scrolling</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Scroll element into view</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">scroll_into_view</span><span class="p">(</span><span class="s2">&quot;#footer_element&quot;</span><span class="p">)</span>
+
+<span class="c1"># Scroll by pixels</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">scroll</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+
+<span class="c1"># Scroll to element</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">scroll_to_element</span><span class="p">(</span><span class="s2">&quot;#target_section&quot;</span><span class="p">)</span>
+
+<span class="c1"># Scroll within specific element</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">scroll_in_element</span><span class="p">(</span><span class="s2">&quot;#scrollable_container&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Viewport Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set viewport size</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">set_viewport_size</span><span class="p">(</span><span class="mi">1920</span><span class="p">,</span> <span class="mi">1080</span><span class="p">)</span>
+
+<span class="c1"># Get current viewport</span>
+<span class="n">viewport</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">viewport_size</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Viewport: </span><span class="si">{</span><span class="n">viewport</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Check if element is in viewport</span>
+<span class="n">in_view</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_in_viewport</span><span class="p">(</span><span class="s2">&quot;#visible_element&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-browser-operations">
+<h2>Advanced Browser Operations<a class="headerlink" href="#advanced-browser-operations" title="Link to this heading"></a></h2>
+<p><strong>Page Navigation</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Navigation controls</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">back</span><span class="p">()</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
+
+<span class="c1"># Navigate to URL</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://example.com&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get current URL</span>
+<span class="n">current_url</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">current_url</span><span class="p">()</span>
+
+<span class="c1"># Wait for navigation</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_navigation</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#submit&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><strong>Browser Context Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Execute JavaScript</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return document.title;&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title from JS: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Execute with arguments</span>
+<span class="n">element_text</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span>
+    <span class="s2">&quot;return arguments[0].textContent;&quot;</span><span class="p">,</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="s2">&quot;#a_button&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Set cookies</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span><span class="s2">&quot;session_id&quot;</span><span class="p">,</span> <span class="s2">&quot;abc123&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get cookies</span>
+<span class="n">cookies</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-and-debugging">
+<h2>Performance and Debugging<a class="headerlink" href="#performance-and-debugging" title="Link to this heading"></a></h2>
+<p><strong>Performance Timing</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="c1"># Time operations</span>
+<span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#slow_button&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_text</span><span class="p">(</span><span class="s2">&quot;#result&quot;</span><span class="p">,</span> <span class="s2">&quot;Complete&quot;</span><span class="p">)</span>
+<span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Operation took </span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Debug Information</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get element information for debugging</span>
+<span class="n">element_info</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">debug_element</span><span class="p">(</span><span class="s2">&quot;#problematic_element&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element debug info: </span><span class="si">{</span><span class="n">element_info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Log browser console messages</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">log_console</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Console </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">browser</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s2">&quot;console&quot;</span><span class="p">,</span> <span class="n">log_console</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="error-handling-patterns">
+<h2>Error Handling Patterns<a class="headerlink" href="#error-handling-patterns" title="Link to this heading"></a></h2>
+<p><strong>Robust Element Interaction</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">safe_click</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Safely click an element with proper error handling&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span><span class="n">locator</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="n">locator</span><span class="p">):</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element </span><span class="si">{</span><span class="n">locator</span><span class="si">}</span><span class="s2"> is not enabled&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to click </span><span class="si">{</span><span class="n">locator</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+<span class="c1"># Usage</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">safe_click</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="s2">&quot;#submit_button&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Click successful&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Conditional Operations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">conditional_fill</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fill input only if it exists and is different&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="n">locator</span><span class="p">):</span>
+        <span class="n">current_value</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_value</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">locator</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filled </span><span class="si">{</span><span class="n">locator</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">locator</span><span class="si">}</span><span class="s2"> already has correct value&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">locator</span><span class="si">}</span><span class="s2"> not found on page&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<p><strong>1. Use Appropriate Wait Strategies</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Wait for specific conditions</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span><span class="s2">&quot;#dynamic_content&quot;</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#dynamic_content&quot;</span><span class="p">)</span>
+
+<span class="c1"># Avoid: Arbitrary sleep times</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># Unreliable</span>
+</pre></div>
+</div>
+<p><strong>2. Verify Element States</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Check before interaction</span>
+<span class="k">if</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="s2">&quot;#submit_btn&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="s2">&quot;#submit_btn&quot;</span><span class="p">):</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#submit_btn&quot;</span><span class="p">)</span>
+
+<span class="c1"># Avoid: Assuming elements are ready</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#submit_btn&quot;</span><span class="p">)</span>  <span class="c1"># May fail if not ready</span>
+</pre></div>
+</div>
+<p><strong>3. Use Specific Locators</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Specific, unique locators</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#submit-form-button&quot;</span><span class="p">)</span>
+
+<span class="c1"># Avoid: Generic, ambiguous locators</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">)</span>  <span class="c1"># Which button?</span>
+</pre></div>
+</div>
+<p><strong>4. Handle Network Timing</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Wait for network stability after actions</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#load_data_btn&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_network_idle</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;#data_result&quot;</span><span class="p">)</span>
+
+<span class="c1"># Avoid: Not waiting for async operations</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;#load_data_btn&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;#data_result&quot;</span><span class="p">)</span>  <span class="c1"># May be empty</span>
+</pre></div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>The Browser class provides comprehensive methods for web automation:</p>
+<ul class="simple">
+<li><p><strong>Element Finding</strong>: Smart selection and multiple strategies</p></li>
+<li><p><strong>Interaction</strong>: Clicking, typing, form operations</p></li>
+<li><p><strong>State Checking</strong>: Visibility, enabled status, values</p></li>
+<li><p><strong>Waiting</strong>: Smart waits for various conditions</p></li>
+<li><p><strong>Advanced Operations</strong>: Drag-drop, screenshots, JavaScript execution</p></li>
+<li><p><strong>Error Handling</strong>: Robust patterns for reliable automation</p></li>
+</ul>
+<p><strong>Next Step</strong>: Learn <a class="reference internal" href="fill-strategies.html"><span class="doc">Fill Strategies Tutorial</span></a> to master comprehensive form automation patterns.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="views-and-navigation.html" class="btn btn-neutral float-left" title="Views and Navigation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fill-strategies.html" class="btn btn-neutral float-right" title="Fill Strategies Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

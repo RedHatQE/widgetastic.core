@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Custom Widget Development Tutorial" href="../tutorials/custom-widgets.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-components">Core Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-reference">Quick Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-organization">API Organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inheritance-hierarchy">Inheritance Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#method-categories">Method Categories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-types">Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage-patterns">Usage Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-compatibility">Version Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributing-to-documentation">Contributing to Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-with-the-api">Getting Started with the API</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api-reference/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p>Complete API documentation for widgetastic.core. This reference provides detailed information about every class,
+method, and function in the library.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Navigation Tip</strong>: Use the search function (Ctrl+F / Cmd+F) to quickly find specific APIs.
+All methods include usage examples and parameter descriptions.</p>
+</div>
+<section id="core-components">
+<h2>Core Components<a class="headerlink" href="#core-components" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><strong>🌐 Browser</strong></dt><dd><p>The enhanced Playwright wrapper providing intelligent web automation</p>
+<ul class="simple">
+<li><p>Page management and navigation</p></li>
+<li><p>Element location and interaction</p></li>
+<li><p>Network monitoring and safety checks</p></li>
+<li><p>Frame context management</p></li>
+</ul>
+</dd>
+<dt><strong>🎯 Widgets</strong></dt><dd><p>UI component abstractions with consistent interfaces</p>
+<ul class="simple">
+<li><p>Basic widgets (Text, TextInput, Button)</p></li>
+<li><p>Form widgets (Select, Checkbox, FileInput)</p></li>
+<li><p>Complex widgets (Table, Image)</p></li>
+<li><p>Widget lifecycle and caching</p></li>
+</ul>
+</dd>
+<dt><strong>📋 Views</strong></dt><dd><p>Page and section organization with hierarchical structure</p>
+<ul class="simple">
+<li><p>View creation and nesting</p></li>
+<li><p>Parametrized and conditional views</p></li>
+<li><p>Fill strategies and data operations</p></li>
+<li><p>Context management</p></li>
+</ul>
+</dd>
+<dt><strong>📍 Locators</strong></dt><dd><p>Smart element location with automatic format detection</p>
+<ul class="simple">
+<li><p>SmartLocator system</p></li>
+<li><p>CSS, XPath, and text locators</p></li>
+<li><p>Dynamic locator generation</p></li>
+<li><p>Playwright compatibility</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="quick-reference">
+<h2>Quick Reference<a class="headerlink" href="#quick-reference" title="Link to this heading"></a></h2>
+<p><strong>Most Used Classes</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">Widget</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">Button</span><span class="p">,</span> <span class="n">Select</span><span class="p">,</span> <span class="n">Checkbox</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.locator</span><span class="w"> </span><span class="kn">import</span> <span class="n">SmartLocator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">VersionPick</span><span class="p">,</span> <span class="n">ParametrizedString</span>
+</pre></div>
+</div>
+<p><strong>Essential Methods</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Browser operations</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>          <span class="c1"># Find single element</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>         <span class="c1"># Find multiple elements</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>           <span class="c1"># Click element</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>            <span class="c1"># Get text content</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">locator</span><span class="p">)</span>      <span class="c1"># Fill input field</span>
+
+<span class="c1"># Widget operations</span>
+<span class="n">widget</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>                    <span class="c1"># Get widget value</span>
+<span class="n">widget</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>              <span class="c1"># Set widget value</span>
+<span class="n">widget</span><span class="o">.</span><span class="n">is_displayed</span>             <span class="c1"># Check visibility</span>
+<span class="n">widget</span><span class="o">.</span><span class="n">wait_displayed</span><span class="p">()</span>         <span class="c1"># Wait for element</span>
+
+<span class="c1"># View operations</span>
+<span class="n">view</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>                     <span class="c1"># Read all widgets</span>
+<span class="n">view</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">data_dict</span><span class="p">)</span>           <span class="c1"># Fill multiple widgets</span>
+<span class="n">view</span><span class="o">.</span><span class="n">widget_names</span>              <span class="c1"># Get widget list</span>
+</pre></div>
+</div>
+<p><strong>Common Exceptions</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">NoSuchElementException</span><span class="p">,</span>      <span class="c1"># Element not found</span>
+    <span class="n">WidgetOperationFailed</span><span class="p">,</span>       <span class="c1"># Widget operation failed</span>
+    <span class="n">DoNotReadThisWidget</span><span class="p">,</span>         <span class="c1"># Skip widget in read()</span>
+    <span class="n">FrameNotFoundError</span>          <span class="c1"># Frame context error</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="api-organization">
+<h2>API Organization<a class="headerlink" href="#api-organization" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Complete API Documentation Coming Soon</strong></p>
+<p>Detailed API reference documentation for each module will be added in the next update.
+For now, you can explore the source code directly or use the tutorials and examples above
+to understand the API patterns.</p>
+</div>
+</section>
+<section id="inheritance-hierarchy">
+<h2>Inheritance Hierarchy<a class="headerlink" href="#inheritance-hierarchy" title="Link to this heading"></a></h2>
+<p><strong>Core Classes</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Browser
+├── Enhanced Playwright Page wrapper
+├── Smart element location
+└── Network activity monitoring
+
+Widget (metaclass: WidgetMetaclass)
+├── View
+│   ├── ParametrizedView
+│   └── ConditionalSwitchableView
+├── GenericLocatorWidget
+│   ├── Text
+│   ├── Image
+│   └── Button (via ClickableMixin)
+├── BaseInput
+│   ├── TextInput
+│   ├── FileInput
+│   └── ColourInput
+├── Select (with ClickableMixin)
+├── Checkbox (BaseInput + ClickableMixin)
+└── Table
+    ├── TableRow
+    └── TableColumn
+</pre></div>
+</div>
+<p><strong>Mixin Classes</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ClickableMixin
+├── Provides click() method
+└── Used by Button, Select, Checkbox, etc.
+
+Widgetable
+├── Base for all widget-like objects
+├── Sequential ID assignment
+└── Child item discovery
+</pre></div>
+</div>
+<p><strong>OUIA Classes</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>OUIABase
+├── OUIAGenericView
+└── OUIAGenericWidget
+    ├── ouia.Text
+    ├── ouia.TextInput
+    └── ouia.Checkbox
+</pre></div>
+</div>
+</section>
+<section id="method-categories">
+<h2>Method Categories<a class="headerlink" href="#method-categories" title="Link to this heading"></a></h2>
+<p><strong>Element Location</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 50.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.element(locator)</span></code></p></td>
+<td><p>Find single element</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Locator</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">browser.elements(locator)</span></code></p></td>
+<td><p>Find multiple elements</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">List[Locator]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.wait_for_element(locator)</span></code></p></td>
+<td><p>Wait for element to appear</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Optional[Locator]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Element Interaction</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 50.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.click(locator)</span></code></p></td>
+<td><p>Click element</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">browser.send_keys(text,</span> <span class="pre">locator)</span></code></p></td>
+<td><p>Type text into element</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.clear(locator)</span></code></p></td>
+<td><p>Clear input field</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Element Properties</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 50.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.text(locator)</span></code></p></td>
+<td><p>Get text content</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">browser.get_attribute(attr,</span> <span class="pre">locator)</span></code></p></td>
+<td><p>Get attribute value</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Optional[str]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">browser.is_displayed(locator)</span></code></p></td>
+<td><p>Check if visible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Form Operations</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 50.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">widget.fill(value)</span></code></p></td>
+<td><p>Set widget value</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code> (changed)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">widget.read()</span></code></p></td>
+<td><p>Get widget value</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">view.fill(data)</span></code></p></td>
+<td><p>Fill multiple widgets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code> (changed)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="parameter-types">
+<h2>Parameter Types<a class="headerlink" href="#parameter-types" title="Link to this heading"></a></h2>
+<p><strong>Common Type Annotations</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Locator</span><span class="p">,</span> <span class="n">ElementHandle</span>
+
+<span class="c1"># Locator aliases</span>
+<span class="n">LocatorAlias</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Locator</span><span class="p">,</span> <span class="n">ElementHandle</span><span class="p">,</span> <span class="n">Widget</span><span class="p">]</span>
+<span class="n">ElementParent</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">LocatorAlias</span><span class="p">,</span> <span class="n">Browser</span><span class="p">]</span>
+<span class="n">ViewParent</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Browser</span><span class="p">,</span> <span class="n">View</span><span class="p">]</span>
+
+<span class="c1"># Version types</span>
+<span class="n">VString</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Version</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
+
+<span class="c1"># Handler types</span>
+<span class="n">Handler</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ClickableMixin</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Locator Formats</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># String locators (auto-detected)</span>
+<span class="s2">&quot;#my-id&quot;</span>                    <span class="c1"># CSS ID selector</span>
+<span class="s2">&quot;.my-class&quot;</span>                 <span class="c1"># CSS class selector</span>
+<span class="s2">&quot;button#submit.primary&quot;</span>     <span class="c1"># CSS combined selector</span>
+<span class="s2">&quot;//div[@class=&#39;content&#39;]&quot;</span>   <span class="c1"># XPath expression</span>
+
+<span class="c1"># Dictionary locators (explicit)</span>
+<span class="p">{</span><span class="s2">&quot;css&quot;</span><span class="p">:</span> <span class="s2">&quot;#my-element&quot;</span><span class="p">}</span>      <span class="c1"># CSS selector</span>
+<span class="p">{</span><span class="s2">&quot;xpath&quot;</span><span class="p">:</span> <span class="s2">&quot;//button[1]&quot;</span><span class="p">}</span>    <span class="c1"># XPath selector</span>
+<span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Click Me&quot;</span><span class="p">}</span>        <span class="c1"># Text content</span>
+<span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;submit-button&quot;</span><span class="p">}</span>     <span class="c1"># Element ID</span>
+<span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;button&quot;</span><span class="p">}</span>          <span class="c1"># ARIA role</span>
+</pre></div>
+</div>
+</section>
+<section id="usage-patterns">
+<h2>Usage Patterns<a class="headerlink" href="#usage-patterns" title="Link to this heading"></a></h2>
+<p><strong>Pattern 1: Basic Widget Usage</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">Button</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LoginView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="s2">&quot;#username&quot;</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="s2">&quot;#password&quot;</span><span class="p">)</span>
+    <span class="n">submit</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="s2">&quot;#login-btn&quot;</span><span class="p">)</span>
+
+<span class="c1"># Usage</span>
+<span class="n">login</span> <span class="o">=</span> <span class="n">LoginView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+<span class="n">login</span><span class="o">.</span><span class="n">fill</span><span class="p">({</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;pass&quot;</span><span class="p">})</span>
+<span class="n">login</span><span class="o">.</span><span class="n">submit</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Pattern 2: Advanced Locator Usage</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.locator</span><span class="w"> </span><span class="kn">import</span> <span class="n">SmartLocator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametrizedLocator</span>
+
+<span class="c1"># Smart locator with explicit type</span>
+<span class="n">submit_btn</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">SmartLocator</span><span class="p">({</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Submit Form&quot;</span><span class="p">}))</span>
+
+<span class="c1"># Parametrized locator for dynamic content</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UserRow</span><span class="p">(</span><span class="n">ParametrizedView</span><span class="p">):</span>
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">,)</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ParametrizedLocator</span><span class="p">(</span><span class="s2">&quot;//tr[@data-user-id=&#39;</span><span class="si">{user_id}</span><span class="s2">&#39;]&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Pattern 3: Error Handling</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoSuchElementException</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">widget</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+<span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Widget not found&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">WidgetOperationFailed</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Operation failed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="version-compatibility">
+<h2>Version Compatibility<a class="headerlink" href="#version-compatibility" title="Link to this heading"></a></h2>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Version Compatibility Matrix</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>widgetastic.core</p></th>
+<th class="head"><p>Python</p></th>
+<th class="head"><p>Playwright</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>2.0+</p></td>
+<td><p>3.10+</p></td>
+<td><p>1.54+</p></td>
+<td><p>Current stable release</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.30+</p></td>
+<td><p>3.8+</p></td>
+<td><p>1.40+</p></td>
+<td><p>Legacy maintenance</p></td>
+</tr>
+<tr class="row-even"><td><p>1.0-1.29</p></td>
+<td><p>3.7+</p></td>
+<td><p>N/A</p></td>
+<td><p>Selenium-based (deprecated)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Migration Notes</strong></p>
+<ul class="simple">
+<li><p><strong>v2.0</strong>: Switched from Selenium to Playwright backend</p></li>
+<li><p><strong>v1.30</strong>: Last Selenium-compatible version</p></li>
+<li><p><strong>v1.20</strong>: Introduced OUIA support</p></li>
+<li><p><strong>v1.10</strong>: Added parametrized views</p></li>
+</ul>
+</section>
+<section id="contributing-to-documentation">
+<h2>Contributing to Documentation<a class="headerlink" href="#contributing-to-documentation" title="Link to this heading"></a></h2>
+<p><strong>Found an Error?</strong></p>
+<p>Help improve this documentation:</p>
+<ol class="arabic simple">
+<li><p><strong>Report Issues</strong>: <a class="reference external" href="https://github.com/RedHatQE/widgetastic.core/issues">GitHub Issues</a></p></li>
+<li><p><strong>Submit Fixes</strong>: Pull requests welcome for corrections</p></li>
+<li><p><strong>Suggest Improvements</strong>: Better examples, missing details</p></li>
+<li><p><strong>Add Examples</strong>: Real-world usage patterns</p></li>
+</ol>
+<p><strong>Documentation Standards</strong></p>
+<ul class="simple">
+<li><p><strong>Complete Examples</strong>: Every method should have working code</p></li>
+<li><p><strong>Parameter Descriptions</strong>: All parameters documented with types</p></li>
+<li><p><strong>Return Values</strong>: Clear description of what methods return</p></li>
+<li><p><strong>Error Conditions</strong>: When methods fail and what exceptions are raised</p></li>
+<li><p><strong>Cross-References</strong>: Links to related methods and concepts</p></li>
+</ul>
+<p><strong>API Documentation Guidelines</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">example_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Brief one-line description of what the method does.</span>
+
+<span class="sd">    Longer description explaining the method&#39;s behavior, use cases,</span>
+<span class="sd">    and any important details about its implementation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        param1: Description of first parameter including type and constraints</span>
+<span class="sd">        param2: Description of optional parameter with default behavior</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Description of return value and what it represents</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ExceptionType: When this exception is raised and why</span>
+<span class="sd">        AnotherException: Another possible exception condition</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        Basic usage example:</span>
+
+<span class="sd">        &gt;&gt;&gt; result = obj.example_method(&quot;test&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(result)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Advanced usage with optional parameter:</span>
+
+<span class="sd">        &gt;&gt;&gt; result = obj.example_method(&quot;test&quot;, param2=42)</span>
+<span class="sd">        &gt;&gt;&gt; if result:</span>
+<span class="sd">        ...     print(&quot;Operation successful&quot;)</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Any important notes, warnings, or additional information</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        related_method: Related functionality</span>
+<span class="sd">        OtherClass.method: Cross-references to related APIs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-started-with-the-api">
+<h2>Getting Started with the API<a class="headerlink" href="#getting-started-with-the-api" title="Link to this heading"></a></h2>
+<p><strong>New to Widgetastic?</strong></p>
+<ol class="arabic simple">
+<li><p>Start with the Browser classes for basic browser operations</p></li>
+<li><p>Learn about Widgets for UI component interaction</p></li>
+<li><p>Explore Views for organizing your automation code</p></li>
+<li><p>Review the tutorials section for hands-on examples</p></li>
+</ol>
+<p><strong>Looking for Specific Functionality?</strong></p>
+<p>Use the module index to quickly find what you need:</p>
+<ul class="simple">
+<li><p><strong>Element Location</strong> → Browser and Locators modules</p></li>
+<li><p><strong>Form Automation</strong> → Widget classes (TextInput, Select, Checkbox)</p></li>
+<li><p><strong>Page Organization</strong> → Views and Widget base classes</p></li>
+<li><p><strong>Error Handling</strong> → Exceptions module</p></li>
+<li><p><strong>Advanced Features</strong> → Utils module (VersionPick, ParametrizedString)</p></li>
+<li><p><strong>Accessibility</strong> → OUIA support modules</p></li>
+</ul>
+<p><strong>Integration Examples</strong></p>
+<p>See the tutorials section for complete, real-world implementations showing how different API components work together.</p>
+<p>This API reference is your complete guide to widgetastic.core. Every public method, class, and function is documented with examples and best practices. Happy automating! 🚀</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/custom-widgets.html" class="btn btn-neutral float-left" title="Custom Widget Development Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

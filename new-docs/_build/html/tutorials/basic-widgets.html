@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basic Widgets Tutorial &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Views and Navigation" href="views-and-navigation.html" />
+    <link rel="prev" title="Tutorials" href="index.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basic Widgets Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-your-environment">Setting Up Your Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-the-testing-page-structure">Understanding the Testing Page Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#text-widget-reading-content-from-pages">Text Widget - Reading Content from Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#textinput-widget-form-field-automation">TextInput Widget - Form Field Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#checkbox-widget-boolean-state-management">Checkbox Widget - Boolean State Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#select-widget-dropdown-management">Select Widget - Dropdown Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#image-widget-image-attribute-access">Image Widget - Image Attribute Access</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom-widgets.html">Custom Widget Development Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Basic Widgets Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/basic-widgets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="basic-widgets-tutorial">
+<h1>Basic Widgets Tutorial<a class="headerlink" href="#basic-widgets-tutorial" title="Link to this heading"></a></h1>
+<p>This comprehensive tutorial demonstrates all the fundamental widgets in Widgetastic.core using the framework’s real testing pages.
+You’ll learn to interact with web elements through practical examples using <code class="docutils literal notranslate"><span class="pre">testing/html/testing_page.html</span></code> - the same file used to test the framework itself.</p>
+<section id="learning-objectives">
+<h2>Learning Objectives<a class="headerlink" href="#learning-objectives" title="Link to this heading"></a></h2>
+<p>By completing this tutorial, you will:</p>
+<ul class="simple">
+<li><p>✅ Basic understanding of five core widget types (Text, TextInput, Checkbox, Select, Image)</p></li>
+<li><p>✅ Understand the widget read/fill interface</p></li>
+<li><p>✅ Handle widget state and validation</p></li>
+<li><p>✅ Work with real-world HTML structures</p></li>
+<li><p>✅ Implement effective automation patterns</p></li>
+</ul>
+</section>
+<section id="setting-up-your-environment">
+<h2>Setting Up Your Environment<a class="headerlink" href="#setting-up-your-environment" title="Link to this heading"></a></h2>
+<p><strong>Browser Setup Using Testing Page</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">Checkbox</span><span class="p">,</span> <span class="n">Select</span><span class="p">,</span> <span class="n">Image</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_browser</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Setup browser with widgetastic testing page.&quot;&quot;&quot;</span>
+    <span class="c1"># Get the widgetastic testing page path</span>
+    <span class="n">test_page_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;testing/html/testing_page.html&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">test_page_url</span> <span class="o">=</span> <span class="n">test_page_path</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
+
+    <span class="c1"># Initialize Playwright</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sync_playwright</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">browser_instance</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">browser_instance</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+    <span class="c1"># Navigate to testing page</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">test_page_url</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">browser_instance</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="c1"># Usage</span>
+<span class="n">browser</span><span class="p">,</span> <span class="n">playwright</span><span class="p">,</span> <span class="n">browser_instance</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">setup_browser</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="understanding-the-testing-page-structure">
+<h2>Understanding the Testing Page Structure<a class="headerlink" href="#understanding-the-testing-page-structure" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">testing_page.html</span></code> contains comprehensive examples:</p>
+<ul class="simple">
+<li><p><strong>Header Section</strong>: Main title and subtitle elements</p></li>
+<li><p><strong>Visibility Testing</strong>: Hidden/visible elements with dynamic content</p></li>
+<li><p><strong>Form Elements</strong>: Text inputs, checkboxes, file inputs, color pickers</p></li>
+<li><p><strong>Selection Widgets</strong>: Single and multi-select dropdowns</p></li>
+<li><p><strong>Interactive Buttons</strong>: Click handlers, state changes</p></li>
+<li><p><strong>Tables</strong>: Standard and complex table structures with embedded widgets</p></li>
+<li><p><strong>Images</strong>: Elements with src, alt, and title attributes</p></li>
+<li><p><strong>Advanced Features</strong>: Drag &amp; drop, OUIA components, alerts, iframes</p></li>
+</ul>
+</section>
+<section id="text-widget-reading-content-from-pages">
+<h2>Text Widget - Reading Content from Pages<a class="headerlink" href="#text-widget-reading-content-from-pages" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Text</span></code> widget extracts text content from any web element.</p>
+<p><strong>Basic Text Widget Examples</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TestingPageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Read the main page title</span>
+    <span class="n">main_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span> <span class="s2">&quot;.//h1[@id=&#39;wt-core-title&#39;]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Read the sub title</span>
+    <span class="n">sub_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;.//p[@class=&quot;subtitle&quot;]&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Read section headers; `.section-header` is a CSS selector matches all elements with class `section-header`</span>
+    <span class="c1"># But it will select first element with class `section-header`</span>
+    <span class="n">section_header</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;.section-header&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Define non existing element</span>
+    <span class="n">non_existing_element</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s1">&#39;.//div[@id=&quot;non-existing-element&quot;]&#39;</span><span class="p">)</span>
+
+
+<span class="n">page</span> <span class="o">=</span> <span class="n">TestingPageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Check if element exist on page or not</span>
+<span class="n">page</span><span class="o">.</span><span class="n">main_title</span><span class="o">.</span><span class="n">is_displayed</span>        <span class="c1"># True</span>
+<span class="n">page</span><span class="o">.</span><span class="n">non_existing_element</span><span class="o">.</span><span class="n">is_displayed</span>        <span class="c1"># False</span>
+
+<span class="c1"># Reading text content</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">main_title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Output: &quot;Widgetastic.Core - Testing Page&quot;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sub title: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">sub_title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Output: &quot;Interactive demonstrations for widget automation and testing&quot;</span>
+
+<span class="c1"># In state of read method you can use text property to get the text content</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First Section header: </span><span class="si">{</span><span class="n">page</span><span class="o">.</span><span class="n">section_header</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Output: &quot;Element Visibility &amp; State Testing&quot;</span>
+</pre></div>
+</div>
+<p><strong>Advanced Text Widget Patterns</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">AdvancedTextExamples</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Table header content</span>
+    <span class="n">table_header</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;//table[@id=&#39;with-thead&#39;]//th[2]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Visible content in mixed visibility container</span>
+    <span class="n">visible_content</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;#visible_invisible .visible&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Content from OUIA section</span>
+    <span class="n">ouia_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;//div[@data-ouia-component-id=&#39;ouia&#39;]//h3&quot;</span><span class="p">)</span>
+
+<span class="n">advanced</span> <span class="o">=</span> <span class="n">AdvancedTextExamples</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Reading from different contexts</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table header: </span><span class="si">{</span><span class="n">advanced</span><span class="o">.</span><span class="n">table_header</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Column 1&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visible text: </span><span class="si">{</span><span class="n">advanced</span><span class="o">.</span><span class="n">visible_content</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Visible content&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OUIA title: </span><span class="si">{</span><span class="n">advanced</span><span class="o">.</span><span class="n">ouia_title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &quot;OUIA Widget Examples&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="textinput-widget-form-field-automation">
+<h2>TextInput Widget - Form Field Automation<a class="headerlink" href="#textinput-widget-form-field-automation" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">TextInput</span></code> widget handles all text input elements.</p>
+<p><strong>TextInput Initialization Arguments</strong></p>
+<p>The TextInput widget accepts exactly <strong>one</strong> of these three arguments (they are mutually exclusive):</p>
+<ul class="simple">
+<li><p><strong>id</strong>: Look up input by its id attribute</p></li>
+<li><p><strong>name</strong>: Look up input by its name attribute</p></li>
+<li><p><strong>locator</strong>: Use a custom locator (supports SmartLocator)</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You can only specify <strong>one</strong> argument when initializing TextInput. Using multiple arguments
+(e.g., both <code class="docutils literal notranslate"><span class="pre">id</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code>) will raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">InputVariations</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Demonstrating different TextInput initialization methods</span>
+    <span class="c1"># Note: In real code, you&#39;d typically use id when available for consistency</span>
+    <span class="n">text_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>  <span class="c1"># Standard text input - by id</span>
+    <span class="n">paste_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;#input_paste&quot;</span><span class="p">)</span>  <span class="c1"># Paste target - by CSS locator</span>
+    <span class="n">number_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_number&quot;</span><span class="p">)</span>  <span class="c1"># Number input - by name</span>
+    <span class="n">textarea_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;//textarea[@id=&#39;textarea_input&#39;]&quot;</span><span class="p">)</span>  <span class="c1"># Textarea - by XPath</span>
+
+<span class="n">view</span> <span class="o">=</span> <span class="n">InputVariations</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Reading current values using different initialization methods</span>
+<span class="n">current_value</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">text_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">paste_value</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">paste_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">number_value</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">number_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">textarea_value</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">textarea_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+<span class="c1"># Filling inputs initialized with different arguments</span>
+<span class="n">view</span><span class="o">.</span><span class="n">text_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;test_user&quot;</span><span class="p">)</span>
+<span class="n">view</span><span class="o">.</span><span class="n">paste_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;pasted_content&quot;</span><span class="p">)</span>
+<span class="n">view</span><span class="o">.</span><span class="n">number_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;42&quot;</span><span class="p">)</span>
+<span class="n">view</span><span class="o">.</span><span class="n">textarea_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;Multi-line text content&quot;</span><span class="p">)</span>
+
+<span class="c1"># All input types work the same regardless of initialization method</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Text input: &#39;</span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">text_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>  <span class="c1"># &quot;test_user&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Paste input: &#39;</span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">paste_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>  <span class="c1"># &quot;pasted_content&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number input: &#39;</span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">number_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>  <span class="c1"># &quot;42&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Textarea: &#39;</span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">textarea_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Multi-line text content&quot;</span>
+</pre></div>
+</div>
+<p><strong>TextInput State Management</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">InputStateManagement</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="n">enabled_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input1&quot;</span><span class="p">)</span>
+    <span class="n">disabled_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input1_disabled&quot;</span><span class="p">)</span>
+    <span class="n">non_existing_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;non_existing_input&quot;</span><span class="p">)</span>
+    <span class="n">textarea_input</span> <span class="o">=</span> <span class="n">TextInput</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;textarea_input&quot;</span><span class="p">)</span>
+
+<span class="c1"># Using the InputVariations view for state management examples</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">InputStateManagement</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Check if input is displayed or not</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enabled input is displayed: </span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">enabled_input</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non existing input is displayed: </span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">non_existing_input</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># False</span>
+
+<span class="c1"># Check if input is enabled or disabled</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enabled input is enabled: </span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">enabled_input</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disabled input is enabled: </span><span class="si">{</span><span class="n">view</span><span class="o">.</span><span class="n">disabled_input</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># False</span>
+
+<span class="c1"># Check if fill was successful (returns True if value changed)</span>
+<span class="n">changed</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">enabled_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;new_value&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value changed: </span><span class="si">{</span><span class="n">changed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># True if different from previous</span>
+
+<span class="n">no_change</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">enabled_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;new_value&quot;</span><span class="p">)</span>  <span class="c1"># Same value</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value changed: </span><span class="si">{</span><span class="n">no_change</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>   <span class="c1"># False, no change needed</span>
+
+
+<span class="c1"># Multi-line content in textarea</span>
+<span class="n">textarea_content</span> <span class="o">=</span> <span class="s2">&quot;Line 1</span><span class="se">\n</span><span class="s2">Line 2</span><span class="se">\n</span><span class="s2">New content&quot;</span>
+<span class="n">view</span><span class="o">.</span><span class="n">textarea_input</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">textarea_content</span><span class="p">)</span>
+<span class="n">view</span><span class="o">.</span><span class="n">textarea_input</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="checkbox-widget-boolean-state-management">
+<h2>Checkbox Widget - Boolean State Management<a class="headerlink" href="#checkbox-widget-boolean-state-management" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Checkbox</span></code> widget handles checkbox elements.</p>
+<p><strong>Checkbox Examples from Testing Page</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CheckboxView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Main form checkboxes</span>
+    <span class="n">enabled_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2&quot;</span><span class="p">)</span>
+    <span class="n">disabled_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;input2_disabled&quot;</span><span class="p">)</span>
+
+<span class="n">checkboxes</span> <span class="o">=</span> <span class="n">CheckboxView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Check is_displayed and is_enabled</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enabled checkbox is displayed: </span><span class="si">{</span><span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disabled checkbox is displayed: </span><span class="si">{</span><span class="n">checkboxes</span><span class="o">.</span><span class="n">disabled_checkbox</span><span class="o">.</span><span class="n">is_displayed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># True</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enabled checkbox is enabled: </span><span class="si">{</span><span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># True</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disabled checkbox is enabled: </span><span class="si">{</span><span class="n">checkboxes</span><span class="o">.</span><span class="n">disabled_checkbox</span><span class="o">.</span><span class="n">is_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># False</span>
+
+<span class="c1"># Filling  and reading checkboxes</span>
+<span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># Check</span>
+<span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="c1"># True</span>
+<span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>        <span class="c1"># Uncheck</span>
+<span class="n">checkboxes</span><span class="o">.</span><span class="n">enabled_checkbox</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="c1"># False</span>
+</pre></div>
+</div>
+</section>
+<section id="select-widget-dropdown-management">
+<h2>Select Widget - Dropdown Management<a class="headerlink" href="#select-widget-dropdown-management" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Select</span></code> widget handles HTML select elements.</p>
+<p><strong>Select Examples from Testing Page</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SelectView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Single selection dropdowns</span>
+    <span class="n">single_select</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;testselect1&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Multiple selection dropdown</span>
+    <span class="n">multi_select</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;testselect2&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Select with no initial selection</span>
+    <span class="n">no_selection</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;testselect3&quot;</span><span class="p">)</span>
+
+<span class="n">selects</span> <span class="o">=</span> <span class="n">SelectView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Reading selected values</span>
+<span class="n">current</span> <span class="o">=</span> <span class="n">selects</span><span class="o">.</span><span class="n">single_select</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current selection: </span><span class="si">{</span><span class="n">current</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Foo&quot;</span>
+
+<span class="c1"># Get all available options</span>
+<span class="n">options</span> <span class="o">=</span> <span class="n">selects</span><span class="o">.</span><span class="n">single_select</span><span class="o">.</span><span class="n">all_options</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># [Option(text=&#39;Foo&#39;, value=&#39;foo&#39;), Option(text=&#39;Bar&#39;, value=&#39;bar&#39;)]</span>
+
+<span class="c1"># Select by visible text</span>
+<span class="n">selects</span><span class="o">.</span><span class="n">single_select</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;Bar&quot;</span><span class="p">)</span>
+
+<span class="c1"># Select by value</span>
+<span class="n">selects</span><span class="o">.</span><span class="n">single_select</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="s2">&quot;by_value&quot;</span><span class="p">,</span> <span class="s2">&quot;foo&quot;</span><span class="p">))</span>
+
+<span class="c1"># Multiple selection</span>
+<span class="n">selects</span><span class="o">.</span><span class="n">multi_select</span><span class="o">.</span><span class="n">fill</span><span class="p">([</span><span class="s2">&quot;Foo&quot;</span><span class="p">,</span> <span class="s2">&quot;Baz&quot;</span><span class="p">])</span>
+<span class="n">selected_multiple</span> <span class="o">=</span> <span class="n">selects</span><span class="o">.</span><span class="n">multi_select</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="c1"># [&quot;Foo&quot;, &quot;Baz&quot;]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multi-selected: </span><span class="si">{</span><span class="n">selected_multiple</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="image-widget-image-attribute-access">
+<h2>Image Widget - Image Attribute Access<a class="headerlink" href="#image-widget-image-attribute-access" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Image</span></code> widget provides access to HTML image elements.</p>
+<p><strong>Image Examples from Testing Page</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ImageView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Images with different attributes</span>
+    <span class="n">full_image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="s1">&#39;.//img[@id=&quot;test-image-full&quot;]&#39;</span><span class="p">)</span>      <span class="c1"># Has src, alt, title</span>
+    <span class="n">src_only_image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="s1">&#39;.//img[@id=&quot;test-image-src-only&quot;]&#39;</span><span class="p">)</span>  <span class="c1"># Only src</span>
+    <span class="n">alt_image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="s1">&#39;.//img[@id=&quot;test-image-alt&quot;]&#39;</span><span class="p">)</span>        <span class="c1"># Has src and alt</span>
+
+<span class="n">images</span> <span class="o">=</span> <span class="n">ImageView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="c1"># Accessing image attributes</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Full image src: </span><span class="si">{</span><span class="n">images</span><span class="o">.</span><span class="n">full_image</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Full image alt: </span><span class="si">{</span><span class="n">images</span><span class="o">.</span><span class="n">full_image</span><span class="o">.</span><span class="n">alt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>    <span class="c1"># &quot;Green test image&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Full image title: </span><span class="si">{</span><span class="n">images</span><span class="o">.</span><span class="n">full_image</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># &quot;Image title&quot;</span>
+
+<span class="c1"># Check image visibility</span>
+<span class="k">if</span> <span class="n">images</span><span class="o">.</span><span class="n">full_image</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Image is visible on page&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="views-and-navigation.html" class="btn btn-neutral float-right" title="Views and Navigation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>
