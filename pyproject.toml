@@ -40,7 +40,11 @@ dev = [
   "pytest-xdist",
   "pytest-cov",
 ]
-docs = ["sphinx"]
+docs = [
+  "sphinx",
+  "sphinx-autobuild",
+  "sphinx_rtd_theme",
+]
 test = [
   "pytest",
   "pytest-xdist",

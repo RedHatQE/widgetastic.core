@@ -1,0 +1,1165 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Widget Development Tutorial &mdash; Widgetastic.Core development documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=249f3023"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../api-reference/index.html" />
+    <link rel="prev" title="Version Picking Tutorial" href="version-picking.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../index.html" class="icon icon-home">
+            Widgetastic.Core
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/concepts.html">Core Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/first-steps.html">First Steps</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/basic-example.html">Basic Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/common-patterns.html">Common Patterns</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic-widgets.html">Basic Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views-and-navigation.html">Views and Navigation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="browser-methods.html">Browser Methods and Elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fill-strategies.html">Fill Strategies Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-widgets.html">Advanced Widgets Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iframe-handling.html">IFrame Handling Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window-management.html">Window Management Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ouia-automation.html">OUIA (Open UI Automation) Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version-picking.html">Version Picking Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Custom Widget Development Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#learning-objectives">Learning Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-widget-architecture">Understanding Widget Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-custom-widget-environment">Setting Up Custom Widget Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simple-custom-widget-development">Simple Custom Widget Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#complex-custom-widget-with-multiple-elements">Complex Custom Widget with Multiple Elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-custom-widget-patterns">Advanced Custom Widget Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-widget-with-logging-and-debugging">Custom Widget with Logging and Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#widget-testing-and-quality-assurance">Widget Testing and Quality Assurance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices-for-custom-widgets">Best Practices for Custom Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#final-cleanup">Final Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Widgetastic.Core</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Custom Widget Development Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/custom-widgets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <section id="custom-widget-development-tutorial">
+<h1>Custom Widget Development Tutorial<a class="headerlink" href="#custom-widget-development-tutorial" title="Link to this heading"></a></h1>
+<p>This tutorial demonstrates how to create custom widgets in Widgetastic.core. You’ll learn to extend the framework with your own widget types, implement the read/fill interface, and build reusable automation components for complex UI patterns.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Time Required</strong>: 60 minutes
+<strong>Prerequisites</strong>: Advanced widgets and fill strategies tutorials
+<strong>Test Pages Used</strong>: <code class="docutils literal notranslate"><span class="pre">testing/html/testing_page.html</span></code></p>
+</div>
+<section id="learning-objectives">
+<h2>Learning Objectives<a class="headerlink" href="#learning-objectives" title="Link to this heading"></a></h2>
+<p>By completing this tutorial, you will:</p>
+<ul class="simple">
+<li><p>✅ Understand widget architecture and design principles</p></li>
+<li><p>✅ Create custom widgets with proper read/fill interfaces</p></li>
+<li><p>✅ Implement complex locator strategies and element handling</p></li>
+<li><p>✅ Handle widget state management and validation</p></li>
+<li><p>✅ Build reusable widget components for your applications</p></li>
+</ul>
+</section>
+<section id="understanding-widget-architecture">
+<h2>Understanding Widget Architecture<a class="headerlink" href="#understanding-widget-architecture" title="Link to this heading"></a></h2>
+<p>Widgetastic widgets follow a specific architecture pattern:</p>
+<p><strong>Core Widget Components</strong>
+* <strong>Base Widget Class</strong>: Inherits from <code class="docutils literal notranslate"><span class="pre">Widget</span></code> base class
+* <strong>Locator Strategy</strong>: Defines how to find the widget on the page
+* <strong>Read Interface</strong>: Extracts current state/value from the widget
+* <strong>Fill Interface</strong>: Sets new state/value in the widget
+* <strong>State Management</strong>: Handles widget lifecycle and caching</p>
+<p><strong>Widget Design Principles</strong>
+* <strong>Single Responsibility</strong>: Each widget handles one UI component type
+* <strong>Consistent Interface</strong>: Follow read/fill pattern for predictability
+* <strong>Error Handling</strong>: Gracefully handle missing or invalid elements
+* <strong>Performance</strong>: Cache expensive operations and minimize DOM access
+* <strong>Reusability</strong>: Design for use across different applications</p>
+</section>
+<section id="setting-up-custom-widget-environment">
+<h2>Setting Up Custom Widget Environment<a class="headerlink" href="#setting-up-custom-widget-environment" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span><span class="p">,</span> <span class="n">View</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">,</span> <span class="n">ClickableMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoSuchElementException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametrizedLocator</span><span class="p">,</span> <span class="n">cached_property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">logged</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_custom_widget_browser</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Setup browser for custom widget development.&quot;&quot;&quot;</span>
+    <span class="n">test_page_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;testing/html/testing_page.html&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">test_page_url</span> <span class="o">=</span> <span class="n">test_page_path</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sync_playwright</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">browser_instance</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">browser_instance</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+    <span class="n">browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">test_page_url</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">browser_instance</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="n">browser</span><span class="p">,</span> <span class="n">playwright</span><span class="p">,</span> <span class="n">browser_instance</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">setup_custom_widget_browser</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="simple-custom-widget-development">
+<h2>Simple Custom Widget Development<a class="headerlink" href="#simple-custom-widget-development" title="Link to this heading"></a></h2>
+<p>Start with basic custom widget patterns:</p>
+<p><strong>Basic Custom Widget Example</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">StatusIndicator</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom widget for status indicator elements.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize status indicator widget.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">locator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locator</span> <span class="o">=</span> <span class="n">locator</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define how to locate this widget on the page.&quot;&quot;&quot;</span>
+        <span class="c1"># This should be overridden by subclasses or provided in constructor</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;locator&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">locator</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;StatusIndicator requires a locator&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the CSS class that indicates status.&quot;&quot;&quot;</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">classes</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">classes</span> <span class="k">else</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status_text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the status text content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the current status.&quot;&quot;&quot;</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_class</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_text</span>
+
+        <span class="c1"># Determine status based on classes and text</span>
+        <span class="k">if</span> <span class="s1">&#39;success&#39;</span> <span class="ow">in</span> <span class="n">classes</span> <span class="ow">or</span> <span class="s1">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;active&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">classes</span> <span class="ow">or</span> <span class="s1">&#39;failed&#39;</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="s1">&#39;warning&#39;</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;unknown&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_active</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if status indicates active state.&quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">status</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;active&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if status indicates error state.&quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">status</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;error&#39;</span>
+
+<span class="c1"># Test the custom status indicator</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestStatusView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Use existing elements from testing page as status indicators</span>
+    <span class="n">status_message</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;#click_result&quot;</span><span class="p">)</span>  <span class="c1"># Button click result</span>
+    <span class="n">page_title</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">(</span><span class="n">locator</span><span class="o">=</span><span class="s2">&quot;h1#wt-core-title&quot;</span><span class="p">)</span>  <span class="c1"># Page title</span>
+
+<span class="n">test_view</span> <span class="o">=</span> <span class="n">TestStatusView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Custom Status Widget Test ===&quot;</span><span class="p">)</span>
+<span class="n">message_status</span> <span class="o">=</span> <span class="n">test_view</span><span class="o">.</span><span class="n">status_message</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status message: </span><span class="si">{</span><span class="n">message_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">title_status</span> <span class="o">=</span> <span class="n">test_view</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page title status: </span><span class="si">{</span><span class="n">title_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Message is active: </span><span class="si">{</span><span class="n">test_view</span><span class="o">.</span><span class="n">status_message</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Enhanced Custom Widget with Fill Interface</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ProgressBar</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom widget for progress bar elements.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Locate progress bar element.&quot;&quot;&quot;</span>
+        <span class="c1"># In a real application, this would be a progress bar</span>
+        <span class="c1"># For demo, we&#39;ll use an existing element</span>
+        <span class="k">return</span> <span class="s2">&quot;#exact_dimensions&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">progress_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get progress value from aria-valuenow or data attributes.&quot;&quot;&quot;</span>
+        <span class="c1"># Check for standard progress attributes</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;aria-valuenow&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Check for data attributes</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;data-progress&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Fallback: calculate from width if it&#39;s a visual progress bar</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;style&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;width:&quot;</span> <span class="ow">in</span> <span class="n">style</span><span class="p">:</span>
+            <span class="c1"># Extract width percentage (simplified)</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;width:\s*(\d+)%&#39;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get maximum progress value.&quot;&quot;&quot;</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;aria-valuemax&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_val</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_val</span> <span class="k">else</span> <span class="mi">100</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read current progress state.&quot;&quot;&quot;</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress_value</span>
+        <span class="n">maximum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span>
+        <span class="n">percentage</span> <span class="o">=</span> <span class="p">(</span><span class="n">current</span> <span class="o">/</span> <span class="n">maximum</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">maximum</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span>
+            <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="n">maximum</span><span class="p">,</span>
+            <span class="s1">&#39;percentage&#39;</span><span class="p">:</span> <span class="n">percentage</span><span class="p">,</span>
+            <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">percentage</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wait for progress to complete.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">progress</span><span class="p">[</span><span class="s1">&#39;completed&#39;</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_percentage</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wait for specific progress percentage.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">progress</span><span class="p">[</span><span class="s1">&#39;percentage&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">target_percentage</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+<span class="c1"># Test progress bar widget</span>
+<span class="n">progress_bar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Custom Progress Bar Widget Test ===&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">progress_bar</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+    <span class="n">progress_data</span> <span class="o">=</span> <span class="n">progress_bar</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Progress bar state: </span><span class="si">{</span><span class="n">progress_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Progress bar not displayed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="complex-custom-widget-with-multiple-elements">
+<h2>Complex Custom Widget with Multiple Elements<a class="headerlink" href="#complex-custom-widget-with-multiple-elements" title="Link to this heading"></a></h2>
+<p>Build sophisticated widgets that manage multiple sub-elements:</p>
+<p><strong>Multi-Element Custom Widget</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FormSection</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom widget representing a form section with multiple inputs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">section_locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize form section widget.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section_locator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">section_locator</span> <span class="o">=</span> <span class="n">section_locator</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Locate the form section container.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;section_locator&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_locator</span>
+        <span class="k">return</span> <span class="s2">&quot;#testform&quot;</span>  <span class="c1"># Default to test form on page</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all input elements within this section.&quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get specific input by name attribute.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;input[name=&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;]&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get specific input by ID attribute.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;input[id=&#39;</span><span class="si">{</span><span class="n">input_id</span><span class="si">}</span><span class="s2">&#39;]&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all label elements in this section.&quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">labels</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read all form data from this section.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_elements</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">input_element</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="c1"># Get input properties</span>
+            <span class="n">input_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+            <span class="n">input_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span>
+            <span class="n">input_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;text&quot;</span>
+
+            <span class="c1"># Use name or id as key</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">input_name</span> <span class="ow">or</span> <span class="n">input_id</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Read value based on input type</span>
+            <span class="k">if</span> <span class="n">input_type</span> <span class="o">==</span> <span class="s2">&quot;checkbox&quot;</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">input_type</span> <span class="o">==</span> <span class="s2">&quot;radio&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">):</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Text, email, password, etc.</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill form section with provided data.&quot;&quot;&quot;</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Try to find input by name first, then by ID</span>
+            <span class="n">input_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_by_name</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_element</span><span class="p">:</span>
+                <span class="n">input_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_by_id</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_element</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Get current value to check if change is needed</span>
+            <span class="n">input_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;text&quot;</span>
+
+            <span class="k">if</span> <span class="n">input_type</span> <span class="o">==</span> <span class="s2">&quot;checkbox&quot;</span><span class="p">:</span>
+                <span class="n">current_checked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                <span class="n">target_checked</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">current_checked</span> <span class="o">!=</span> <span class="n">target_checked</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">target_checked</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">uncheck</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                    <span class="n">changed</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">changed</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Text inputs</span>
+                <span class="n">current_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">current_value</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                    <span class="n">changed</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">changed</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">changed</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_required_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">required_fields</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that required fields have values.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">required_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="n">field</span><span class="p">]:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Required field &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; is empty&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">errors</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear all inputs in this form section.&quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_elements</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">input_element</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="n">input_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;text&quot;</span>
+
+            <span class="k">if</span> <span class="n">input_type</span> <span class="o">==</span> <span class="s2">&quot;checkbox&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">uncheck</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">input_type</span> <span class="o">!=</span> <span class="s2">&quot;radio&quot;</span><span class="p">:</span>  <span class="c1"># Don&#39;t clear radio buttons</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+
+<span class="c1"># Test complex form section widget</span>
+<span class="n">form_section</span> <span class="o">=</span> <span class="n">FormSection</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Complex Form Section Widget Test ===&quot;</span><span class="p">)</span>
+
+<span class="c1"># Read current form data</span>
+<span class="n">current_data</span> <span class="o">=</span> <span class="n">form_section</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current form data: </span><span class="si">{</span><span class="n">current_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fill form with test data</span>
+<span class="n">test_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;input1&#39;</span><span class="p">:</span> <span class="s1">&#39;custom_widget_test&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;input2&#39;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># checkbox</span>
+<span class="p">}</span>
+
+<span class="n">fill_results</span> <span class="o">=</span> <span class="n">form_section</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fill results: </span><span class="si">{</span><span class="n">fill_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Read updated data</span>
+<span class="n">updated_data</span> <span class="o">=</span> <span class="n">form_section</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updated form data: </span><span class="si">{</span><span class="n">updated_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test validation</span>
+<span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;input1&#39;</span><span class="p">]</span>
+<span class="n">validation_errors</span> <span class="o">=</span> <span class="n">form_section</span><span class="o">.</span><span class="n">validate_required_fields</span><span class="p">(</span><span class="n">required_fields</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation errors: </span><span class="si">{</span><span class="n">validation_errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-custom-widget-patterns">
+<h2>Advanced Custom Widget Patterns<a class="headerlink" href="#advanced-custom-widget-patterns" title="Link to this heading"></a></h2>
+<p>Implement sophisticated widget patterns with caching and performance optimization:</p>
+<p><strong>Cached Property Custom Widget</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DataTable</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Advanced custom widget for data tables with caching.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Locate the data table.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;#with-thead&quot;</span>  <span class="c1"># Use existing table on test page</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">headers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get table headers (cached for performance).&quot;&quot;&quot;</span>
+        <span class="n">header_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;thead th&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">header_elements</span><span class="p">]</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">row_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get number of rows (cached).&quot;&quot;&quot;</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;tbody tr&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get specific row data.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">row_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tbody tr:nth-child(</span><span class="si">{</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">cells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">row_element</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cells</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_column_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all data from specific column.&quot;&quot;&quot;</span>
+        <span class="n">column_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_count</span><span class="p">):</span>
+            <span class="n">row_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">row_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row_data</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">column_index</span><span class="p">:</span>
+                <span class="n">column_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">column_index</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">column_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">search_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_term</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Search for rows containing specific text.&quot;&quot;&quot;</span>
+        <span class="n">matching_rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">row_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_count</span><span class="p">):</span>
+            <span class="n">row_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">row_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row_data</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">search_term</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">cell</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">):</span>
+                <span class="n">matching_rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">row_index</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">row_data</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">matching_rows</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read complete table data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;headers&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+            <span class="s1">&#39;row_count&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_count</span><span class="p">,</span>
+            <span class="s1">&#39;rows&#39;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_count</span><span class="p">)]</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">click_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">column_index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Click specific table cell.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;tbody tr:nth-child(</span><span class="si">{</span><span class="n">row_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">) td:nth-child(</span><span class="si">{</span><span class="n">column_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">parent</span><span class="o">=</span><span class="bp">self</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cell_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">column_index</span><span class="p">,</span> <span class="n">widget_class</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get widget from specific table cell.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;tbody tr:nth-child(</span><span class="si">{</span><span class="n">row_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">) td:nth-child(</span><span class="si">{</span><span class="n">column_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">parent</span><span class="o">=</span><span class="bp">self</span>
+            <span class="p">)</span>
+            <span class="c1"># Create widget instance with cell as parent</span>
+            <span class="n">widget</span> <span class="o">=</span> <span class="n">widget_class</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">widget</span> <span class="k">if</span> <span class="n">widget</span><span class="o">.</span><span class="n">is_displayed</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+<span class="c1"># Test advanced data table widget</span>
+<span class="n">data_table</span> <span class="o">=</span> <span class="n">DataTable</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Advanced Data Table Widget Test ===&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">data_table</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+    <span class="c1"># Read table structure</span>
+    <span class="n">table_data</span> <span class="o">=</span> <span class="n">data_table</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table headers: </span><span class="si">{</span><span class="n">table_data</span><span class="p">[</span><span class="s1">&#39;headers&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Row count: </span><span class="si">{</span><span class="n">table_data</span><span class="p">[</span><span class="s1">&#39;row_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get specific row</span>
+    <span class="n">first_row</span> <span class="o">=</span> <span class="n">data_table</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First row: </span><span class="si">{</span><span class="n">first_row</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get column data</span>
+    <span class="n">first_column</span> <span class="o">=</span> <span class="n">data_table</span><span class="o">.</span><span class="n">get_column_data</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First column data: </span><span class="si">{</span><span class="n">first_column</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Search functionality</span>
+    <span class="n">search_results</span> <span class="o">=</span> <span class="n">data_table</span><span class="o">.</span><span class="n">search_rows</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Search results for &#39;foo&#39;: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">search_results</span><span class="p">)</span><span class="si">}</span><span class="s2"> matches&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Parameterized Custom Widget</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametrizedLocator</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ParameterizedButton</span><span class="p">(</span><span class="n">Widget</span><span class="p">,</span> <span class="n">ClickableMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom button widget that accepts parameters.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">button_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize parameterized button.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button_type</span> <span class="o">=</span> <span class="n">button_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button_id</span> <span class="o">=</span> <span class="n">button_id</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate locator based on parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">button_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;button[id=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">button_id</span><span class="si">}</span><span class="s2">&#39;]&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">button_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;button[type=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">button_type</span><span class="si">}</span><span class="s2">&#39;]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;button&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">button_text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get button text.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if button is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">css_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get button CSS classes.&quot;&quot;&quot;</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">classes</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read button state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">button_text</span><span class="p">,</span>
+            <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">,</span>
+            <span class="s1">&#39;classes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">css_classes</span><span class="p">,</span>
+            <span class="s1">&#39;displayed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_displayed</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if button has specific CSS class.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">css_classes</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wait for button to become enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">wait_for_element</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">condition</span><span class="o">=</span><span class="k">lambda</span> <span class="n">el</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="n">el</span><span class="p">),</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
+        <span class="p">)</span>
+
+<span class="c1"># Test parameterized button widgets</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ButtonTestView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="c1"># Different button instances with parameters</span>
+    <span class="n">click_button</span> <span class="o">=</span> <span class="n">ParameterizedButton</span><span class="p">(</span><span class="n">button_id</span><span class="o">=</span><span class="s2">&quot;a_button&quot;</span><span class="p">)</span>
+    <span class="n">disabled_button</span> <span class="o">=</span> <span class="n">ParameterizedButton</span><span class="p">(</span><span class="n">button_id</span><span class="o">=</span><span class="s2">&quot;disabled_button&quot;</span><span class="p">)</span>
+    <span class="n">multi_button</span> <span class="o">=</span> <span class="n">ParameterizedButton</span><span class="p">(</span><span class="n">button_id</span><span class="o">=</span><span class="s2">&quot;multi_button&quot;</span><span class="p">)</span>
+
+<span class="n">button_view</span> <span class="o">=</span> <span class="n">ButtonTestView</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Parameterized Button Widget Test ===&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test each button</span>
+<span class="n">buttons</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;click_button&#39;</span><span class="p">,</span> <span class="n">button_view</span><span class="o">.</span><span class="n">click_button</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;disabled_button&#39;</span><span class="p">,</span> <span class="n">button_view</span><span class="o">.</span><span class="n">disabled_button</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;multi_button&#39;</span><span class="p">,</span> <span class="n">button_view</span><span class="o">.</span><span class="n">multi_button</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">button</span> <span class="ow">in</span> <span class="n">buttons</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">button</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+        <span class="n">button_state</span> <span class="o">=</span> <span class="n">button</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">button_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Test specific features</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Has &#39;clicked&#39; class: </span><span class="si">{</span><span class="n">button</span><span class="o">.</span><span class="n">has_class</span><span class="p">(</span><span class="s1">&#39;clicked&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: Not displayed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-widget-with-logging-and-debugging">
+<h2>Custom Widget with Logging and Debugging<a class="headerlink" href="#custom-widget-with-logging-and-debugging" title="Link to this heading"></a></h2>
+<p>Implement proper logging and debugging features:</p>
+<p><strong>Logged Custom Widget</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">widgetastic.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">logged</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SmartForm</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom form widget with comprehensive logging.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">form_locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_locator</span> <span class="o">=</span> <span class="n">form_locator</span> <span class="ow">or</span> <span class="s2">&quot;#testform&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_locator</span>
+
+    <span class="nd">@logged</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_all_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find all inputs with detailed logging.&quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="si">}</span><span class="s2"> input elements&quot;</span><span class="p">)</span>
+
+        <span class="n">input_details</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">input_el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_el</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_el</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">input_el</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="n">input_el</span><span class="p">),</span>
+                <span class="s1">&#39;displayed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span><span class="n">input_el</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">input_details</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">details</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">details</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">input_details</span>
+
+    <span class="nd">@logged</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">smart_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Smart fill with different strategies and logging.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting smart fill with strategy &#39;</span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">&#39; and data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">input_details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_inputs</span><span class="p">()</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; with value &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Find matching input</span>
+            <span class="n">target_input</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">input_info</span> <span class="ow">in</span> <span class="n">input_details</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">field_name</span> <span class="ow">or</span>
+                    <span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">field_name</span><span class="p">):</span>
+                    <span class="n">target_input</span> <span class="o">=</span> <span class="n">input_info</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">target_input</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No input found for field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Input not found&#39;</span><span class="p">}</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">target_input</span><span class="p">[</span><span class="s1">&#39;enabled&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; is disabled&quot;</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Input disabled&#39;</span><span class="p">}</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Get actual element and fill</span>
+            <span class="n">input_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)[</span><span class="n">target_input</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">target_input</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                    <span class="n">target</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">current</span> <span class="o">!=</span> <span class="n">target</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">uncheck</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span> <span class="s1">&#39;to&#39;</span><span class="p">:</span> <span class="n">target</span><span class="p">}</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checkbox &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; changed from </span><span class="si">{</span><span class="n">current</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">current</span><span class="p">}</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">current</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">input_element</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span> <span class="s1">&#39;to&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; changed from &#39;</span><span class="si">{</span><span class="n">current</span><span class="si">}</span><span class="s2">&#39; to &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;changed&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">current</span><span class="p">}</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error filling field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Smart fill completed. Results: </span><span class="si">{</span><span class="n">results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@logged</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validation_rules</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate form with comprehensive logging.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting form validation with rules: </span><span class="si">{</span><span class="n">validation_rules</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">current_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">input_details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_inputs</span><span class="p">()</span>
+
+        <span class="c1"># Read current values</span>
+        <span class="k">for</span> <span class="n">input_info</span> <span class="ow">in</span> <span class="n">input_details</span><span class="p">:</span>
+            <span class="n">field_name</span> <span class="o">=</span> <span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">field_name</span><span class="p">:</span>
+                <span class="n">input_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)[</span><span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">input_info</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;checkbox&#39;</span><span class="p">:</span>
+                    <span class="n">current_data</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">is_checked</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">current_data</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">input_value</span><span class="p">(</span><span class="n">input_element</span><span class="p">)</span>
+
+        <span class="c1"># Validate against rules</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">rules</span> <span class="ow">in</span> <span class="n">validation_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_data</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="n">current_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+
+            <span class="c1"># Required validation</span>
+            <span class="k">if</span> <span class="n">rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;required&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; is required&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Length validation</span>
+            <span class="k">if</span> <span class="s1">&#39;min_length&#39;</span> <span class="ow">in</span> <span class="n">rules</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">rules</span><span class="p">[</span><span class="s1">&#39;min_length&#39;</span><span class="p">]:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; must be at least </span><span class="si">{</span><span class="n">rules</span><span class="p">[</span><span class="s1">&#39;min_length&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> characters&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Pattern validation</span>
+            <span class="k">if</span> <span class="s1">&#39;pattern&#39;</span> <span class="ow">in</span> <span class="n">rules</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">rules</span><span class="p">[</span><span class="s1">&#39;pattern&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; does not match required pattern&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation completed. Errors: </span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;valid&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;errors&#39;</span><span class="p">:</span> <span class="n">errors</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">current_data</span><span class="p">}</span>
+
+<span class="c1"># Test smart form widget</span>
+<span class="n">smart_form</span> <span class="o">=</span> <span class="n">SmartForm</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Smart Form Widget with Logging Test ===&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test smart fill</span>
+<span class="n">test_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;input1&#39;</span><span class="p">:</span> <span class="s1">&#39;smart_form_test&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;input2&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+
+<span class="n">fill_results</span> <span class="o">=</span> <span class="n">smart_form</span><span class="o">.</span><span class="n">smart_fill</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Smart fill results: </span><span class="si">{</span><span class="n">fill_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test validation</span>
+<span class="n">validation_rules</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;input1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;min_length&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+    <span class="s1">&#39;input2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">validation_results</span> <span class="o">=</span> <span class="n">smart_form</span><span class="o">.</span><span class="n">validate_form</span><span class="p">(</span><span class="n">validation_rules</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation results: </span><span class="si">{</span><span class="n">validation_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="widget-testing-and-quality-assurance">
+<h2>Widget Testing and Quality Assurance<a class="headerlink" href="#widget-testing-and-quality-assurance" title="Link to this heading"></a></h2>
+<p>Implement comprehensive testing for custom widgets:</p>
+<p><strong>Widget Test Framework</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">WidgetTester</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Framework for testing custom widgets.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_widget_basic_functionality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">widget_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test basic widget functionality.&quot;&quot;&quot;</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Test 1: Widget existence and display</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">displayed</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">is_displayed</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;is_displayed&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="n">displayed</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Widget is </span><span class="si">{</span><span class="s1">&#39;displayed&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">displayed</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;not displayed&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;is_displayed&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error checking display: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Test 2: Read functionality</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">read_result</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;read&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="n">read_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Read returned: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">read_result</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">read_result</span>
+            <span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;read&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error reading widget: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Test 3: Fill functionality (if available)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s1">&#39;fill&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Test with simple data</span>
+                <span class="n">test_value</span> <span class="o">=</span> <span class="s2">&quot;test_value&quot;</span>
+                <span class="n">fill_result</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">test_value</span><span class="p">)</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;fill&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="n">fill_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Fill returned: </span><span class="si">{</span><span class="n">fill_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">fill_result</span>
+                <span class="p">})</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;fill&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;passed&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error filling widget: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">})</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget_name</span><span class="p">,</span> <span class="s1">&#39;tests&#39;</span><span class="p">:</span> <span class="n">tests</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_comprehensive_test_suite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widgets_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run comprehensive tests on multiple widgets.&quot;&quot;&quot;</span>
+        <span class="n">all_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">widget_name</span><span class="p">,</span> <span class="n">widget</span> <span class="ow">in</span> <span class="n">widgets_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Testing </span><span class="si">{</span><span class="n">widget_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_widget_basic_functionality</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">widget_name</span><span class="p">)</span>
+            <span class="n">all_results</span><span class="p">[</span><span class="n">widget_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+
+            <span class="c1"># Print test results</span>
+            <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;tests&#39;</span><span class="p">]:</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;PASS&quot;</span> <span class="k">if</span> <span class="n">test</span><span class="p">[</span><span class="s1">&#39;passed&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;FAIL&quot;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">test</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">test</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_test_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_results</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate comprehensive test report.&quot;&quot;&quot;</span>
+        <span class="n">total_widgets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_results</span><span class="p">)</span>
+        <span class="n">total_tests</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;tests&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">passed_tests</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;tests&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="s1">&#39;passed&#39;</span><span class="p">]])</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="n">report</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;total_widgets&#39;</span><span class="p">:</span> <span class="n">total_widgets</span><span class="p">,</span>
+                <span class="s1">&#39;total_tests&#39;</span><span class="p">:</span> <span class="n">total_tests</span><span class="p">,</span>
+                <span class="s1">&#39;passed_tests&#39;</span><span class="p">:</span> <span class="n">passed_tests</span><span class="p">,</span>
+                <span class="s1">&#39;failed_tests&#39;</span><span class="p">:</span> <span class="n">total_tests</span> <span class="o">-</span> <span class="n">passed_tests</span><span class="p">,</span>
+                <span class="s1">&#39;success_rate&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">passed_tests</span> <span class="o">/</span> <span class="n">total_tests</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="k">if</span> <span class="n">total_tests</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;details&#39;</span><span class="p">:</span> <span class="n">test_results</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">report</span>
+
+<span class="c1"># Test all custom widgets</span>
+<span class="n">widgets_to_test</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;StatusIndicator&#39;</span><span class="p">:</span> <span class="n">StatusIndicator</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="s2">&quot;#click_result&quot;</span><span class="p">),</span>
+    <span class="s1">&#39;ProgressBar&#39;</span><span class="p">:</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">browser</span><span class="p">),</span>
+    <span class="s1">&#39;FormSection&#39;</span><span class="p">:</span> <span class="n">FormSection</span><span class="p">(</span><span class="n">browser</span><span class="p">),</span>
+    <span class="s1">&#39;DataTable&#39;</span><span class="p">:</span> <span class="n">DataTable</span><span class="p">(</span><span class="n">browser</span><span class="p">),</span>
+    <span class="s1">&#39;SmartForm&#39;</span><span class="p">:</span> <span class="n">SmartForm</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">tester</span> <span class="o">=</span> <span class="n">WidgetTester</span><span class="p">(</span><span class="n">browser</span><span class="p">)</span>
+<span class="n">test_results</span> <span class="o">=</span> <span class="n">tester</span><span class="o">.</span><span class="n">run_comprehensive_test_suite</span><span class="p">(</span><span class="n">widgets_to_test</span><span class="p">)</span>
+<span class="n">test_report</span> <span class="o">=</span> <span class="n">tester</span><span class="o">.</span><span class="n">generate_test_report</span><span class="p">(</span><span class="n">test_results</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Custom Widget Test Report ===&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total widgets tested: </span><span class="si">{</span><span class="n">test_report</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">][</span><span class="s1">&#39;total_widgets&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total tests run: </span><span class="si">{</span><span class="n">test_report</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">][</span><span class="s1">&#39;total_tests&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tests passed: </span><span class="si">{</span><span class="n">test_report</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">][</span><span class="s1">&#39;passed_tests&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tests failed: </span><span class="si">{</span><span class="n">test_report</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">][</span><span class="s1">&#39;failed_tests&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Success rate: </span><span class="si">{</span><span class="n">test_report</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">][</span><span class="s1">&#39;success_rate&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices-for-custom-widgets">
+<h2>Best Practices for Custom Widgets<a class="headerlink" href="#best-practices-for-custom-widgets" title="Link to this heading"></a></h2>
+<p>Guidelines for creating maintainable and robust custom widgets:</p>
+<p><strong>Custom Widget Best Practices</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Follow naming conventions and inheritance hierarchy</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GoodCustomWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;✓ Good - Clear name, inherits from Widget base class.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__locator__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;✓ Good - Implements required locator method.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">locator</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;✓ Good - Implements read interface.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;✓ Good - Provides useful string representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(locator=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__locator__</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+<span class="c1"># 2. Handle errors gracefully</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RobustWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget with comprehensive error handling.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read with error handling.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">NoSuchElementException</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element not found for </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected error reading </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">safe_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill with comprehensive error checking.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Widget not displayed&#39;</span><span class="p">}</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;is_enabled&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Widget not enabled&#39;</span><span class="p">}</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+<span class="c1"># 3. Use caching for expensive operations</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PerformantWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget with performance optimizations.&quot;&quot;&quot;</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expensive_computation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cache expensive DOM operations.&quot;&quot;&quot;</span>
+        <span class="c1"># This would be cached after first access</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">elements</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">invalidate_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear cached properties when DOM changes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_expensive_computation&#39;</span><span class="p">):</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_expensive_computation&#39;</span><span class="p">)</span>
+
+<span class="c1"># 4. Document widget behavior and parameters</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentedWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom widget for complex UI component.</span>
+
+<span class="sd">    This widget handles XYZ functionality and provides:</span>
+<span class="sd">    - Read interface for current state</span>
+<span class="sd">    - Fill interface for setting values</span>
+<span class="sd">    - Validation for input data</span>
+<span class="sd">    - Error handling for edge cases</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        locator: CSS selector or XPath for the widget</span>
+<span class="sd">        validation_mode: &#39;strict&#39; or &#39;lenient&#39; validation</span>
+<span class="sd">        timeout: Maximum wait time for operations</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        widget = DocumentedWidget(browser, locator=&quot;#my-widget&quot;)</span>
+<span class="sd">        current_state = widget.read()</span>
+<span class="sd">        widget.fill({&quot;field1&quot;: &quot;value1&quot;})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_mode</span><span class="o">=</span><span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locator</span> <span class="o">=</span> <span class="n">locator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_mode</span> <span class="o">=</span> <span class="n">validation_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+</pre></div>
+</div>
+</section>
+<section id="final-cleanup">
+<h2>Final Cleanup<a class="headerlink" href="#final-cleanup" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">browser_instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">playwright</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleanup error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>Custom widget development in Widgetastic.core provides:</p>
+<ul class="simple">
+<li><p><strong>Extensibility</strong>: Create widgets for any UI component type</p></li>
+<li><p><strong>Reusability</strong>: Build widgets once, use across multiple projects</p></li>
+<li><p><strong>Consistency</strong>: Follow framework patterns for predictable behavior</p></li>
+<li><p><strong>Performance</strong>: Implement caching and optimization strategies</p></li>
+<li><p><strong>Maintainability</strong>: Proper error handling, logging, and documentation</p></li>
+</ul>
+<p>Key takeaways:
+* Always inherit from Widget base class and implement __locator__()
+* Follow read/fill interface pattern for consistency
+* Handle errors gracefully with try/catch and logging
+* Use caching for expensive DOM operations
+* Test widgets thoroughly with comprehensive test suites
+* Document widget behavior, parameters, and usage examples
+* Consider performance implications in widget design</p>
+<p>This completes the custom widget development tutorial. You can now create sophisticated, reusable widgets that extend Widgetastic.core for your specific automation needs.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="version-picking.html" class="btn btn-neutral float-left" title="Version Picking Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api-reference/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016-2019, Milan Falešník; 2020-2025, Red Hat, Inc. (Apache license 2).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>
