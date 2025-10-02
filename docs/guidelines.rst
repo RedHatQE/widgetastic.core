@@ -50,19 +50,19 @@ Anyone using this library should consult these guidelines whether one is not vio
 
       - et cetera
 
-    - ``__locator__`` MUST NOT return ``WebElement`` instances to prevent ``StaleElementReferenceException``
+    - ``__locator__`` MUST NOT return ``ElementHandle`` instances to prevent stale element issues
 
     - If you use a ``ROOT`` class attribute, especially in combination with ``ParametrizedLocator``, a ``__locator__`` is generated automatically for you.
 
-  - Widgets should keep its internal state in reasonable size. Ideally none, but eg. caching header names of tables is perfectly acceptable. Saving ``WebElement`` instances in the widget instance is not recommended.
+  - Widgets should keep its internal state in reasonable size. Ideally none, but eg. caching header names of tables is perfectly acceptable. Saving ``ElementHandle`` instances in the widget instance is not recommended.
 
     - Think about what to cache and when to invalidate
 
-    - Never store ``WebElement`` objects.
+    - Never store ``ElementHandle`` objects.
 
-    - Try to shorten the lifetime of any single ``WebElement`` as much as possible
+    - Try to shorten the lifetime of any single ``ElementHandle`` as much as possible
 
-      - This will help against ``StaleElementReferenceException``
+      - This will help against stale element issues
 
   - Widgets shall log using ``self.logger``. That ensures the log message is prefixed with the widget name and location and gives more insight about what is happening.
 
@@ -96,17 +96,17 @@ Anyone using this library should consult these guidelines whether one is not vio
 
 - When using ``Browser`` (also applies when writing Widgets)
 
-  - Ensure you don't invoke methods or attributes on the ``WebElement`` instances returned by ``element()`` or ``elements()``
+  - Ensure you use the widgetastic Browser methods rather than direct Playwright Locator methods where possible
 
-  - Eg. instead of ``element.text`` use ``browser.text(element)`` (applies for all such circumstances). These calls usually do not invoke more than their original counterparts. They only invoke some workarounds if some know issue arises. Check what the ``Browser`` (sub)class offers and if you miss something, create a PR
+  - Eg. instead of ``locator.text_content()`` use ``browser.text(locator)`` (applies for all such circumstances). These calls usually do not invoke more than their original counterparts. They only invoke some workarounds if some known issue arises. Check what the ``Browser`` (sub)class offers and if you miss something, create a PR
 
   - You don't necessarily have to specify ``self.browser.element(..., parent=self)`` when you are writing a query inside a widget implementation as widgetastic figures this out and does it automatically.
 
   - Most of the methods that implement the getters, that would normally be on the element object, take an argument or two for themselves and the rest of ``*args`` and ``**kwargs`` is shoved inside ``element()`` method for resolution, so constructs like ``self.browser.get_attribute('id', self.browser.element('locator', parent=foo))`` are not needed. Just write ``self.browser.get_attribute('id', 'locator', parent=foo)``. Check the method definitions on the ``Browser`` class to see that.
 
-  - ``element()`` method tries to apply a rudimentary intelligence on the element it resolves. If a locator resolves to a single element, it returns it. If the locator resolves to multiple elements, it tries to filter out the invisible elements and return the first visible one. If none of them is visible, it just returns the first one. Under normal circumstances, standard selenium resolution always returns the first of the resolved elements.
+  - ``element()`` method tries to apply a rudimentary intelligence on the element it resolves. If a locator resolves to a single element, it returns it. If the locator resolves to multiple elements, it tries to filter out the invisible elements and return the first visible one. If none of them is visible, it just returns the first one. Under normal circumstances, standard Playwright resolution returns all matching elements.
 
-  - DO NOT use ``element.find_elements_by_<method>('locator')``, use ``self.browser.element('locator', parent=element)``. It is about as same long and safer.
+  - DO NOT use nested locator calls, use ``self.browser.element('locator', parent=element)``. This approach is safer and more consistent with the framework architecture.
 
     - Eventually I might wrap the elements as well but I decided to not complicate things for now.
 

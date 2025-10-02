@@ -1,9 +1,13 @@
 name: 🕵️ Test suite
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
-      - main
+      - playwright
   pull_request:
     types: ["opened", "synchronize", "reopened"]
   schedule:
@@ -11,30 +15,55 @@ on:
     - cron: 59 23 * * 5
 
 jobs:
+  setup-browsers:
+    name: 🌐 Setup Playwright Browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      playwright-version: ${{ steps.playwright-version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Playwright
+        run: pip install playwright
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pip show playwright | grep Version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-browsers
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-
+
+      - name: Install browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: |
+          playwright install chromium firefox
+          playwright install-deps
+
   tests:
     # Run unit tests on different version of python and browser
     name: 🐍 Python-${{ matrix.python-version }}-${{ matrix.browser }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: setup-browsers
     strategy:
       matrix:
-        browser: [chrome, firefox]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        browser: [chromium, firefox]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
-      - name: Pull selenium-standalone:latest
-        run: podman pull selenium/standalone-${{ matrix.browser }}:latest
-
-      - name: Pull nginx:alpine
-        run: podman pull docker.io/library/nginx:alpine
-
-      - name: Pull pause
-        run: |
-          # something screwy is going on in the github kube node
-          # seeing 404s pulling from k8s.gcr, which was deprecated a year ago anyway
-          # the registry name is hardcoded somewhere on the infra side, but the pull from the new registry works consistently
-          podman pull registry.k8s.io/pause:3.5
-          podman tag registry.k8s.io/pause:3.5 k8s.gcr.io/pause:3.5
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -43,15 +72,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Playwright
+        run: pip install playwright
+
+      - name: Restore Playwright browsers cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ needs.setup-browsers.outputs.playwright-version }}-browsers
+          fail-on-cache-miss: true
+
       - name: UnitTest - Python-${{ matrix.python-version }}-${{ matrix.browser }}
-        env:
-          BROWSER: ${{ matrix.browser }}
-          XDG_RUNTIME_DIR: ${{ github.workspace }}
         run: |
           pip install -e .[test]
-          mkdir -p ${XDG_RUNTIME_DIR}/podman
-          podman system service --time=0 unix://${XDG_RUNTIME_DIR}/podman/podman.sock &
-          pytest -n 5
+          pytest -n 3 -sqvv --browser=${{ matrix.browser }} --headless --cov=src --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -64,6 +98,7 @@ jobs:
   docs:
     name: Docs Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,6 +107,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+          cache: 'pip'
 
       - name: Install Deps
         run: |
@@ -91,6 +127,8 @@ jobs:
     # Check package properly install on different platform (dev setup)
     name: 💻 Platform-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    needs: [setup-browsers, tests]
     strategy:
       matrix:
         os: [windows-latest, macos-latest]    # We are running test on ubuntu linux.
@@ -104,6 +142,7 @@ jobs:
         with:
           python-version: "3.x"
           architecture: "x64"
+          cache: 'pip'
 
       - name: Development setup on ${{ matrix.os }}
         run: |
@@ -113,6 +152,8 @@ jobs:
   package:
     name: ⚙️ Build & Verify Package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [setup-browsers, tests, docs]
 
     steps:
       - name: Checkout
@@ -123,6 +164,7 @@ jobs:
         with:
           python-version: "3.x"
           architecture: "x64"
+          cache: 'pip'
 
       - name: Build and verify with twine
         run: |

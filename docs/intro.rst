@@ -19,8 +19,8 @@ Features
 - Widgets defined on Views are read/filled in exact order that they were defined. The only exception
   to this default behaviour is for nested Views as there is limitation in the language. However, this
   can be worked around by using ``View.nested`` decorator on the nested View.
-- Includes a wrapper around selenium functionality that tries to make the experience as hassle-free
-  as possible including customizable hooks and built-in "JavaScript wait" code.
+- Includes a wrapper around Playwright functionality that tries to make the experience as hassle-free
+  as possible including customizable hooks and built-in network activity monitoring.
 - Views can define their root locators and those are automatically honoured in the element lookup
   in the child Widgets.
 - Supports :ref:`parametrized-views`.
@@ -29,7 +29,7 @@ Features
 - Supports :ref:`version-picking`.
 - Supports automatic :ref:`constructor-object-collapsing` for objects passed into the widget constructors.
 - Supports :ref:`fillable-objects` that can coerce themselves into an appropriate filling value.
-- Supports many Pythons! 2.7, 3.5, 3.6 and PyPy are officially supported and unit-tested in CI.
+- Supports modern Python versions (specify in pyproject.toml) are officially supported and unit-tested in CI.
 
 What this project does NOT do
 -----------------------------

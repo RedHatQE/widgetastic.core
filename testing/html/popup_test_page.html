@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Popup Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        button, a {
+            padding: 10px 15px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        button:hover, a:hover {
+            background-color: #0056b3;
+        }
+
+        .section {
+            background: white;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Popup Test Page</h1>
+
+    <div class="section">
+        <h3>Popup Windows</h3>
+        <button id="open-popup" onclick="openPopup()">Open Popup</button>
+    </div>
+
+    <div class="section">
+        <h3>New Tab Operations</h3>
+        <button id="open-new-tab" onclick="openNewTab()">Open New Tab</button>
+    </div>
+
+    <div class="section">
+        <h3>External Links</h3>
+        <a href="external_test_page.html" target="_blank" id="external-link">External Link (New Tab)</a>
+    </div>
+
+    <script>
+        function openPopup() {
+            window.open('testing_page.html', 'popup', 'width=400,height=300');
+        }
+
+        function openNewTab() {
+            window.open('testing_page.html', '_blank');
+        }
+    </script>
+</body>
+</html>

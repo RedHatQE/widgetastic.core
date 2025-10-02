@@ -18,6 +18,7 @@ from widgetastic.widget import View
 from widgetastic.widget import Widget
 from widgetastic.widget import WidgetDescriptor
 from widgetastic.widget import WTMixin
+from widgetastic.locator import SmartLocator
 
 
 def test_can_create_view(browser):
@@ -40,7 +41,7 @@ def test_view_root_locator(browser):
         ROOT = "#foo"
 
     view = MyView(browser)
-    assert view.__locator__() == ("css selector", "#foo")
+    assert view.__locator__() == SmartLocator("#foo")
 
 
 def test_view_widget_names(browser):
@@ -126,7 +127,7 @@ def test_view_is_displayed_without_root_locator(browser):
 
 def test_view_is_displayed_with_root_locator(browser):
     class MyView(View):
-        ROOT = "#hello"
+        ROOT = "#wt-core-title"
 
     assert MyView(browser).is_displayed
 
@@ -735,7 +736,7 @@ def test_iframe_view(browser):
     assert all([getattr(iframe_view, name).is_displayed for name in iframe_view.widget_names])
     assert all([getattr(parent_view, name).is_displayed for name in parent_view.widget_names])
 
-    assert iframe_view.h3.text == "IFrame Tests"
+    assert iframe_view.h3.text == "IFrame Widget Testing"
     assert parent_view.h3.text == "footest"
 
     assert iframe_view.select1.read() == "Foo"
@@ -745,7 +746,7 @@ def test_iframe_view(browser):
     assert parent_view.checkbox1.fill(True) and parent_view.checkbox1.read()
 
     assert iframe_view.nested_iframe_view.is_displayed
-    assert iframe_view.nested_iframe_view.h3.text == "IFrame Tests 2"
+    assert iframe_view.nested_iframe_view.h3.text == "Nested IFrame Content"
     assert (
         iframe_view.nested_iframe_view.select3.fill("Bar")
         and iframe_view.nested_iframe_view.select3.read() == "Bar"
@@ -755,3 +756,27 @@ def test_iframe_view(browser):
     assert iframe_view.nested_iframe_view.nested.nested_input.read() == "Default Value"
     assert iframe_view.nested_iframe_view.nested.nested_input.fill("New Value")
     assert iframe_view.nested_iframe_view.nested.nested_input.read() == "New Value"
+
+
+def test_parametrized_view_request_errors(browser):
+    """Test ParametrizedViewRequest error handling."""
+
+    class TestParam(ParametrizedView):
+        PARAMETERS = ("param1", "param2")
+
+        @classmethod
+        def all(cls, browser):
+            return [("a", "b")]
+
+    class TestView(View):
+        param = TestParam()
+
+    view = TestView(browser)
+
+    # Test missing parameter error
+    with pytest.raises(TypeError, match="You did not pass the required parameter param2"):
+        view.param(param1="test")
+
+    # Test accessing attribute before calling
+    with pytest.raises(AttributeError, match="This is not an instance of TestParam"):
+        view.param.some_attr

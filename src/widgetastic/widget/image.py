@@ -1,8 +1,5 @@
 from .base import GenericLocatorWidget
 
-if __name__ == "__main__":
-    pass
-
 
 class Image(GenericLocatorWidget):
     """A widget that represents an image.
