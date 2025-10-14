@@ -95,7 +95,7 @@ This approach creates standalone view classes and assigns them as attributes usi
     view.normal_view.is_displayed               # True
     view.normal_view.title.read()               # 'Normal View Testing'
     view.parametrized_view.title.read()         # 'Parametrized View Testing'
-    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'}    
+    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'}
 
 
 **2. Inner Classes**
@@ -135,7 +135,7 @@ This approach defines view classes as inner classes with the ``@View.nested`` de
     view.normal_view.is_displayed               # True
     view.normal_view.title.read()               # 'Normal View Testing'
     view.parametrized_view.title.read()         # 'Parametrized View Testing'
-    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'} 
+    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'}
 
 
 .. note::
@@ -200,20 +200,20 @@ ParametrizedView solves this by letting you define a single template view that c
 
     # Then for invoking this. create a view for foo.
     view = ThingContainerView(browser, additional_context={'thing_id': 'foo'})
-    
+
     # Fill the foo container
     view.the_widget.fill('Test input for foo')
     view.description.fill('Description for foo')
     view.active.fill(True)
-    
+
     # Create parametrized view for bar
     bar_view = ThingContainerView(browser, additional_context={'thing_id': 'bar'})
     bar_view.the_widget.fill('Test input for bar')
 
 **Nested Parametrized View Example**
 
-It is also possible to nest the parametrized view inside another view, parametrized or otherwise. 
-In this case the invocation of a nested view looks like a method call, instead of looking like a property. 
+It is also possible to nest the parametrized view inside another view, parametrized or otherwise.
+In this case the invocation of a nested view looks like a method call, instead of looking like a property.
 The invocation supports passing the arguments both ways, positional and keyword based.
 
 .. code-block:: python
@@ -236,31 +236,31 @@ The invocation supports passing the arguments both ways, positional and keyword 
 
     # We create the root view
     view = ParametrizedViewTesting(browser)
-    
+
     # Now if it was an ordinary nested view, view.thing_container_view.the_widget would give us the
     # nested view instance directly and then the the_widget widget. But this is a parametrized view
     # and it will give us an intermediate object whose task is to collect the parameters upon
     # calling and then pass them through into the real view object.
-    
+
     # This example will be invoking the parametrized view with the exactly same param like the
     # previous example:
     view.thing_container_view('foo')
-    
+
     # So, when we have that view, you can use it as you are used to
     view.thing_container_view('foo').the_widget.fill('Test for foo')
     view.thing_container_view('bar').the_widget.fill('Test for bar')
     view.thing_container_view('baz').the_widget.fill('Test for baz')
-    
+
     # Or with keyword params
     view.thing_container_view(thing_id='foo').the_widget.fill('Test for foo')
 
 
-The parametrized views also support list-like access using square braces. 
-For that to work, you need the `all` classmethod defined on the view so Widgetastic would be aware of all the items. 
+The parametrized views also support list-like access using square braces.
+For that to work, you need the `all` classmethod defined on the view so Widgetastic would be aware of all the items.
 You can access the parametrized views by member index [i] and slice [i:j].
 
-It is also possible to iterate through all the occurences of the parametrized view. 
-Let's assume the previous code sample is still loaded and the `thing_container_view` class has the all() defined. 
+It is also possible to iterate through all the occurences of the parametrized view.
+Let's assume the previous code sample is still loaded and the `thing_container_view` class has the all() defined.
 In that case, the code would like like this:
 
 .. code-block:: python
@@ -299,7 +299,7 @@ In that case, the code would like like this:
 .. note::
    This sample code would go through all the occurences of the parametrization. Remember that the all classmethod **IS REQUIRED** in this case.
 
-You can also pass the :py:class:`widgetastic.utils.ParametrizedString` instance as a constructor parameter into widget instantiation on the view class. 
+You can also pass the :py:class:`widgetastic.utils.ParametrizedString` instance as a constructor parameter into widget instantiation on the view class.
 Because it utilizes :ref:`constructor-object-collapsing`, it will resolve itself automatically.
 
 .. _constructor-object-collapsing:
@@ -319,7 +319,7 @@ By using :py:class:`widgetastic.utils.ConstructorResolvable`, you can create an 
 This mechanism enables:
 
 * **Lazy Evaluation**: Objects can decide their final form only when they have full context
-* **Dynamic Resolution**: The same constructor parameter can resolve to different values based on runtime conditions  
+* **Dynamic Resolution**: The same constructor parameter can resolve to different values based on runtime conditions
 * **Version Picking**: :py:class:`widgetastic.utils.VersionPick` uses this to select appropriate widgets based on browser version
 * **Parametrized Strings**: :py:class:`widgetastic.utils.ParametrizedString` uses this to inject parameters during widget construction
 
@@ -332,8 +332,8 @@ Conditional Views
 
 Handle dynamic UI sections that change based on application state using conditional views.
 
-If you have forms in your product whose parts change depending on previous selections, you might like to use the :py:class:`widgetastic.widget.ConditionalSwitchableView`. 
-It will allow you to represent different kinds of views under one widget name. 
+If you have forms in your product whose parts change depending on previous selections, you might like to use the :py:class:`widgetastic.widget.ConditionalSwitchableView`.
+It will allow you to represent different kinds of views under one widget name.
 
 
 **ConditionalSwitchableView Example**
@@ -350,7 +350,7 @@ Look at our testing page, Under `Conditional view testing` section, you can see 
 
     class ConditionalSwitchableViewTesting(View):
         ROOT = "#conditional_form_container"
-        
+
         foo = TextInput(name='foo_value')  # For multi-widget reference
         action_type = Select(name='action_type')
 
@@ -392,7 +392,7 @@ Look at our testing page, Under `Conditional view testing` section, you can see 
 
     # Switch to action type 2 content
     view.action_type.fill("Action type 2")
-    view.action_form.widget.fill("Test input for type 2") 
+    view.action_form.widget.fill("Test input for type 2")
     view.action_form.priority.fill("High")
     view.action_form.notes.fill("Important notes")
 
@@ -418,7 +418,7 @@ You can see it gives you the flexibility of decision based on the values in the 
         conditional_widget.register('Action type 1', default=True, widget=TextInput(name='simple_widget'))
 
     view = SimpleConditionalWidgetView(browser)
-    
+
     # When bar is set to 'Action type 1', conditional_widget becomes available.
     view.bar.fill('Action type 1')
     view.conditional_widget.is_displayed # True
@@ -440,7 +440,7 @@ Views support batch operations like fill and read on all their widgets.
 
     class NormalView(View):
         ROOT = "#normal_view_container"
-        
+
         name = TextInput(id="normal_name")
         email = TextInput(id="normal_email")
         terms = Checkbox(id="normal_terms")
@@ -472,7 +472,7 @@ Views support batch operations like fill and read on all their widgets.
     view = NormalView(browser)
     view.name.is_displayed # Always True
 
-If we don't specify a ``ROOT`` locator, it will be considered as displayed every time. 
+If we don't specify a ``ROOT`` locator, it will be considered as displayed every time.
 but if we specify a ``ROOT`` locator, it will be considered as displayed only when the root locator is present on web page.
 
 .. code-block:: python
@@ -482,11 +482,11 @@ but if we specify a ``ROOT`` locator, it will be considered as displayed only wh
         name = TextInput(id="normal_name")
 
     view = NormalView(browser)
-    view.name.is_displayed # Only True when the root locator is present 
+    view.name.is_displayed # Only True when the root locator is present
 
 .. note::
     View ``is_displayed`` property is important to know when you are using views to navigate between pages.
-    So it recommended to specify a ``ROOT`` locator for all views. If you don't want to specify a ``ROOT`` locator, 
+    So it recommended to specify a ``ROOT`` locator for all views. If you don't want to specify a ``ROOT`` locator,
     then tried to add custom ``is_displayed`` property to the view.
 
 Here is a example of how to overwrite ``is_displayed`` property of the view with custom logic.
@@ -496,7 +496,7 @@ Here is a example of how to overwrite ``is_displayed`` property of the view with
     class NormalView(View):
         name = TextInput(id="normal_name")
 
-        @property        
+        @property
         def is_displayed(self):
             # We can take support of other widgets to check if the view is displayed
             return self.name.is_displayed
@@ -540,7 +540,7 @@ When designing views in widgetastic, following best practices will help you crea
 
 - **Leverage ROOT Locators**: Always define a ``ROOT`` locator for your views to scope widget searches to the correct section of the page. This prevents accidental matches and improves reliability.
 
-    .. code-block:: python  
+    .. code-block:: python
 
         # Scope widgets to specific sections
         class SidebarView(View):
