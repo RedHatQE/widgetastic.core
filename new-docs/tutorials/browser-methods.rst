@@ -5,12 +5,20 @@ Browser Methods and Elements
 The Browser class is the foundation of widgetastic, providing methods for interacting with web pages and elements. This tutorial covers essential browser operations and element interaction patterns.
 
 .. note::
-   **Prerequisites**: Complete :doc:`basic-widgets` and :doc:`views-and-navigation` tutorials first.
+   **Prerequisites**: Complete :doc:`basic-widgets` and :doc:`views` tutorials first.
 
 Browser Class Overview
 ======================
 
-The widgetastic Browser wraps Playwright's ``Page`` object with additional intelligence for reliable automation.
+The widgetastic Browser wraps Playwright's ``Page`` object with additional intelligence for reliable automation. It provides comprehensive web interaction capabilities while maintaining compatibility with the proven widgetastic API.
+
+**Key Features:**
+
+* **Smart Element Selection**: Intelligently selects visible and interactable elements
+* **Robust Text Handling**: Normalized text operations with multiple extraction strategies
+* **Enhanced Click Operations**: Handles overlays, animations, and dynamic positioning
+* **Frame Context Management**: Seamless iframe handling with automatic context switching
+* **Network Activity Monitoring**: Page safety checks for stable interactions
 
 **Browser Initialization**
 
@@ -31,26 +39,58 @@ The widgetastic Browser wraps Playwright's ``Page`` object with additional intel
     # Navigate to test page
     page.goto("file:///path/to/testing/html/testing_page.html")
 
+Browser Properties and Information
+===================================
+
+The Browser class provides several properties for accessing browser and page information:
+
+.. code-block:: python
+
+    # Page URL (can be read or set)
+    current_url = browser.url
+    browser.url = "https://example.com"  # Navigate by setting URL
+
+    # Page title
+    page_title = browser.title
+    print(f"Current page: {page_title}")
+
+    # Browser information
+    browser_engine = browser.browser_type    # "chromium", "firefox", etc.
+    major_version = browser.browser_version  # 119, 120, etc.
+    is_closed = browser.is_browser_closed   # True/False
+
+    # Screenshots
+    browser.save_screenshot("/path/to/screenshot.png")
+
+    # Page management
+    browser.refresh()  # Reload current page
+    browser.close()    # Close browser page
+
 Element Finding and Selection
 =============================
 
-The Browser provides sophisticated element finding with smart selection strategies.
+The Browser provides sophisticated element finding with smart selection strategies and comprehensive element collection methods.
 
 **Basic Element Finding**
 
 .. code-block:: python
 
-    # Find elements using different strategies
+    # Find single elements using different strategies
     title_element = browser.element("h1#wt-core-title")
     text_input = browser.element("#input")
     button = browser.element("//button[@id='a_button']")
 
+    # Find multiple elements
+    all_buttons = browser.elements("button")  # List of all button elements
+    section_headers = browser.elements(".section-header")
+
+    # Element finding with parent scoping
+    table = browser.element("#with-thead")
+    table_rows = browser.elements("tr", parent=table)
+
     # Check if elements exist
     exists = browser.is_displayed("h1#wt-core-title")  # True
     missing = browser.is_displayed("#non-existent")    # False
-
-    # Find with timeout
-    dynamic_element = browser.element("#invisible_appear_p", timeout=5000)
 
 **Smart Element Selection**
 

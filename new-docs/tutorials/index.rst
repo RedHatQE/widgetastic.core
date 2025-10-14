@@ -17,10 +17,4 @@ These comprehensive tutorials cover everything from basic widget usage to advanc
 
 **Ready to begin?** Start with Basic Widgets and follow the sequence.
 
-Each tutorial includes:
-* Complete working examples using the widgetastic test page
-* Step-by-step explanations
-* Best practices and common patterns
-* Hands-on exercises
-
 **Support**: All examples use elements from ``testing/html/testing_page.html`` - you can test everything yourself!

@@ -112,12 +112,6 @@ Optional Dependencies
 
 For additional functionality, you can install optional dependencies:
 
-**Documentation Building**
-
-.. code-block:: bash
-
-    pip install "widgetastic.core[docs]"
-
 **Development Tools**
 
 .. code-block:: bash
@@ -130,6 +124,12 @@ For additional functionality, you can install optional dependencies:
 
     pip install "widgetastic.core[test]"
 
+**Documentation Building**
+
+.. code-block:: bash
+
+    pip install "widgetastic.core[docs]"
+
 Next Steps
 ==========
 
@@ -137,4 +137,3 @@ Now that you have widgetastic.core installed:
 
 1. :doc:`concepts` - Learn the core concepts and terminology
 2. :doc:`first-steps` - Write your first widgetastic automation script
-3. :doc:`../quickstart/index` - Jump into practical examples
