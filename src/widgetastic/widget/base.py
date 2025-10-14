@@ -719,7 +719,7 @@ class ClickableMixin:
         Args:
             handle_alert: Special alert handling. None - no handling, True - accept, False - dismiss
         """
-        self.browser.click(self, ignore_ajax=(handle_alert is not None))
+        self.browser.click(self, no_wait_after=(handle_alert is not None))
         if handle_alert is not None:
             self.browser.handle_alert(cancel=not handle_alert, wait=2.0, squash=True)
 

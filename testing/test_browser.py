@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import playwright
 import pytest
 
 from widgetastic.browser import BrowserParentWrapper
@@ -11,7 +12,6 @@ from widgetastic.exceptions import LocatorNotImplemented
 from widgetastic.exceptions import NoSuchElementException
 from widgetastic.widget import Text
 from widgetastic.widget import View
-from playwright.sync_api import Locator
 
 
 @pytest.fixture()
@@ -273,7 +273,10 @@ def test_wait_for_element_visible(browser):
     # Click on the button
     browser.click("#invisible_appear_button")
     try:
-        assert isinstance(browser.wait_for_element("#invisible_appear_p", visible=True), Locator)
+        assert isinstance(
+            browser.wait_for_element("#invisible_appear_p", visible=True),
+            playwright.sync_api.Locator,
+        )
     except NoSuchElementException:
         pytest.fail("NoSuchElementException raised when webelement expected")
 
@@ -603,7 +606,7 @@ def test_click_with_ignore_ajax(browser):
 
 def test_click_with_invalid_button(browser):
     """Test click method with invalid button parameter raises ValueError."""
-    with pytest.raises(ValueError, match="Invalid button 'invalid'"):
+    with pytest.raises(playwright._impl._errors.Error):
         browser.click("#a_button", button="invalid")
 
 
@@ -655,19 +658,85 @@ def test_mouse_click(browser, button):
     assert result == expected_result
 
 
+def test_click_with_click_count(browser):
+    """Test click method with click_count=<number> parameter."""
+    for click_count in [1, 2, 3]:
+        # Reset first
+        browser.execute_script("resetClickCount()")
+
+        browser.click("#a_button", click_count=click_count)
+
+        # Verify click count was detected
+        result = browser.text("#click_count_result")
+        assert f"Clicks: {click_count}" in result
+        assert "clicked" in browser.classes("#a_button").pop()
+
+
+def test_click_with_delay_parameter(browser):
+    """Test click method with delay parameter between mousedown and mouseup."""
+    for delay_ms in [100, 0]:
+        browser.execute_script("resetClickDelay()")
+
+        browser.click("#multi_button", delay=delay_ms)
+        # Give a moment for the handler to process
+        time.sleep(0.05)
+
+        # Verify delay was applied (allow some tolerance for execution time)
+        result = browser.text("#click_delay_result")
+        assert "Delay:" in result
+
+        # Extract the delay value from result
+        delay_value = int(result.split(":")[1].strip().replace("ms", ""))
+        print(delay_value)
+        # Allow 10ms tolerance for browser timing variations
+        assert delay_value >= delay_ms
+        assert delay_value <= delay_ms + 10
+
+
+def test_click_with_force_parameter(browser):
+    """Test click method with force parameter (True and False)."""
+    # force parameter bypasses Playwright's actionability checks
+    # We test that the parameter is properly passed through
+    browser.execute_script("resetClickCount()")
+
+    # Test force=True works
+    browser.click("#a_button", force=True)
+    assert "clicked" in browser.classes("#a_button")
+
+    browser.refresh()
+    browser.execute_script("resetClickCount()")
+
+    # Test force=False works (default behavior)
+    browser.click("#a_button", force=False)
+    assert "clicked" in browser.classes("#a_button")
+
+
+def test_click_with_timeout_parameter(browser):
+    """Test click method with timeout parameter."""
+    # Test that timeout parameter is accepted and doesn't break normal clicks
+    browser.click("#a_button", timeout=0)
+    assert "clicked" in browser.classes("#a_button")
+
+    browser.refresh()
+    browser.execute_script("resetClickCount()")
+
+    browser.click("#a_button", timeout=100)
+    assert "clicked" in browser.classes("#a_button")
+
+
 def test_double_click_method(browser):
     """Test double_click method."""
     initial_classes = browser.classes("#a_button")
     browser.double_click("#a_button")
     final_classes = browser.classes("#a_button")
-    assert "clicked" in final_classes
+    assert "double-clicked" in final_classes
     assert "clicked" not in initial_classes
 
 
 def test_double_click_with_ignore_ajax(browser):
     """Test double_click method with ignore_ajax parameter."""
     browser.double_click("#a_button", ignore_ajax=True)
-    assert "clicked" in browser.classes("#a_button")
+    assert "double-clicked" in browser.classes("#a_button")
 
 
 def test_double_click_with_timed_out_error_in_ensure_page_safe(browser, monkeypatch):
@@ -703,7 +772,7 @@ def test_double_click_with_timed_out_error_in_ensure_page_safe(browser, monkeypa
 
     # Verify the timeout handler was called
     assert timeout_called is True
-    assert "clicked" in browser.classes("#a_button")
+    assert "double-clicked" in browser.classes("#a_button")
 
 
 def test_raw_click(browser):

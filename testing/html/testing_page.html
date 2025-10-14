@@ -319,14 +319,18 @@
 
       <div class="widget-group">
         <div class="widget-title">Interactive Buttons</div>
-        <div class="widget-description">Buttons with state changes and click handlers</div>
-        <button id="a_button" onclick="this.className += ' clicked'">Click Me (State Changes)</button>
-        <div class="code-example">Button adds 'clicked' class when pressed</div>
+        <div class="widget-description">Buttons with state changes, click handlers, and enhanced click parameters</div>
+        <button id="a_button" onclick="handleClickCount(event)">Click Me (State Changes)</button>
+        <div id="click_count_result" style="margin-left: 10px; font-weight: bold; color: #007bff; display: inline;">Clicks: 0</div>
+        <div class="code-example">Button tracks click count and adds 'clicked' class (tests click_count parameter)</div>
+
         <button id='disabled_button' disabled>Disabled Button</button>
         <div class="code-example">Button in disabled state - cannot be clicked</div>
-        <button id="multi_button" onmousedown="handleButtonClick(event)">Multi-Click Test</button>
-        <div id="click_result" style="margin-left: 10px; font-weight: bold; color: #007bff;">Ready</div>
-        <div class="code-example">Button detects left, right, and middle mouse clicks</div>
+
+        <button id="multi_button" onmousedown="handleButtonClick(event)" onmouseup="handleMouseUp()">Multi-Click Test</button>
+        <div id="click_result" style="margin-left: 10px; font-weight: bold; color: #007bff; display: inline;">Ready</div>
+        <div id="click_delay_result" style="margin-left: 10px; font-weight: bold; color: #007bff; display: inline;">Delay: 0ms</div>
+        <div class="code-example">Button detects mouse buttons and measures click delay (tests button, delay, force, and timeout parameters)</div>
       </div>
     </div>
   </div>
@@ -721,6 +725,46 @@
     document.getElementById("alert_out").innerHTML = txt;
   }
 
+  // Click count tracking for #a_button
+  var clickCountData = {
+    count: 0,
+    lastClick: 0
+  };
+
+  function handleClickCount(event) {
+    var now = Date.now();
+    // Reset count if more than 500ms since last click
+    if (now - clickCountData.lastClick > 500) {
+      clickCountData.count = 0;
+    }
+    clickCountData.count++;
+    clickCountData.lastClick = now;
+
+    document.getElementById("click_count_result").textContent = "Clicks: " + clickCountData.count;
+
+    // Add specific class based on click count
+    if (clickCountData.count === 2) {
+      event.target.className = event.target.className.replace(/\s*single-clicked/g, '').replace(/\s*clicked/g, '') + ' double-clicked';
+    } else if (clickCountData.count === 3) {
+      event.target.className = event.target.className.replace(/\s*double-clicked/g, '') + ' triple-clicked';
+    } else {
+      event.target.className = event.target.className.replace(/\s*(double|triple)-clicked/g, '') + ' single-clicked clicked';
+    }
+  }
+
+  function resetClickCount() {
+    clickCountData.count = 0;
+    clickCountData.lastClick = 0;
+    var btn = document.getElementById("a_button");
+    if (btn) btn.className = "";
+    document.getElementById("click_count_result").textContent = "Clicks: 0";
+  }
+
+  // Click delay tracking for #multi_button
+  var clickDelayData = {
+    mousedownTime: 0
+  };
+
   function handleButtonClick(event) {
     var result = document.getElementById("click_result");
     var clickType = "";
@@ -740,7 +784,21 @@
     }
 
     result.textContent = clickType;
+    clickDelayData.mousedownTime = Date.now();
     event.preventDefault();
+  }
+
+  function handleMouseUp() {
+    if (clickDelayData.mousedownTime > 0) {
+      var delay = Date.now() - clickDelayData.mousedownTime;
+      document.getElementById("click_delay_result").textContent = "Delay: " + delay + "ms";
+      clickDelayData.mousedownTime = 0;
+    }
+  }
+
+  function resetClickDelay() {
+    clickDelayData.mousedownTime = 0;
+    document.getElementById("click_delay_result").textContent = "Delay: 0ms";
   }
   </script>
 
