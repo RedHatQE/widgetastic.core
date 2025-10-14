@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
 ]
 
 master_doc = "index"
@@ -47,10 +48,33 @@ html_theme = "sphinx_rtd_theme"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
+    # Playwright doesn't have a proper intersphinx inventory yet
+    # "playwright": ("https://playwright.dev/python/", None),
 }
+
+# Configure warnings and error handling
+nitpick_ignore = [
+    # Ignore missing references that are known to be problematic
+    ("py:class", "RootResolverError"),  # anytree reference that may not exist
+    ("py:exc", "RootResolverError"),  # Exception variant
+    ("any", "RootResolverError"),  # Any reference type
+]
 
 autodoc_member_order = "bysource"
 autosummary_generate = True
+
+# Suppress warnings for missing references
+suppress_warnings = ["ref.python"]
+
+# Make cross-references non-strict to avoid ambiguity errors
+nitpicky = False
+
+# Configure autodoc to be less strict about signatures and types
+autodoc_typehints = "description"
+autodoc_type_aliases = {}
+
+# Configure autosummary
+autosummary_mock_imports = []
 
 # -- Napoleon settings -------------------------------------------------------
 

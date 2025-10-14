@@ -1494,6 +1494,276 @@
       </div>
     </div>
   </div>
+  <!-- View Testing Section -->
+  <div class="section">
+    <div class="section-header">View Testing</div>
+    <div class="section-content">
+      <div class="widget-group normal-view">
+        <div class="widget-title">Normal View Testing</div>
+        <div class="widget-description">Basic view structure with standard form elements for normal view testing</div>
+        <div id="normal_view_container" style="border: 2px solid #dee2e6; border-radius: 6px; padding: 20px; background: #f8f9fa; margin: 15px 0;">
+          <h4>Normal View Form</h4>
+          <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="normal_name" name="normal_name" placeholder="Enter your name" />
+          </div>
+          <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="normal_email" name="normal_email" placeholder="Enter your email" />
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="normal_terms" name="normal_terms" />
+              Accept Terms and Conditions
+            </label>
+          </div>
+          <div class="form-group">
+            <button id="normal_submit" onclick="this.textContent='Submitted!'">Submit</button>
+          </div>
+        </div>
+        <div class="code-example">
+          class NormalView(View):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;name = TextInput(id="normal_name")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;email = TextInput(id="normal_email")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;terms = Checkbox(id="normal_terms")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;submit = Text(id="normal_submit")
+        </div>
+      </div>
+
+      <div class="widget-group parametrized-view">
+        <div class="widget-title">Parametrized View Testing</div>
+        <div class="widget-description">Elements with parametrized IDs and names for ParametrizedView testing</div>
+
+        <!-- Multiple thing containers for parametrized testing -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 15px 0;">
+          <div class="thing" id="foo" style="border: 2px solid #007bff; border-radius: 6px; padding: 15px; background: #e7f3ff;">
+            <h4>Thing: foo</h4>
+            <div class="form-group">
+              <label>Widget for foo:</label>
+              <input type="text" name="asdf_foo" placeholder="Input for foo" />
+            </div>
+            <div class="form-group">
+              <label>Description:</label>
+              <textarea name="desc_foo" placeholder="Description for foo"></textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" name="active_foo" />
+                Active for foo
+              </label>
+            </div>
+          </div>
+
+          <div class="thing" id="bar" style="border: 2px solid #28a745; border-radius: 6px; padding: 15px; background: #e7f7e7;">
+            <h4>Thing: bar</h4>
+            <div class="form-group">
+              <label>Widget for bar:</label>
+              <input type="text" name="asdf_bar" placeholder="Input for bar" />
+            </div>
+            <div class="form-group">
+              <label>Description:</label>
+              <textarea name="desc_bar" placeholder="Description for bar"></textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" name="active_bar" />
+                Active for bar
+              </label>
+            </div>
+          </div>
+
+          <div class="thing" id="baz" style="border: 2px solid #ffc107; border-radius: 6px; padding: 15px; background: #fff8e1;">
+            <h4>Thing: baz</h4>
+            <div class="form-group">
+              <label>Widget for baz:</label>
+              <input type="text" name="asdf_baz" placeholder="Input for baz" />
+            </div>
+            <div class="form-group">
+              <label>Description:</label>
+              <textarea name="desc_baz" placeholder="Description for baz"></textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" name="active_baz" />
+                Active for baz
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-example">
+          class MyParametrizedView(ParametrizedView):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;PARAMETERS = ('thing_id', )<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;ROOT = ParametrizedLocator('.//div[@id={thing_id|quote}]')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;widget = TextInput(name=ParametrizedString('asdf_{thing_id}'))<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;description = TextInput(name=ParametrizedString('desc_{thing_id}'))<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;active = Checkbox(name=ParametrizedString('active_{thing_id}'))<br><br>
+
+          # Usage:<br>
+          view = MyParametrizedView(browser, additional_context={'thing_id': 'foo'})<br>
+          # or nested: view.this_is_parametrized('foo').widget.fill('test')
+        </div>
+      </div>
+
+      <div class="widget-group conditional-switchable-view">
+        <div class="widget-title">Conditional Switchable View Testing</div>
+        <div class="widget-description">Forms that switch based on select dropdown value for ConditionalSwitchableView testing</div>
+
+        <div id="conditional_form_container" style="border: 2px solid #6c757d; border-radius: 6px; padding: 20px; background: #f8f9fa; margin: 15px 0;">
+          <div class="form-group">
+            <label>Form Type (Reference):</label>
+            <input type="text" id="conditional_foo_input" name="foo_value" placeholder="Foo value for multi-widget reference" />
+          </div>
+
+          <div class="form-group">
+            <label>Action Type:</label>
+            <select id="conditional_action_type" name="action_type" onchange="switchConditionalForm(this.value)">
+              <option value="">Select Action Type</option>
+              <option value="Action type 1">Action type 1</option>
+              <option value="Action type 2">Action type 2</option>
+              <option value="Action type 3">Action type 3</option>
+            </select>
+          </div>
+
+          <!-- Action Type 1 Form (default) -->
+          <div id="action_form_1" class="action-form" style="display: none; border: 2px solid #007bff; border-radius: 4px; padding: 15px; margin: 10px 0; background: #e7f3ff;">
+            <h5 style="color: #007bff; margin-bottom: 10px;">Action Type 1 Form</h5>
+            <div class="form-group">
+              <label>Type 1 Widget:</label>
+              <input type="text" name="action1_widget" placeholder="Widget for Action Type 1" />
+            </div>
+            <div class="form-group">
+              <label>Type 1 Options:</label>
+              <select name="action1_options">
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" name="action1_enabled" />
+                Enable Type 1 Processing
+              </label>
+            </div>
+          </div>
+
+          <!-- Action Type 2 Form -->
+          <div id="action_form_2" class="action-form" style="display: none; border: 2px solid #28a745; border-radius: 4px; padding: 15px; margin: 10px 0; background: #e7f7e7;">
+            <h5 style="color: #28a745; margin-bottom: 10px;">Action Type 2 Form</h5>
+            <div class="form-group">
+              <label>Type 2 Widget:</label>
+              <input type="text" name="action2_widget" placeholder="Widget for Action Type 2" />
+            </div>
+            <div class="form-group">
+              <label>Priority Level:</label>
+              <select name="action2_priority">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Notes:</label>
+              <textarea name="action2_notes" placeholder="Additional notes"></textarea>
+            </div>
+          </div>
+
+          <!-- Action Type 3 Form -->
+          <div id="action_form_3" class="action-form" style="display: none; border: 2px solid #ffc107; border-radius: 4px; padding: 15px; margin: 10px 0; background: #fff8e1;">
+            <h5 style="color: #e68900; margin-bottom: 10px;">Action Type 3 Form</h5>
+            <div class="form-group">
+              <label>Type 3 Widget:</label>
+              <input type="text" name="action3_widget" placeholder="Widget for Action Type 3" />
+            </div>
+            <div class="form-group">
+              <label>Configuration:</label>
+              <input type="text" name="action3_config" placeholder="Configuration settings" />
+            </div>
+            <div class="form-group">
+              <label>Advanced Mode:</label>
+              <select name="action3_mode">
+                <option value="basic">Basic</option>
+                <option value="advanced">Advanced</option>
+                <option value="expert">Expert</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Simple Conditional Widget Example -->
+          <div style="margin-top: 20px; padding: 15px; border: 2px solid #dc3545; border-radius: 4px; background: #ffeaea;">
+            <h5 style="color: #dc3545; margin-bottom: 10px;">Simple Conditional Widget</h5>
+            <div class="form-group">
+              <label>Bar Select (Simple Reference):</label>
+              <select id="simple_bar_select" name="bar" onchange="switchSimpleWidget(this.value)">
+                <option value="">Select...</option>
+                <option value="Action type 1">Action type 1</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div id="simple_switched_widget" style="margin-top: 10px; display: none;">
+              <input type="text" name="simple_widget" placeholder="Simple conditional widget" />
+            </div>
+          </div>
+        </div>
+
+        <div class="code-example">
+          class SomeForm(View):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;foo = TextInput(name='foo_value')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;action_type = Select(name='action_type')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;action_form = ConditionalSwitchableView(reference='action_type')<br><br>
+
+          &nbsp;&nbsp;&nbsp;&nbsp;@action_form.register('Action type 1', default=True)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;class ActionType1Form(View):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;widget = TextInput(name='action1_widget')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;options = Select(name='action1_options')<br><br>
+
+          &nbsp;&nbsp;&nbsp;&nbsp;@action_form.register(lambda action_type: action_type == 'Action type 2')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;class ActionType2Form(View):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;widget = TextInput(name='action2_widget')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priority = Select(name='action2_priority')<br><br>
+
+          &nbsp;&nbsp;&nbsp;&nbsp;@action_form.register(<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lambda action_type, foo: action_type == 'Action type 2' and foo == '2')<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;class ActionType2Form(View):<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;widget = TextInput(name='action2_widget')<br><br>
+
+          # Simple widget registration:<br>
+          switched_widget = ConditionalSwitchableView(reference='bar')<br>
+          switched_widget.register('Action type 1', default=True, widget=TextInput(name='simple_widget'))
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript for conditional form switching
+    function switchConditionalForm(selectedValue) {
+      // Hide all action forms
+      const actionForms = document.querySelectorAll('.action-form');
+      actionForms.forEach(form => {
+        form.style.display = 'none';
+      });
+
+      // Show the selected form
+      if (selectedValue === 'Action type 1') {
+        document.getElementById('action_form_1').style.display = 'block';
+      } else if (selectedValue === 'Action type 2') {
+        document.getElementById('action_form_2').style.display = 'block';
+      } else if (selectedValue === 'Action type 3') {
+        document.getElementById('action_form_3').style.display = 'block';
+      }
+    }
+
+    function switchSimpleWidget(selectedValue) {
+      const widget = document.getElementById('simple_switched_widget');
+      if (selectedValue === 'Action type 1') {
+        widget.style.display = 'block';
+      } else {
+        widget.style.display = 'none';
+      }
+    }
+  </script>
+
   <!-- IFrame Testing Section -->
   <div class="section">
     <div class="section-header">IFrame & Nested Content</div>

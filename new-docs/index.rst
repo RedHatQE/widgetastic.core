@@ -1,6 +1,6 @@
-===========================
+==============================
 Widgetastic.Core Documentation
-===========================
+==============================
 
 .. image:: https://img.shields.io/pypi/pyversions/widgetastic.core.svg?style=flat
     :target: https://pypi.org/project/widgetastic.core
@@ -56,13 +56,13 @@ Quick Example
 
     from playwright.sync_api import sync_playwright
     from widgetastic.browser import Browser
-    from widgetastic.widget import View, Text, TextInput, Button
+    from widgetastic.widget import View, Text, TextInput
 
     class LoginView(View):
         username = TextInput(name='username')
         password = TextInput(name='password')
-        submit = Button('Log In')
-        message = Text('.flash-message')
+        submit = Text(locator='.//div[text()="Log In"]')
+        message = Text(locator='.//div[contains(@class, "flash-message")]')
 
     # Initialize with Playwright
     with sync_playwright() as p:
@@ -76,7 +76,7 @@ Quick Example
             'username': 'admin',
             'password': 'secret'
         })
-        login.submit.click()
+        login.submit.click()  # Text widget inherites ClickableMixin so able to click.
 
         if login.message.is_displayed:
             print(f"Login result: {login.message.text}")
@@ -94,19 +94,11 @@ Documentation Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Quick Start
-
-   quickstart/index
-   quickstart/basic-example
-   quickstart/common-patterns
-
-.. toctree::
-   :maxdepth: 2
    :caption: Tutorials
 
    tutorials/index
    tutorials/basic-widgets
-   tutorials/views-and-navigation
+   tutorials/views
    tutorials/browser-methods
    tutorials/fill-strategies
    tutorials/advanced-widgets

@@ -1,6 +1,6 @@
-=====================
-Basic Widgets Tutorial
-=====================
+=============
+Basic Widgets
+=============
 
 This comprehensive tutorial demonstrates all the fundamental widgets in Widgetastic.core using the framework's real testing pages.
 You'll learn to interact with web elements through practical examples using ``testing/html/testing_page.html`` - the same file used to test the framework itself.

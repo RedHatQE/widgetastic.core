@@ -18,20 +18,31 @@ the example works reliably.
     # my_first_widgetastic.py
     from playwright.sync_api import sync_playwright
     from widgetastic.browser import Browser
-    from widgetastic.widget import View, Text, TextInput, Button, Select
+    from widgetastic.widget import View, Text, TextInput, Checkbox
 
     # Step 1: Define your widgets and views
     class DemoFormView(View):
         # Define the form elements as widgets
-        first_name = TextInput(name="first_name")
-        last_name = TextInput(name="last_name")
-        email = TextInput(name="email")
-        country = Select(name="country")
-        message = TextInput(name="message")
-        submit_button = Button("//button[@type='submit']")
+        custname = TextInput(locator='.//input[@name="custname"]')
+        telephone = TextInput(locator='.//input[@name="custtel"]')
+        email = TextInput(locator='.//input[@name="custemail"]')
 
-        # Results section
-        result_message = Text("#result")
+        @View.nested
+        class pizza_size(View):     # noqa
+            small = Checkbox(locator=".//input[@value='small']")
+            medium = Checkbox(locator=".//input[@value='medium']")
+            large = Checkbox(locator=".//input[@value='large']")
+
+        @View.nested
+        class pizza_toppings(View):     # noqa
+            bacon = Checkbox(locator=".//input[@value='bacon']")
+            extra_cheese = Checkbox(locator=".//input[@value='cheese']")
+            onion = Checkbox(locator=".//input[@value='onion']")
+            mushroom = Checkbox(locator=".//input[@value='mushroom']")
+
+        delivery_instructions = TextInput(locator='.//input[@name="comments"]')
+        submit_order = Text(".//button[text()='Submit order']")
+
 
     # Step 2: Create a custom browser class
     class MyBrowser(Browser):
@@ -316,7 +327,7 @@ Congratulations! You've successfully created your first widgetastic automation s
 
 1. :doc:`../quickstart/index` - More practical examples and common patterns
 2. :doc:`../tutorials/basic-widgets` - Deep dive into different widget types
-3. :doc:`../tutorials/views-and-navigation` - Advanced view patterns
+3. :doc:`../tutorials/views` - Advanced view patterns
 
 **As You Progress**
 
