@@ -866,14 +866,21 @@ class Browser:
             force: Whether to bypass the actionability checks
             no_wait_after: If True, don't wait for page events after click
             timeout: Maximum time in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout.
-            ignore_ajax: If True, expect blocking dialogs (passed via kwargs)
+
+        Deprecated:
+            ignore_ajax: Deprecated parameter. Use `no_wait_after=True` instead.
         """
         self.logger.debug("click: %r with %s button", locator, button)
 
-        # If ignore_ajax is True, it's a signal that a blocking dialog is expected.
-        # We pass no_wait_after=True to prevent a timeout.
+        # Handle deprecated ignore_ajax parameter
         ignore_ajax = kwargs.pop("ignore_ajax", False)
         if ignore_ajax:
+            warnings.warn(
+                "The 'ignore_ajax' parameter is deprecated and will be removed in a future version. "
+                "Use 'no_wait_after=True' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             no_wait_after = True
 
         el = self.element(locator, *args, **kwargs)
@@ -887,11 +894,11 @@ class Browser:
             no_wait_after=no_wait_after,
             timeout=timeout,
         )
-
-        try:
-            self.plugin.ensure_page_safe()
-        except TimedOutError:
-            self.plugin.after_click_safe_timeout(el, locator)
+        if not ignore_ajax and not no_wait_after:
+            try:
+                self.plugin.ensure_page_safe()
+            except TimedOutError:
+                self.plugin.after_click_safe_timeout(el, locator)
         self.plugin.after_click(el, locator)
 
     def double_click(self, locator: LocatorAlias, *args, **kwargs) -> None:
@@ -901,13 +908,29 @@ class Browser:
             locator: Element locator to double-click on
             *args: Additional arguments passed to element() method
             **kwargs: Additional keyword arguments passed to element() method
+
+        Deprecated:
+            ignore_ajax: Deprecated parameter. Use `no_wait_after=True` instead.
         """
         self.logger.debug("double_click: %r", locator)
+
+        # Handle deprecated ignore_ajax parameter
         ignore_ajax = kwargs.pop("ignore_ajax", False)
+        if ignore_ajax:
+            warnings.warn(
+                "The 'ignore_ajax' parameter is deprecated and will be removed in a future version. "
+                "Use 'no_wait_after=True' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        no_wait_after = kwargs.pop("no_wait_after", False)
+
         el = self.element(locator, *args, **kwargs)
         self.plugin.before_click(el, locator)
-        el.dblclick()
-        if not ignore_ajax:
+        el.dblclick(no_wait_after=no_wait_after)
+
+        if not ignore_ajax and not no_wait_after:
             try:
                 self.plugin.ensure_page_safe()
             except TimedOutError:
