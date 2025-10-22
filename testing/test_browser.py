@@ -533,6 +533,14 @@ def test_set_attribute(browser):
     assert browser.get_attribute("foo", "#invisible") == "bar"
 
 
+def test_value_of_css_property(browser):
+    assert browser.value_of_css_property(locator="#test-image-full", property="margin") == "5px"
+    assert (
+        browser.value_of_css_property(locator="#test-image-full", property="border-color")
+        == "rgb(221, 221, 221)"
+    )
+
+
 # ================== ELEMENT GEOMETRY & VISUAL PROPERTIES TESTS ==================
 
 
