@@ -7,7 +7,7 @@ concurrency:
 on:
   push:
     branches:
-      - playwright
+      - main
   pull_request:
     types: ["opened", "synchronize", "reopened"]
   schedule:

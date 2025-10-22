@@ -790,6 +790,28 @@ class Browser:
         )
         self.logger.debug("set attribute for %r => %r=%r", args, attr, value)
 
+    def value_of_css_property(
+        self, locator: LocatorAlias, property: str, *args, **kwargs
+    ) -> Optional[str]:
+        """Retrieves the value of specified computed style property of an element in the current browsing context.
+
+        Args:
+            locator: Element locator to get css property
+            property: CSS property to get the value of
+            *args: Additional arguments passed to element() method
+            **kwargs: Additional keyword arguments passed to element() method
+
+        Returns:
+            Value of css property.
+        """
+        self.logger.debug(
+            "Retrieving value of css property '%s' for locator: %r", property, locator
+        )
+        el = self.element(locator, *args, **kwargs)
+        return el.evaluate(
+            f"element => window.getComputedStyle(element).getPropertyValue('{property}')"
+        )
+
     # ================== ELEMENT GEOMETRY & VISUAL PROPERTIES ==================
     def size_of(self, *args, **kwargs) -> Size:
         """Returns element's size as a tuple of width/height.
