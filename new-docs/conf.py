@@ -15,16 +15,6 @@ copyright = (
     f"2016-2019, Milan Falešník; 2020-{datetime.now().year}, Red Hat, Inc. (Apache license 2)"
 )
 
-# The full version, including alpha/beta/rc tags
-try:
-    from widgetastic._version import version
-
-    release = version
-except ImportError:
-    release = "development"
-
-version = ".".join(release.split(".")[:2]) if "." in release else release
-
 # -- General configuration ---------------------------------------------------
 
 extensions = [

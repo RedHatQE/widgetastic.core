@@ -18,3 +18,55 @@ These comprehensive tutorials cover everything from basic widget usage to advanc
 **Ready to begin?** Start with Basic Widgets and follow the sequence.
 
 **Support**: All examples use elements from ``testing/html/testing_page.html`` - you can test everything yourself!
+
+Setting Up Your Environment
+============================
+
+**Browser Setup Using Testing Page**
+
+.. code-block:: python
+
+    from pathlib import Path
+    from playwright.sync_api import sync_playwright
+    from widgetastic.browser import Browser
+    from widgetastic.widget import View, Text, TextInput, Checkbox, Select, Image
+
+    def setup_browser():
+        """Setup browser with widgetastic testing page."""
+        # Get the widgetastic testing page path
+        test_page_path = Path("testing/html/testing_page.html").resolve()
+        test_page_url = test_page_path.as_uri()
+
+        # Initialize Playwright
+        p = sync_playwright().start()
+        browser_instance = p.chromium.launch(headless=False)
+        context = browser_instance.new_context()
+        page = context.new_page()
+        wt_browser = Browser(page)
+
+        # Navigate to testing page
+        wt_browser.goto(test_page_url)
+
+        return wt_browser
+
+    # Usage
+    browser = setup_browser()
+
+
+Understanding the Testing Page Structure
+=========================================
+
+The ``testing_page.html`` contains comprehensive examples:
+
+* **Element Visibility & State Testing**: Hidden/visible elements, interactive buttons with click tracking
+* **Input Widgets & Controls**: Text inputs, file uploads, color pickers, editable content, textareas
+* **Form Elements & Input States**: Mixed input types, radio button groups, enabled/disabled states
+* **Table Widget Examples**: Standard tables with headers, tables without proper headers, embedded widgets
+* **Image Widget Testing**: Images with src, alt, and title attributes
+* **Locator & Element Finding**: Ambiguous vs specific locators, batch operations, element dimensions
+* **Drag and Drop Testing**: Interactive drag/drop elements, sortable lists, position tracking
+* **Advanced Table Operations**: Tables with embedded widgets, switchable content, dynamic content
+* **Multiple TBody Table Structure**: Complex table structures with multiple tbody sections
+* **View Testing**: Normal views, parametrized views, conditional switchable views
+* **IFrame & Nested Content**: Embedded iframe testing
+* **OUIA Integration**: Open UI Automation components with standardized attributes

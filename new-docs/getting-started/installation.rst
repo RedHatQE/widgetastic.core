@@ -129,11 +129,3 @@ For additional functionality, you can install optional dependencies:
 .. code-block:: bash
 
     pip install "widgetastic.core[docs]"
-
-Next Steps
-==========
-
-Now that you have widgetastic.core installed:
-
-1. :doc:`concepts` - Learn the core concepts and terminology
-2. :doc:`first-steps` - Write your first widgetastic automation script

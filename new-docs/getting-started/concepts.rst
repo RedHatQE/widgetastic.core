@@ -50,7 +50,7 @@ dialog, or section of a web application. Views provide structure and context for
     class LoginView(View):
         username = TextInput("#username")
         password = TextInput("#password")
-        submit_button = Button("//button[@type='submit']")
+        submit_button = Text("//button[@type='submit']")  # You can use Button widget from patternfly library
         error_message = Text(".error-message")
 
 **Understanding Views**
@@ -65,6 +65,7 @@ and manage collections of child widgets that belong together logically.
 * **A Page Representation** - Models entire web pages or sections
 * **A Context Provider** - Gives widgets context about where they exist
 * **An Organization Tool** - Structures complex UIs into manageable components
+
 **View Hierarchy**
 
 Views can be nested to represent complex UI structures:
@@ -110,7 +111,7 @@ Widgets automatically receive their parent context, enabling proper element scop
 
     class MyView(View):
         ROOT = "#my-section"
-        button = Button("//button")  # Automatically scoped to #my-section
+        username_input = TextInput("//input[@name='username']")  # Automatically scoped to #my-section
 
 Locators and Smart Detection
 =============================
@@ -156,21 +157,6 @@ SmartLocator uses pattern matching to detect locator strategies:
 
 Widgets automatically use SmartLocator for their locator arguments:
 
-.. code-block:: python
-
-    # All these work the same way - SmartLocator handles detection
-    button1 = Button("#submit")              # CSS auto-detected
-    button2 = Button("//button[@type='submit']") # XPath auto-detected
-    button3 = Button({"text": "Submit"})     # Explicit text locator
-
-.. tip::
-   **For Complete SmartLocator Details**
-
-   For comprehensive documentation including strategy resolution order, regex patterns,
-   and advanced usage examples, see the ``SmartLocator`` class documentation in
-   ``widgetastic.locator``. This includes detailed information about CSS detection
-   patterns, XPath recognition, and the widget locator protocol.
-
 .. note::
    **Widget Initialization Arguments**
 
@@ -178,6 +164,7 @@ Widgets automatically use SmartLocator for their locator arguments:
    Always check the widget's documentation to understand what it needs for initialization -
    some widgets require ``id``, others need ``locator``, ``text``, or other specific parameters.
    Each widget type has its own initialization signature.
+
 
 The Read/Fill Interface
 =======================
@@ -227,11 +214,11 @@ Widgets don't store raw element references, preventing stale element issues:
 .. code-block:: python
 
     class MyView(View):
-        button = Button("#submit")  # This creates a widget descriptor
+        username = TextInput("#name")  # This creates a widget descriptor
 
     view = MyView(browser)
     # Element is only located when accessed:
-    view.button.click()  # NOW the element is found and clicked
+    view.username.fill("John Doe")  # NOW the element is found and filled
 
 **Widget Caching**
 
@@ -240,9 +227,9 @@ Widget instances are cached per view for performance:
 .. code-block:: python
 
     view = MyView(browser)
-    button1 = view.button  # Creates and caches widget instance
-    button2 = view.button  # Returns cached instance (same object)
-    assert button1 is button2  # True
+    username1 = view.username  # Creates and caches widget instance
+    username2 = view.username  # Returns cached instance (same object)
+    assert username1 is username2  # True
 
 Version Picking
 ===============
@@ -257,8 +244,8 @@ Applications change over time. Version picking allows widgets to adapt to differ
 
     class MyView(View):
         submit_button = VersionPick({
-            Version.lowest(): Button("//input[@value='Submit']"),  # Old version
-            "2.0.0": Button("//button[contains(@class, 'submit')]"),  # New version
+            Version.lowest(): Text("//input[@value='Submit']"),  # Old version
+            "2.0.0": Text("//button[contains(@class, 'submit')]"),  # New version
         })
 
 **Automatic Resolution**
@@ -364,7 +351,7 @@ Widgetastic provides meaningful error messages and comprehensive logging:
     try:
         widget.click()
     except NoSuchElementException as e:
-        print(f"Element not found: {e}")
+        logger.error(f"Element not found: {e}")
 
 **Hierarchical Logging**
 
@@ -387,12 +374,3 @@ Key Takeaways
 6. **Parametrized views** handle repeated UI patterns
 7. **Conditional views** adapt to dynamic UI sections
 8. **OUIA support** enables accessibility-driven automation
-
-Next Steps
-==========
-
-Now that you understand the core concepts:
-
-1. :doc:`first-steps` - Write your first widgetastic script
-2. :doc:`../quickstart/index` - See practical examples
-3. :doc:`../tutorials/index` - Deep dive into specific topics
