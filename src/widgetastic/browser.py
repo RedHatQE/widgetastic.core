@@ -36,9 +36,10 @@ from playwright.sync_api import ElementHandle, FrameLocator
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Locator
 from playwright.sync_api import Page
+from playwright.sync_api import TimeoutError
 
 from .locator import SmartLocator
-from wait_for import TimedOutError
+from wait_for import TimedOutError, wait_for
 
 from .exceptions import LocatorNotImplemented
 from .exceptions import NoSuchElementException
@@ -1628,6 +1629,119 @@ class WindowManager:
         self.current.logger.info("New page opened / popup detected: %s", page.url)
         self._wrap_page(page)
 
+    def expect_new_page(self, timeout: float = 5.0):
+        """Context manager to wait for a new page and return the wrapped Browser instance.
+
+        This method uses Playwright's native `expect_page()` to wait for a new page
+        to be created. Use this when you know an action (like clicking a link with
+        target="_blank" or a button that calls window.open()) will open a new page.
+
+        The context manager automatically waits for the page to load (domcontentloaded).
+
+        Args:
+            timeout: Maximum time to wait for the new page in seconds (default: 5.0)
+
+        Yields:
+            Browser: The wrapped Browser instance for the new page
+
+        Example:
+            .. code-block:: python
+
+                # Get Browser directly - returns actual Browser instance
+                with window_manager.expect_new_page() as new_browser:
+                    browser.click("a[target='_blank']")
+                # new_browser is the wrapped Browser instance, ready to use
+                assert new_browser.title == "New Page"
+                new_browser.element("#submit").click()
+                window_manager.close_browser(new_browser)
+
+                # Or with a longer timeout
+                with window_manager.expect_new_page(timeout=10.0) as popup_browser:
+                    browser.click("#open-popup-button")
+                popup_browser.element("#confirm").click()
+        """
+
+        class _BrowserWaiter:
+            """Simple context manager that waits for page and returns wrapped Browser."""
+
+            def __init__(self, window_manager: "WindowManager", timeout_ms: int) -> None:
+                self.window_manager = window_manager
+                self.context = window_manager._context
+                self.timeout_ms = timeout_ms
+                self.page_info: Optional[Any] = None
+                self._browser: Optional[Browser] = None
+                self._initial_browsers: Optional[Set[Browser]] = None
+
+            def __enter__(self) -> "_BrowserWaiter":
+                # Capture initial browsers before setting up expectation
+                self._initial_browsers = set(self.window_manager.all_browsers)
+                self.page_info = self.context.expect_page(timeout=self.timeout_ms)
+                self.page_info.__enter__()
+                return self
+
+            def __exit__(self, *args: Any) -> None:
+                # Exit Playwright's context manager to get the Page/Browser
+                if not self.page_info:
+                    # If page_info was never set, something went wrong in __enter__
+                    raise RuntimeError(
+                        "expect_new_page context manager was not properly initialized. "
+                        "This should not happen."
+                    )
+
+                new_page = None
+                self.page_info.__exit__(*args)
+                try:
+                    new_page = self.page_info.value
+                except AttributeError:
+                    # value might not be available in some edge cases
+                    pass
+
+                if new_page:
+                    # Wait for page to load and wrap it
+                    try:
+                        new_page.wait_for_load_state("domcontentloaded", timeout=5000)
+                    except TimeoutError:
+                        self.logger.warning(
+                            "Timed out waiting for new page to load (domcontentloaded)."
+                        )
+                    self._browser = self.window_manager._wrap_page(new_page)
+                else:
+                    # expect_page succeeded but value is None.This can happen if the event handler already wrapped the page
+                    # Try to find it by comparing browser sets
+                    if self._initial_browsers is None:
+                        raise RuntimeError(
+                            "expect_new_page context manager was not properly initialized. "
+                            "This should not happen."
+                        )
+                    current_browsers = set(self.window_manager.all_browsers)
+
+                    if new_browsers := current_browsers - self._initial_browsers:
+                        self._browser = next(iter(new_browsers))
+                    else:
+                        # No new page found - this shouldn't happen if expect_page succeeded
+                        raise RuntimeError(
+                            "expect_page succeeded but no new page was found. "
+                            "This may indicate a timing issue or the page was closed immediately."
+                        )
+
+            def __getattr__(self, name: str) -> Any:
+                """Delegate all attribute access to the wrapped Browser."""
+                if self._browser is None:
+                    raise RuntimeError(
+                        "Browser is not available yet. Access it after the 'with' block exits."
+                    )
+                return getattr(self._browser, name)
+
+            def __eq__(self, other: Any) -> bool:
+                """Compare by page identity for 'in' checks to work."""
+                if self._browser is None:
+                    return False
+                if isinstance(other, Browser):
+                    return self._browser.page is other.page
+                return False
+
+        return _BrowserWaiter(self, int(timeout * 1000))
+
     @property
     def all_browsers(self) -> List[Browser]:
         """Get all managed Browser instances with automatic cleanup.
@@ -1636,6 +1750,12 @@ class WindowManager:
         automatically performs cleanup by removing any Browser instances associated with
         closed pages, ensuring the returned list only contains valid, active browsers.
 
+        Note:
+            When you know a click will open a new page, use ``expect_new_page()`` context manager
+            for reliable detection.
+
+        Returns:
+            List[Browser]: A list of all currently active widgetastic Browser instances
 
         Example:
             .. code-block:: python
@@ -1647,25 +1767,82 @@ class WindowManager:
                 # Iterate through all browsers
                 for i, browser in enumerate(browsers):
                     print(f"Window {i}: {browser.title} - {browser.url}")
+
+                # For reliable new page detection, use expect_new_page
+                with window_manager.expect_new_page() as new_browser:
+                    browser.click("a[target='_blank']")
+                # New page is now available in all_browsers
         """
-        current_pages = self._context.pages
         # Clean up browsers for pages that are no longer in the context or are closed
         for page in list(self._browsers.keys()):
             try:
                 # Check if page is still in context and not closed
-                if page not in current_pages or page.is_closed():
+                if page.is_closed():
                     del self._browsers[page]
             except Exception:
-                # If we can't check the page state, assume it's closed and remove it
+                # If we can't check the page state, assume it's closed
                 if page in self._browsers:
                     del self._browsers[page]
 
         # Ensure all current pages are wrapped
-        for page in current_pages:
-            if not page.is_closed():
+        for page in self._context.pages:
+            if not page.is_closed() and page not in self._browsers:
                 self._wrap_page(page)
 
-        return list(self._browsers.values())
+        # Quick check for new pages that might be in transition
+        initial_count = len([p for p in self._context.pages if not p.is_closed()])
+        initial_wrapped_count = len([p for p in self._browsers.keys() if not p.is_closed()])
+
+        def _check_for_new_pages():
+            """Check if new pages have appeared."""
+            current_pages = [p for p in self._context.pages if not p.is_closed()]
+            current_wrapped = [p for p in self._browsers.keys() if not p.is_closed()]
+
+            # Wrap any new pages found
+            for page in current_pages:
+                if page not in self._browsers:
+                    self._wrap_page(page)
+
+            # Check if we detected a new page
+            return (
+                len(current_pages) > initial_count  # New page in context.pages
+                or len(current_wrapped) > initial_wrapped_count  # Event handler wrapped a new page
+            )
+
+        # Use wait_for with a short timeout for best-effort detection
+        # Note: Tests should use expect_new_page() for reliable detection
+        try:
+            wait_for(
+                _check_for_new_pages,
+                num_sec=1.0,  # Short timeout - expect_new_page() should be used for reliability
+                delay=0.05,
+                message="Checking for new pages",
+                silent_failure=True,
+                very_quiet=True,
+            )
+        except TimedOutError:
+            pass
+
+        # Final wrap - ensure all pages in context are wrapped
+        for page in self._context.pages:
+            if not page.is_closed() and page not in self._browsers:
+                self._wrap_page(page)
+
+        # Return all active browsers
+        active_browsers = []
+        for page, browser in self._browsers.items():
+            try:
+                if not page.is_closed() and not browser.is_browser_closed:
+                    active_browsers.append(browser)
+            except Exception:
+                # If we can't check page state, try browser state
+                try:
+                    if not browser.is_browser_closed:
+                        active_browsers.append(browser)
+                except Exception:
+                    active_browsers.append(browser)
+
+        return active_browsers
 
     @property
     def all_pages(self) -> List[Page]:
@@ -1737,7 +1914,7 @@ class WindowManager:
         current browser for subsequent operations.
 
         Args:
-            browser_or_page: Browser instance or Playwright Page to switch to
+            browser_or_page: Browser instance or Playwright Page to switch to.
 
         Raises:
             NoSuchElementException: If the specified page doesn't exist in the context
@@ -1753,12 +1930,23 @@ class WindowManager:
                 all_pages = window_manager.all_pages
                 window_manager.switch_to(all_pages[0])
 
+                # Switch using browser from expect_new_page
+                with window_manager.expect_new_page() as new_browser:
+                    browser.click("a[target='_blank']")
+                window_manager.switch_to(new_browser)
+
                 # Verify the switch
                 print(f"Now on: {window_manager.current.title}")
         """
-        target_page = (
-            browser_or_page.page if isinstance(browser_or_page, Browser) else browser_or_page
-        )
+        if isinstance(browser_or_page, Page):
+            target_page = browser_or_page
+        elif hasattr(browser_or_page, "page"):
+            # This works for Browser and Browser-like proxies (like _BrowserWaiter)
+            target_page = browser_or_page.page
+        else:
+            raise TypeError(
+                f"Expected a Browser, Page, or Browser-like object, got {type(browser_or_page)}"
+            )
 
         if target_page not in self.all_pages:
             raise NoSuchElementException("The specified Page handle does not exist.")
@@ -1801,7 +1989,16 @@ class WindowManager:
                 print(f"{remaining} tabs still open")
         """
         target_browser = browser_or_page or self.current
-        target_page = target_browser.page if isinstance(target_browser, Browser) else target_browser
+
+        if isinstance(target_browser, Page):
+            target_page = target_browser
+        elif hasattr(target_browser, "page"):
+            # This works for Browser and Browser-like proxies (like _BrowserWaiter)
+            target_page = target_browser.page
+        else:
+            raise TypeError(
+                f"Expected a Browser, Page, or Browser-like object, got {type(target_browser)}"
+            )
 
         # Check if page is already closed
         try:
