@@ -360,3 +360,86 @@ def test_browser_workflow_integration(isolated_window_manager, external_test_url
     # Verify current browser is still valid
     assert isolated_window_manager.current in isolated_window_manager.all_browsers
     assert not isolated_window_manager.current.is_browser_closed
+
+
+@pytest.mark.parametrize(
+    "widget_name,expected_title",
+    [
+        ("open_popup_button", "Widgetastic.Core - Testing Page"),
+        ("open_tab_button", "Widgetastic.Core - Testing Page"),
+        ("external_link", "External Test Page"),
+    ],
+    ids=["popup", "tab", "link"],
+)
+def test_js_window_open_detection(
+    isolated_window_manager,
+    popup_test_page_url,
+    widget_name,
+    expected_title,
+):
+    """Test that new tabs/popups opened via JavaScript or links are automatically detected.
+
+    This test verifies that WindowManager correctly detects new pages opened through:
+    - JavaScript window.open() for popup windows
+    - JavaScript window.open() for new tabs
+    - HTML anchor tags with target="_blank"
+    """
+    from widgetastic.widget import View, Text
+
+    class PopupPageView(View):
+        """View for popup_test_page.html"""
+
+        open_popup_button = Text("#open-popup")
+        open_tab_button = Text("#open-new-tab")
+        external_link = Text("#external-link")
+
+    # Navigate to popup test page
+    initial_browser = isolated_window_manager.current
+    isolated_window_manager.current.url = popup_test_page_url
+    popup_view = PopupPageView(initial_browser)
+
+    initial_count = len(isolated_window_manager.all_browsers)
+    assert initial_count >= 1, "Should have at least one browser initially"
+
+    # Open new tab/popup via JavaScript or link click
+    widget = getattr(popup_view, widget_name)
+    with isolated_window_manager.expect_new_page(timeout=5.0) as new_browser:
+        widget.click()
+
+    assert new_browser is not None, f"New browser should be returned for {widget_name}"
+    assert not new_browser.is_browser_closed, "New browser should be active"
+    assert new_browser.url != popup_test_page_url, (
+        f"New browser should have different URL than the original page for {widget_name}"
+    )
+
+    # Verify the page title matches expected value
+    actual_title = new_browser.text(".//h1")
+    assert actual_title == expected_title, (
+        f"Expected title '{expected_title}' but got '{actual_title}' "
+        f"for page opened by {widget_name}"
+    )
+
+    # Verify it's in all_browsers
+    browsers_after = isolated_window_manager.all_browsers
+    assert len(browsers_after) == initial_count + 1, (
+        f"New page opened by {widget_name} should be detected. "
+        f"Expected {initial_count + 1} browsers, got {len(browsers_after)}"
+    )
+    assert new_browser in browsers_after, f"New browser should be in all_browsers for {widget_name}"
+
+    isolated_window_manager.close_browser(new_browser)
+    isolated_window_manager.switch_to(initial_browser)
+
+
+def test_expect_new_page_timeout_no_action(
+    isolated_window_manager,
+    popup_test_page_url,
+):
+    """Test that expect_new_page times out when no action is taken to open a new page."""
+    from playwright.sync_api import TimeoutError
+
+    isolated_window_manager.current.url = popup_test_page_url
+
+    with pytest.raises(TimeoutError):
+        with isolated_window_manager.expect_new_page(timeout=1.0):
+            pass
