@@ -24,33 +24,18 @@ Setting Up Your Environment
 
 **Browser Setup Using Testing Page**
 
-.. code-block:: python
+All examples in these tutorials use a common browser setup defined as:
 
-    from pathlib import Path
-    from playwright.sync_api import sync_playwright
-    from widgetastic.browser import Browser
-    from widgetastic.widget import View, Text, TextInput, Checkbox, Select, Image
+.. literalinclude:: ../examples/browser_setup.py
+   :language: python
+   :linenos:
 
-    def setup_browser():
-        """Setup browser with widgetastic testing page."""
-        # Get the widgetastic testing page path
-        test_page_path = Path("testing/html/testing_page.html").resolve()
-        test_page_url = test_page_path.as_uri()
+This setup:
 
-        # Initialize Playwright
-        p = sync_playwright().start()
-        browser_instance = p.chromium.launch(headless=False)
-        context = browser_instance.new_context()
-        page = context.new_page()
-        wt_browser = Browser(page)
+- Initializes Playwright with Chrome browser
+- Navigates to the widgetastic testing page (``testing/html/testing_page.html``)
+- Returns a ``Browser`` instance ready for use
 
-        # Navigate to testing page
-        wt_browser.goto(test_page_url)
-
-        return wt_browser
-
-    # Usage
-    browser = setup_browser()
 
 
 Understanding the Testing Page Structure

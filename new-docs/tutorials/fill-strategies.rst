@@ -46,112 +46,48 @@ DefaultFillViewStrategy
 
 **Basic Usage:**
 
-.. code-block:: python
-
-    from widgetastic.utils import DefaultFillViewStrategy
-    from widgetastic.widget import View, TextInput, Checkbox
-
-    class BasicForm(View):
-        input1 = TextInput(name="input1")
-        input2 = TextInput(name="fill_with_2")
-        checkbox1 = Checkbox(id="input2")
-
-        # Explicitly set the default strategy (optional - it's the default)
-        fill_strategy = DefaultFillViewStrategy()
-
-    # Create view instance
-    view = BasicForm(browser)
-
-    # Fill multiple widgets at once
-    changed = view.fill({
-        'input1': 'test_value',
-        'checkbox1': True
-    })
-
-    # Returns True if any widget value changed
-    print(f"Fill changed values: {changed}")
+.. literalinclude:: ../examples/fill-strategies/default_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Basic Usage
+   :end-before: # End Example: Basic Usage
 
 
 **Filtering None Values:**
 
 Values set to ``None`` are automatically filtered out:
 
-.. code-block:: python
-
-    values_with_none = {
-        "input1": "value1",
-        "input2": None,  # This will be filtered out
-        "checkbox1": True
-    }
-
-    view.fill(values_with_none)
+.. literalinclude:: ../examples/fill-strategies/default_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Filtering None Values
+   :end-before: # End Example: Filtering None Values
 
 
 **Handling Extra Keys:**
 
 The strategy warns about keys in your fill data that don't correspond to widgets:
 
-.. code-block:: python
-
-    import logging
-    logging.basicConfig(level=logging.WARNING)
-
-    values_with_extras = {
-        "input1": "value1",
-        "nonexistent_widget": "value2",  # This doesn't exist
-        "another_extra": "value3"         # This doesn't exist either
-    }
-
-    # When filling, you'll get a warning:
-    # "Extra values that have no corresponding fill fields passed: another_extra, nonexistent_widget"
-    view.fill(values_with_extras)
+.. literalinclude:: ../examples/fill-strategies/default_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Handling Extra Keys
+   :end-before: # End Example: Handling Extra Keys
 
 **Handling Widgets Without Fill Methods:**
 
 Widgets that don't have a ``fill()`` method are skipped with a warning:
 
-.. code-block:: python
-
-    from widgetastic.widget import Widget
-
-    class NoFillWidget(Widget):
-        """Widget without fill method."""
-        pass
-
-    class TestForm(View):
-        input1 = TextInput(name="input1")
-        no_fill_widget = NoFillWidget()
-        input2 = TextInput(name="fill_with_2")
-
-        fill_strategy = DefaultFillViewStrategy()
-
-    view = TestForm(browser)
-
-    # Fill operation will skip no_fill_widget and log a warning
-    values = {
-        "input1": "value1",
-        "no_fill_widget": "will_skip",  # This will be skipped
-        "input2": "value2"
-    }
-
-    # The fill succeeds for input1 and input2, but logs:
-    # "Widget 'no_fill_widget' doesn't have fill method"
-    result = view.fill(values)
-    assert result is True  # Other widgets filled successfully
+.. literalinclude:: ../examples/fill-strategies/default_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Handling Widgets Without Fill
+   :end-before: # End Example: Handling Widgets Without Fill
 
 **Change Detection:**
 
 The strategy returns ``True`` only if at least one widget value actually changed:
 
-.. code-block:: python
-
-    # First fill - values are new, so returns True
-    result1 = view.fill({"input1": "test_value", "checkbox1": True})
-    assert result1 is True
-
-    # Second fill with same values - no change, returns False
-    result2 = view.fill({"input1": "test_value", "checkbox1": True})
-    assert result2 is False
+.. literalinclude:: ../examples/fill-strategies/default_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Change Detection
+   :end-before: # End Example: Change Detection
 
 
 WaitFillViewStrategy
@@ -176,44 +112,19 @@ Use ``WaitFillViewStrategy`` when:
 
 **Basic Usage:**
 
-.. code-block:: python
-
-    from widgetastic.utils import WaitFillViewStrategy
-    from widgetastic.widget import View, TextInput, Checkbox
-
-    class DynamicForm(View):
-        input1 = TextInput(name="input1")
-        checkbox1 = Checkbox(id="input2")
-
-        # Use wait strategy with default 5-second timeout
-        fill_strategy = WaitFillViewStrategy()
-
-    view = DynamicForm(browser)
-
-    # Fill operation will wait for each widget to be displayed
-    changed = view.fill({
-        'input1': 'wait_test_value',
-        'checkbox1': True
-    })
+.. literalinclude:: ../examples/fill-strategies/wait_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Basic Usage
+   :end-before: # End Example: Basic Usage
 
 **Custom Wait Timeout:**
 
 Configure how long to wait for each widget:
 
-.. code-block:: python
-
-    class DynamicForm(View):
-        input1 = TextInput(name="input1")
-        input2 = TextInput(name="fill_with_2")
-        checkbox1 = Checkbox(id="input2")
-
-        # Custom 10-second timeout per widget
-        fill_strategy = WaitFillViewStrategy(wait_widget="10s")
-
-    view = DynamicForm(browser)
-
-    # Each widget will wait up to 10 seconds to be displayed
-    view.fill({"input1": "custom_wait_test"})
+.. literalinclude:: ../examples/fill-strategies/wait_fill_strategy_examples.py
+   :language: python
+   :start-after: # Example: Custom Wait Timeout
+   :end-before: # End Example: Custom Wait Timeout
 
 
 Strategy Inheritance with respect_parent
@@ -226,50 +137,19 @@ Both fill strategies support the ``respect_parent`` parameter, which controls wh
 * ``respect_parent=False`` (default): Child views get their own default strategy
 * ``respect_parent=True``: Child views inherit parent's strategy
 
-**Example: Parent Without Inheritance:**
+**Example Without Inheritance:**
 
-.. code-block:: python
+.. literalinclude:: ../examples/fill-strategies/strategy_inheritance_examples.py
+   :language: python
+   :start-after: # Example: Without Inheritance
+   :end-before: # End Example: Without Inheritance
 
-    from widgetastic.utils import WaitFillViewStrategy, DefaultFillViewStrategy
-    from widgetastic.widget import View, TextInput
+**Example With Inheritance:**
 
-    class ParentView(View):
-        # Parent has wait strategy but doesn't respect parent
-        fill_strategy = WaitFillViewStrategy(wait_widget="10s")  # respect_parent=False by default
-
-        @View.nested
-        class ChildView(View):
-            input1 = TextInput(name="input1")
-            # No fill_strategy specified
-
-    parent_view = ParentView(browser)
-
-    # Child gets its own default strategy (not parent's)
-    assert isinstance(parent_view.fill_strategy, WaitFillViewStrategy)
-    assert isinstance(parent_view.ChildView.fill_strategy, DefaultFillViewStrategy)
-
-
-**Example: Parent With Inheritance:**
-
-.. code-block:: python
-
-    from widgetastic.utils import WaitFillViewStrategy, DefaultFillViewStrategy
-    from widgetastic.widget import View, TextInput
-
-    class ParentView(View):
-        # Parent has wait strategy but doesn't respect parent
-        fill_strategy = WaitFillViewStrategy(respect_parent=True, wait_widget="10s")  # respect_parent=False by default
-
-        @View.nested
-        class ChildView(View):
-            input1 = TextInput(name="input1")
-            # No fill_strategy specified
-
-    parent_view = ParentView(browser)
-
-    # Child gets its own default strategy (not parent's)
-    assert isinstance(parent_view.fill_strategy, WaitFillViewStrategy)
-    assert isinstance(parent_view.ChildView.fill_strategy, WaitFillViewStrategy)
+.. literalinclude:: ../examples/fill-strategies/strategy_inheritance_examples.py
+   :language: python
+   :start-after: # Example: With Inheritance
+   :end-before: # End Example: With Inheritance
 
 
 

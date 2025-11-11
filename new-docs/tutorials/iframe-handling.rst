@@ -35,40 +35,9 @@ The testing page contains an iframe that loads ``iframe_page.html``. Here's how 
 
 **Simple IFrame View**
 
-.. code-block:: python
-
-    class BasicIFrameView(View):
-        # The FRAME attribute specifies the iframe locator
-        FRAME = '//iframe[@name="some_iframe"]'
-
-        # Widgets inside the iframe
-        iframe_title = Text(".//h3")
-        select1 = Select(id="iframe_select1")
-        select2 = Select(name="iframe_select2")
-
-    iframe_view = BasicIFrameView(browser)
-
-    # Test basic iframe access
-    print(f"IFrame displayed: {iframe_view.is_displayed}")
-    print(f"IFrame title: {iframe_view.iframe_title.read()}")
-    # Output: "IFrame Widget Testing"
-
-    # Interact with iframe widgets
-    current_selection = iframe_view.select1.read()
-    print(f"Current selection: {current_selection}")  # "Foo"
-
-    # Change selection
-    iframe_view.select1.fill("Bar")
-    print(f"New selection: {iframe_view.select1.read()}")  # "Bar"
-
-    # Working with multi-select in iframe
-    print(f"Multi-select options: {iframe_view.select2.all_options}")
-    # Output: [('Foo', 'foo'), (' Bar', 'bar'), ('Baz', 'baz')]
-
-    # Select multiple options
-    iframe_view.select2.fill(["Foo", "Baz"])
-    selected = iframe_view.select2.read()
-    print(f"Multi-selected: {selected}")
+.. literalinclude:: ../examples/iframe-handling/basic_iframe.py
+   :language: python
+   :linenos:
 
 Nested IFrame Navigation
 ========================
@@ -77,45 +46,9 @@ The iframe testing setup includes nested iframes. Here's how to handle complex h
 
 **Nested IFrame Structure**
 
-.. code-block:: python
-
-    class NestedIFrameView(View):
-        # First level iframe
-        FRAME = '//iframe[@name="some_iframe"]'
-        iframe_title = Text(".//h3")
-
-        # Nested iframe class (iframe within iframe)
-        class nested_iframe(View):
-            FRAME = './/iframe[@name="another_iframe"]'
-            nested_title = Text(".//h3")
-            nested_select = Select(id="iframe_select3")
-
-            # Deeply nested view within the nested iframe
-            class deep_nested(View):
-                ROOT = './/div[@id="nested_view"]'
-                nested_input = TextInput(name="input222")
-
-    nested_view = NestedIFrameView(browser)
-
-    # Access each level of nesting
-    print(f"Level 1 iframe: {nested_view.iframe_title.read()}")
-    # Output: "IFrame Widget Testing"
-
-    print(f"Level 2 iframe: {nested_view.nested_iframe.nested_title.read()}")
-    # Output: "Nested IFrame Content"
-
-    print(f"Nested select: {nested_view.nested_iframe.nested_select.read()}")
-    # Output: "Foo"
-
-    # Access deeply nested input
-    nested_input_value = nested_view.nested_iframe.deep_nested.nested_input.read()
-    print(f"Deep nested input: {nested_input_value}")
-    # Output: "Default Value"
-
-    # Fill deeply nested input
-    nested_view.nested_iframe.deep_nested.nested_input.fill("Updated Value")
-    updated_value = nested_view.nested_iframe.deep_nested.nested_input.read()
-    print(f"Updated nested input: {updated_value}")
+.. literalinclude:: ../examples/iframe-handling/nested_iframe.py
+   :language: python
+   :linenos:
 
 IFrame Context Isolation
 ========================
@@ -124,33 +57,6 @@ IFrame contexts are completely isolated. Elements in different frames cannot dir
 
 **Demonstrating Context Isolation**
 
-.. code-block:: python
-
-    class MainPageView(View):
-        # Elements in main page context
-        main_title = Text('h1#wt-core-title')
-        main_checkbox = Checkbox(id="switchabletesting-3")
-
-    class IFrameView(View):
-        FRAME = '//iframe[@name="some_iframe"]'
-        iframe_title = Text(".//h3")
-        iframe_select = Select(id="iframe_select1")
-
-    main_view = MainPageView(browser)
-    iframe_view = IFrameView(browser)
-
-    # Both contexts work independently
-    print(f"Main page title: {main_view.main_title.read()}")
-    # Output: "Widgetastic.Core - Testing Page"
-
-    print(f"IFrame title: {iframe_view.iframe_title.read()}")
-    # Output: "IFrame Widget Testing"
-
-    # Interactions don't affect each other
-    main_view.main_checkbox.fill(True)
-    iframe_view.iframe_select.fill("Bar")
-
-    # Verify isolation - both maintain their states
-    assert main_view.main_checkbox.read() is True
-    assert iframe_view.iframe_select.read() == "Bar"
-    print("✓ Context isolation verified")
+.. literalinclude:: ../examples/iframe-handling/context_isolation.py
+   :language: python
+   :linenos:

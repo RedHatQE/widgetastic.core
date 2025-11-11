@@ -16,35 +16,13 @@ A View descends from the Widget class but it is specifically designed to hold ot
 
 **Basic View Example**
 
-.. code-block:: python
-
-    from widgetastic.widget import View, Text
-
-    class TestingPageView(View):
-        # Read the main page title
-        main_title = Text(locator= ".//h1[@id='wt-core-title']")
-        # Read the sub title
-        sub_title = Text(locator='.//p[@class="subtitle"]')
-        # Define non existing element
-        non_existing_element = Text(locator='.//div[@id="non-existing-element"]')
-
-
-    page = TestingPageView(browser)
-
-    # Check if element exist on page or not
-    page.main_title.is_displayed        # True
-    page.non_existing_element.is_displayed        # False
-
-    # Reading text content
-    print(f"Page title: {page.main_title.read()}")
-    # Output: "Widgetastic.Core - Testing Page"
-
-    print(f"Sub title: {page.sub_title.read()}")
-    # Output: "Interactive demonstrations for widget automation and testing"
+.. literalinclude:: ../examples/views/basic_view.py
+   :language: python
+   :linenos:
 
 .. note::
    **WidgetDescriptor and Lazy Creation:**
-   
+
    When you define widgets on a view (e.g., ``main_title = Text(locator= ".//h1[@id='wt-core-title']")``), you're not creating
    an actual widget object immediately. Instead, a ``WidgetDescriptor`` is created. The actual widget
    instance is created lazily when you access it (e.g., ``view.main_title``), at which point the browser
@@ -67,100 +45,35 @@ There are two approaches to create nested views in widgetastic:
 
 This approach creates standalone view classes and assigns them as attributes using ``View.nested()``:
 
-.. code-block:: python
-
-    from widgetastic.widget import View, Text, TextInput, Checkbox
-
-    class NormalViewTesting(View):
-        """Normal View under View testing."""
-        ROOT = ".//div[contains(@class, 'normal-view')]"
-        title = Text(locator=".//div[@class='widget-title']")
-        name = TextInput(id="normal_name")
-        email = TextInput(id="normal_email")
-        terms = Checkbox(id="normal_terms")
-        submit = Text(locator=".//button[@id='normal_submit']")
-
-    class ParametrizedViewTesting(View):
-        """Parametrized View under View testing."""
-        ROOT = ".//div[contains(@class, 'parametrized-view')]"
-        title = Text(locator=".//div[@class='widget-title']")
-        # Some other widgets
-
-    class ConditionalSwitchableViewTesting(View):
-        """Conditional Switchable View under View testing."""
-        ROOT = ".//div[contains(@class, 'conditional-switchable-view')]"
-        title = Text(locator=".//div[@class='widget-title']")
-        # Some other widgets
-
-    class ViewTesting(View):
-        normal_view = View.nested(NormalViewTesting)
-        parametrized_view = View.nested(ParametrizedViewTesting)
-        conditional_switchable_view = View.nested(ConditionalSwitchableViewTesting)
-
-    # Access nested elements
-    view = ViewTesting(browser)
-
-    view.normal_view.is_displayed               # True
-    view.normal_view.title.read()               # 'Normal View Testing'
-    view.parametrized_view.title.read()         # 'Parametrized View Testing'
-    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'}
+.. literalinclude:: ../examples/views/nested_view_attribute_assignment.py
+   :language: python
+   :linenos:
 
 
 **2. Inner Classes**
 
 This approach defines view classes as inner classes with the ``@View.nested`` decorator:
 
-.. code-block:: python
-
-    class ViewTesting(View):
-        @View.nested
-        class normal_view(View):    # noqa
-            """Normal View under View testing."""
-            ROOT = ".//div[contains(@class, 'normal-view')]"
-            title = Text(locator=".//div[@class='widget-title']")
-            name = TextInput(id="normal_name")
-            email = TextInput(id="normal_email")
-            terms = Checkbox(id="normal_terms")
-            submit = Text(locator=".//button[@id='normal_submit']")
-
-        @View.nested
-        class parametrized_view(View):  # noqa
-            """Parametrized View under View testing."""
-            ROOT = ".//div[contains(@class, 'parametrized-view')]"
-            title = Text(locator=".//div[@class='widget-title']")
-            # Some other widgets
-
-        @View.nested
-        class conditional_switchable_view(View):    # noqa
-            """Conditional Switchable View under View testing."""
-            ROOT = ".//div[contains(@class, 'conditional-switchable-view')]"
-            title = Text(locator=".//div[@class='widget-title']")
-            # Some other widgets
-
-    # Access nested elements (same as method 1)
-    view = ViewTesting(browser)
-
-    view.normal_view.is_displayed               # True
-    view.normal_view.title.read()               # 'Normal View Testing'
-    view.parametrized_view.title.read()         # 'Parametrized View Testing'
-    view.conditional_switchable_view.read()     # {'title': 'Conditional Switchable View Testing'}
+.. literalinclude:: ../examples/views/nested_view_inner_classes.py
+   :language: python
+   :linenos:
 
 .. note::
    **Understanding @View.nested Decorator:**
-   
+
    The ``@View.nested`` decorator is **not strictly necessary** for basic functionality, but it provides
    important benefits that become critical in certain scenarios:
-   
+
    * **Widget Ordering**: Views remember the order in which widgets are placed on them, which is
      important for fill/read operations. When you use ``View.nested()`` as an attribute assignment
      (Method 1), the nested view doesn't get wrapped in a ``WidgetDescriptor``, so it won't participate
      in the ordering mechanism. Using the ``@View.nested`` decorator on an inner class ensures the view
      is properly wrapped in a ``WidgetDescriptor`` and maintains correct order for fill/read operations.
-   
+
    * **Proper Initialization**: Guarantees correct parent-child relationships and browser context propagation
-   
+
    * **Cleaner Organization**: Keeps related views grouped within the parent class, improving code readability
-   
+
    **When to use @View.nested**: Use it when widget ordering matters for your fill/read operations, or
    when you want to ensure proper WidgetDescriptor wrapping for consistency with the framework's design.
 
@@ -168,17 +81,9 @@ This approach defines view classes as inner classes with the ``@View.nested`` de
 
 The ``ROOT`` attribute defines the container for a view. All widgets in that view are searched within this container, providing proper scoping:
 
-.. code-block:: python
-
-    class NormalViewTesting(View):
-        ROOT = ".//div[contains(@class, 'normal-view')]"  # All widgets scoped to this section
-
-        # These widgets are found within `ROOT`.
-        title = Text(locator=".//div[@class='widget-title']")
-        name = TextInput(id="normal_name")
-
-    # Without ROOT, widgets would search the entire page
-    # With ROOT, widgets only search within .//div[contains(@class, 'normal-view')].
+.. literalinclude:: ../examples/views/root_locator_scoping.py
+   :language: python
+   :linenos:
 
 .. _parametrized-views:
 
@@ -200,35 +105,9 @@ Without ParametrizedView, you'd need to create separate view classes for each "t
 
 ParametrizedView solves this by letting you define a single template view that can be reused with different parameters. The ``thing_id`` parameter gets injected into locators and widget definitions at runtime, allowing one view class to handle all "thing" variations on the testing page.
 
-.. code-block:: python
-
-    from widgetastic.utils import ParametrizedLocator, ParametrizedString
-    from widgetastic.widget import ParametrizedView, TextInput, Checkbox, View
-
-    class ThingContainerView(ParametrizedView):
-        # Defining one parameter
-        PARAMETERS = ('thing_id', )
-        # ParametrizedLocator coerces to a string upon access
-        # It follows similar formatting syntax as .format
-        # You can use the xpath quote filter as shown
-        ROOT = ParametrizedLocator('.//div[@id={thing_id|quote}]')
-
-        # Widget definition *args and values of **kwargs (only the first level) are processed as well
-        the_widget = TextInput(name=ParametrizedString('asdf_{thing_id}'))
-        description = TextInput(name=ParametrizedString('desc_{thing_id}'))
-        active = Checkbox(name=ParametrizedString('active_{thing_id}'))
-
-    # Then for invoking this. create a view for foo.
-    view = ThingContainerView(browser, additional_context={'thing_id': 'foo'})
-
-    # Fill the foo container
-    view.the_widget.fill('Test input for foo')
-    view.description.fill('Description for foo')
-    view.active.fill(True)
-
-    # Create parametrized view for bar
-    bar_view = ThingContainerView(browser, additional_context={'thing_id': 'bar'})
-    bar_view.the_widget.fill('Test input for bar')
+.. literalinclude:: ../examples/views/parametrized_view.py
+   :language: python
+   :linenos:
 
 **Nested Parametrized View Example**
 
@@ -236,43 +115,9 @@ It is also possible to nest the parametrized view inside another view, parametri
 In this case the invocation of a nested view looks like a method call, instead of looking like a property.
 The invocation supports passing the arguments both ways, positional and keyword based.
 
-.. code-block:: python
-
-    class ParametrizedViewTesting(View):
-        """Parametrized View under View testing."""
-        ROOT = ".//div[contains(@class, 'parametrized-view')]"
-        title = Text(locator=".//div[@class='widget-title']")
-
-        class thing_container_view(ParametrizedView):   # noqa
-            # Defining one parameter
-            PARAMETERS = ('thing_id', )
-            # ParametrizedLocator coerces to a string upon access
-            ROOT = ParametrizedLocator('.//div[@id={thing_id|quote}]')
-
-            # Widget definition processed with parameters
-            the_widget = TextInput(name=ParametrizedString('asdf_{thing_id}'))
-            description = TextInput(name=ParametrizedString('desc_{thing_id}'))
-            active = Checkbox(name=ParametrizedString('active_{thing_id}'))
-
-    # We create the root view
-    view = ParametrizedViewTesting(browser)
-
-    # Now if it was an ordinary nested view, view.thing_container_view.the_widget would give us the
-    # nested view instance directly and then the the_widget widget. But this is a parametrized view
-    # and it will give us an intermediate object whose task is to collect the parameters upon
-    # calling and then pass them through into the real view object.
-
-    # This example will be invoking the parametrized view with the exactly same param like the
-    # previous example:
-    view.thing_container_view('foo')
-
-    # So, when we have that view, you can use it as you are used to
-    view.thing_container_view('foo').the_widget.fill('Test for foo')
-    view.thing_container_view('bar').the_widget.fill('Test for bar')
-    view.thing_container_view('baz').the_widget.fill('Test for baz')
-
-    # Or with keyword params
-    view.thing_container_view(thing_id='foo').the_widget.fill('Test for foo')
+.. literalinclude:: ../examples/views/nested_parametrized_view.py
+   :language: python
+   :linenos:
 
 
 The parametrized views also support list-like access using square braces.
@@ -283,38 +128,9 @@ It is also possible to iterate through all the occurences of the parametrized vi
 Let's assume the previous code sample is still loaded and the `thing_container_view` class has the all() defined.
 In that case, the code would like like this:
 
-.. code-block:: python
-
-    class ParametrizedViewTesting(View):
-        """Parametrized View under View testing."""
-        ROOT = ".//div[contains(@class, 'parametrized-view')]"
-        title = Text(locator=".//div[@class='widget-title']")
-
-        class thing_container_view(ParametrizedView):   # noqa
-            # Defining one parameter
-            PARAMETERS = ('thing_id', )
-            # ParametrizedLocator coerces to a string upon access
-            ROOT = ParametrizedLocator('.//div[@id={thing_id|quote}]')
-
-            # Widget definition processed with parameters
-            the_widget = TextInput(name=ParametrizedString('asdf_{thing_id}'))
-            description = TextInput(name=ParametrizedString('desc_{thing_id}'))
-            active = Checkbox(name=ParametrizedString('active_{thing_id}'))
-
-            @classmethod
-            def all(cls, browser):
-                # Get all the thing_id values from the page
-                elements = browser.elements(".//div[@class='thing']")
-                # Return a list of tuples, each containing the thing_id value
-                return [(browser.get_attribute("id", el), ) for el in elements]
-
-    # We create the root view
-    view = ParametrizedViewTesting(browser)
-
-
-    for container_view in view.thing_container_view:
-        container_view.the_widget.fill('do something with the widget')
-        print(container_view.read())
+.. literalinclude:: ../examples/views/parametrized_view_iteration.py
+   :language: python
+   :linenos:
 
 .. note::
    This sample code would go through all the occurences of the parametrization. Remember that the all classmethod **IS REQUIRED** in this case.
@@ -366,89 +182,18 @@ Look at our testing page, Under `Conditional view testing` section, you can see 
 * Action type 2: Container ``<div id="action_form_2">``, input ``name="action2_widget"``, select ``name="action2_priority"``, input ``name="action2_notes"``
 * Action type 3: Container ``<div id="action_form_3">``, input ``name="action3_widget"``, input ``name="action3_config"``, select ``name="action3_mode"``
 
-.. code-block:: python
-
-    from widgetastic.widget import ConditionalSwitchableView, View, TextInput, Select, Checkbox
-
-    class ConditionalSwitchableViewTesting(View):
-        ROOT = "#conditional_form_container"
-
-        foo = TextInput(name='foo_value')  # For multi-widget reference
-        action_type = Select(name='action_type')
-
-        action_form = ConditionalSwitchableView(reference='action_type')
-
-        # Simple value matching. If Action type 1 is selected in the select, use this view.
-        # And if the action_type value does not get matched, use this view as default
-        @action_form.register('Action type 1', default=True)
-        class ActionType1Form(View):
-            ROOT = "#action_form_1"
-            widget = TextInput(name='action1_widget')
-            options = Select(name='action1_options')
-            enabled = Checkbox(name='action1_enabled')
-
-        # You can use a callable to declare the widget values to compare
-        @action_form.register(lambda action_type: action_type == 'Action type 2')
-        class ActionType2Form(View):
-            ROOT = "#action_form_2"
-            widget = TextInput(name='action2_widget')
-            priority = Select(name='action2_priority')
-            notes = TextInput(name='action2_notes')
-
-        # With callable, you can use values from multiple widgets
-        @action_form.register(
-            lambda action_type, foo: action_type == 'Action type 3' and foo == 'special')
-        class ActionType3Form(View):
-            ROOT = "#action_form_3"
-            widget = TextInput(name='action3_widget')
-            config = TextInput(name='action3_config')
-            mode = Select(name='action3_mode')
-
-    view = ConditionalSwitchableViewTesting(browser)
-
-    # Switch content by changing selector
-    view.action_type.fill("Action type 1")
-    view.action_form.widget.fill("Test input for type 1")
-    view.action_form.options.fill("Option 1")
-    view.action_form.enabled.fill(True)
-
-    # Switch to action type 2 content
-    view.action_type.fill("Action type 2")
-    view.action_form.widget.fill("Test input for type 2")
-    view.action_form.priority.fill("High")
-    view.action_form.notes.fill("Important notes")
-
-    # Switch to action type 3 with multi-widget condition
-    view.foo.fill("special")  # Required for condition
-    view.action_type.fill("Action type 3")
-    view.action_form.widget.fill("Test input for type 3")
-    view.action_form.config.fill("advanced config")
+.. literalinclude:: ../examples/views/conditional_switchable_view.py
+   :language: python
+   :linenos:
 
 You can see it gives you the flexibility of decision based on the values in the view.
 
 
 **Simple Conditional Widget Registration**
 
-.. code-block:: python
-
-    class SimpleConditionalWidgetView(View):
-        bar = Select(name='bar') # Reference widget; depends on the value of this widget we will decide widget to use.
-
-        conditional_widget = ConditionalSwitchableView(reference='bar')
-
-        # Register simple widget directly without creating a class
-        conditional_widget.register('Action type 1', default=True, widget=TextInput(name='simple_widget'))
-
-    view = SimpleConditionalWidgetView(browser)
-
-    # When bar is set to 'Action type 1', conditional_widget becomes available.
-    view.bar.fill('Action type 1')
-    view.conditional_widget.is_displayed # True
-    view.conditional_widget.fill('Direct widget input')
-
-    # When bar is set to 'Other', conditional_widget becomes unavailable.
-    view.bar.fill('Other')
-    view.conditional_widget.is_displayed    # False
+.. literalinclude:: ../examples/views/simple_conditional_widget.py
+   :language: python
+   :linenos:
 
 
 View-Level Operations
@@ -458,106 +203,33 @@ View-Level Operations
 
 Views support batch operations like fill and read on all their widgets.
 
-.. code-block:: python
-
-    class NormalView(View):
-        ROOT = "#normal_view_container"
-
-        name = TextInput(id="normal_name")
-        email = TextInput(id="normal_email")
-        terms = Checkbox(id="normal_terms")
-
-
-    # Fill multiple fillable widgets at once
-    form = NormalView(browser)
-    form_data = {
-        'name': 'Foo Bar',
-        'email': 'foo.bar@example.com',
-        'terms': True,
-    }
-
-    form.fill(form_data)
-
-    # Read all fillable widgets in the view
-    current_values = form.read()
+.. literalinclude:: ../examples/views/batch_operations.py
+   :language: python
+   :linenos:
 
 **View Lifecycle Hooks**
 
 Views can optionally define ``before_fill(values)`` and ``after_fill(was_change)`` methods to
 intercept the fill process:
 
-.. code-block:: python
-
-    class FormView(View):
-        ROOT = "#normal_view_container"
-        name = TextInput(id="normal_name")
-        email = TextInput(id="normal_email")
-        terms = Checkbox(id="normal_terms")
-
-        def before_fill(self, values):
-            """Called right before filling starts."""
-            # self.logger.info(f"About to fill form with: {values}")
-            print(f"About to fill form with: {values}")
-
-            # You can validate values, prepare the form, etc.
-            # Return value is ignored
-
-        def after_fill(self, was_change):
-            """Called right after filling completes."""
-            if was_change:
-                # self.logger.info("Form was successfully filled with new values")
-                print("Form was successfully filled with new values")
-                # Could wait for form updates, verify changes, etc.
-            else:
-                # self.logger.debug("No changes were made to the form")
-                print("No changes were made to the form")
-            # Return value is ignored
-
-    form = FormView(browser)
-    form.fill({'name': 'John', 'email': 'john@example.com', 'terms': True})
-    # before_fill is called first, then widgets are filled, then after_fill is called
-    print(current_values)
+.. literalinclude:: ../examples/views/view_lifecycle_hooks.py
+   :language: python
+   :linenos:
 
 
 **View State Checking**
 
-.. code-block:: python
-
-    class NormalView(View):
-        # Without root locator, it will be considered as displayed every time.
-        name = TextInput(id="normal_name")
-
-    view = NormalView(browser)
-    view.name.is_displayed # Always True
-
 If we don't specify a ``ROOT`` locator, it will be considered as displayed every time.
 but if we specify a ``ROOT`` locator, it will be considered as displayed only when the root locator is present on web page.
 
-.. code-block:: python
-
-    class NormalView(View):
-        ROOT = "#normal_view_container"
-        name = TextInput(id="normal_name")
-
-    view = NormalView(browser)
-    view.name.is_displayed # Only True when the root locator is present
+.. literalinclude:: ../examples/views/view_state_checking.py
+   :language: python
+   :linenos:
 
 .. note::
     View ``is_displayed`` property is important to know when you are using views to navigate between pages.
     So it recommended to specify a ``ROOT`` locator for all views. If you don't want to specify a ``ROOT`` locator,
     then tried to add custom ``is_displayed`` property to the view.
-
-Here is a example of how to overwrite ``is_displayed`` property of the view with custom logic.
-
-.. code-block:: python
-
-    class NormalView(View):
-        name = TextInput(id="normal_name")
-
-        @property
-        def is_displayed(self):
-            # We can take support of other widgets to check if the view is displayed
-            return self.name.is_displayed
 
 
 Best Practices for Views
