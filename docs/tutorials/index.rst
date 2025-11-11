@@ -17,7 +17,7 @@ These comprehensive tutorials cover everything from basic widget usage to advanc
 
 **Ready to begin?** Start with Basic Widgets and follow the sequence.
 
-**Support**: All examples use elements from ``testing/html/testing_page.html`` - you can test everything yourself!
+**Support**: Most examples use elements from ``testing/html/testing_page.html``, with some tutorials using specialized pages (``iframe_page.html``, ``popup_test_page.html``) for specific features - you can test everything yourself!
 
 Setting Up Your Environment
 ============================

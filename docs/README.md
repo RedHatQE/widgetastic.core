@@ -1,6 +1,6 @@
 # Widgetastic.Core Documentation
 
-This directory contains the comprehensive documentation for widgetastic.core, provide a superior learning experience for developers using this powerful web automation framework.
+This directory contains the comprehensive documentation for widgetastic.core, providing a superior learning experience for developers using this powerful web automation framework.
 
 ## 🏗️ Building the Documentation
 
@@ -12,6 +12,8 @@ pip install -e .[docs]
 ```
 
 ### Building HTML Documentation
+
+From the project root:
 
 ```bash
 cd docs

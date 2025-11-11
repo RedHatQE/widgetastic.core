@@ -2,7 +2,7 @@
 Table Widget
 =============
 
-This tutorial demonstrates advanced widgets in Widgetastic.core using comprehensive examples from ``testing_page.html``. You'll learn to work with tables, handle drag & drop operations, and interact with complex UI components.
+This tutorial demonstrates the Table widget in Widgetastic.core using comprehensive examples from ``testing_page.html``. You'll learn to work with HTML tables, read data from rows and cells, handle embedded widgets, and manage complex table structures with merged cells.
 
 .. note::
    **Prerequisites**: Basic widgets tutorial

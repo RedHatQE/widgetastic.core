@@ -6,7 +6,7 @@ Requirements
 ============
 
 **Python Version**
-   Widgetastic.core requires Python 3 (For specific versions please check pyproject.toml). We recommend using the latest stable version of Python.
+   Widgetastic.core requires Python 3.10 or higher. We recommend using the latest stable version of Python.
 
 **System Requirements**
    * Windows, macOS, or Linux

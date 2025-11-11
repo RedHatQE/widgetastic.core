@@ -124,7 +124,7 @@ The parametrized views also support list-like access using square braces.
 For that to work, you need the `all` classmethod defined on the view so Widgetastic would be aware of all the items.
 You can access the parametrized views by member index [i] and slice [i:j].
 
-It is also possible to iterate through all the occurences of the parametrized view.
+It is also possible to iterate through all the occurrences of the parametrized view.
 Let's assume the previous code sample is still loaded and the `thing_container_view` class has the all() defined.
 In that case, the code would like like this:
 
@@ -133,7 +133,7 @@ In that case, the code would like like this:
    :linenos:
 
 .. note::
-   This sample code would go through all the occurences of the parametrization. Remember that the all classmethod **IS REQUIRED** in this case.
+   This sample code would go through all the occurrences of the parametrization. Remember that the all classmethod **IS REQUIRED** in this case.
 
 You can also pass the :py:class:`widgetastic.utils.ParametrizedString` instance as a constructor parameter into widget instantiation on the view class.
 Because it utilizes :ref:`constructor-object-collapsing`, it will resolve itself automatically.

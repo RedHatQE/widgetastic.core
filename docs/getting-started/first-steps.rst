@@ -116,7 +116,7 @@ This creates the browser hierarchy and navigates to the test form:
     response_data = json.loads(form_view.response.text)
 
 
-**We can fill the form at single shot. Widgetastic will fill the form in the order of the widgets.**
+**We can fill the form in a single shot. Widgetastic will fill the form in the order of the widgets.**
 
 .. literalinclude:: ../examples/getting-started/batch_fill_example.py
    :language: python

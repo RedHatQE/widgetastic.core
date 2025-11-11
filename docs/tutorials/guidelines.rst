@@ -100,12 +100,12 @@ Locator Definition
 
 **Locator Return Types**
 
-You can write ``__locator__`` method yourself. It should return anything that can be turned into a locator by ``smartloc.Locator``:
+You can write ``__locator__`` method yourself. It should return anything that can be turned into a locator by :py:class:`~widgetastic.locator.SmartLocator`:
 
 - ``'#foo'`` (CSS selector)
 - ``'//div[@id="foo"]'`` (XPath)
-- ``smartloc.Locator(xpath='...')`` (Locator object)
-- et cetera
+- ``SmartLocator(xpath='...')`` (Locator object instance)
+- etc.
 
 **Important Restrictions**
 

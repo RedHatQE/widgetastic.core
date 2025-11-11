@@ -21,7 +21,7 @@ By completing this tutorial, you will:
 Text Widget
 ============
 
-The :py:class:`~widgetastic.widget.Text` widget extracts text content from web element.
+The :py:class:`~widgetastic.widget.Text` widget extracts text content from a web element.
 
 **Basic Text Widget Examples**
 

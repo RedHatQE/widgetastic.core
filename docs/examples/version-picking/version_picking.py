@@ -42,6 +42,9 @@ def get_pw_and_browser(version: str = "v1"):
         return p, BrowserV2(page)
 
 
+# End of Example: Setting Up Version Picking Environment
+
+
 # Example: Basic Version Picking
 # Create versioned view
 class VersionedView(View):
