@@ -31,9 +31,12 @@ iframe_view.select1.fill("Bar")
 print(f"New selection: {iframe_view.select1.read()}")
 
 # Working with multi-select in iframe
-print(f"\nMulti-select options: {iframe_view.select2.all_options}")
+print(f"Multi-select options: {iframe_view.select2.all_options}")
 
 # Select multiple options
 iframe_view.select2.fill(["Foo", "Baz"])
 selected = iframe_view.select2.read()
 print(f"Multi-selected: {selected}")
+
+# Clean up: Return to main frame
+browser.switch_to_main_frame()  # noqa: F821

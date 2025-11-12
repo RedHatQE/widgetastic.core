@@ -19,7 +19,7 @@ print(f"Button is safe: {button.is_safe}")
 print(f"Select is safe: {select.is_safe}")
 
 # You can wait for a component to be safe before interacting
-print("\nWaiting for button to be safe before clicking...")
+print("Waiting for button to be safe before clicking...")
 if button.is_safe:
     button.click()
     print("Button clicked after verifying it's safe")

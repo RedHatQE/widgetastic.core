@@ -4,6 +4,7 @@ This example demonstrates creating and managing multiple browser windows.
 """
 
 import inspect
+import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from widgetastic.browser import Browser, WindowManager
@@ -11,9 +12,12 @@ from widgetastic.browser import Browser, WindowManager
 
 def setup_window_manager():
     """Setup WindowManager and base path."""
+    # Get headless mode from environment (set by conftest or CI)
+    headless = os.getenv("PLAYWRIGHT_HEADLESS", "false").lower() == "true"
+
     base_path = Path(inspect.getfile(Browser)).parent.parent.parent
     p = sync_playwright().start()
-    browser_instance = p.chromium.launch(headless=False)
+    browser_instance = p.chromium.launch(headless=headless)
     context = browser_instance.new_context()
     page = context.new_page()
 

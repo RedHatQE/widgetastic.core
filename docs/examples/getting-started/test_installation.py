@@ -1,5 +1,6 @@
 # test_installation.py
 
+import os
 from playwright.sync_api import sync_playwright
 from widgetastic.browser import Browser
 from widgetastic.widget import View, Text
@@ -10,8 +11,11 @@ class TestView(View):
 
 
 def test_widgetastic():
+    # Get headless mode from environment (set by conftest or CI)
+    headless = os.getenv("PLAYWRIGHT_HEADLESS", "false").lower() == "true"
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=headless)
         page = browser.new_page()
         page.goto("https://example.com")
 

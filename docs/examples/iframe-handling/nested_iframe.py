@@ -40,3 +40,6 @@ print(f"Deep nested input: {nested_input_value}")
 nested_view.nested_iframe.deep_nested.nested_input.fill("Updated Value")
 updated_value = nested_view.nested_iframe.deep_nested.nested_input.read()
 print(f"Updated nested input: {updated_value}")
+
+# Clean up: Return to main frame
+browser.switch_to_main_frame()  # noqa: F821

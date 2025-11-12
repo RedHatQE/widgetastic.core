@@ -1,5 +1,6 @@
 """Pytest configuration for documentation examples."""
 
+import os
 import pytest
 from pathlib import Path
 import sys
@@ -13,6 +14,16 @@ sys.path.insert(0, str(project_root / "src"))
 # Add examples directory to path for browser_setup import
 examples_dir = Path(__file__).parent
 sys.path.insert(0, str(examples_dir))
+
+
+def pytest_addoption(parser):
+    """Add command-line options for example tests."""
+    parser.addoption(
+        "--headless",
+        action="store_true",
+        default=False,
+        help="Run tests in headless mode (no browser window). Default is headed mode locally, headless in CI.",
+    )
 
 
 def pytest_ignore_collect(collection_path, config):
@@ -74,9 +85,23 @@ class ExampleItem(pytest.Item):
         has_own_browser = "sync_playwright" in code
 
         if has_own_browser:
+            # Validate the file path is within the examples directory for security
+            try:
+                resolved_path = self.example_file.resolve()
+                examples_path = Path(examples_dir).resolve()
+                resolved_path.relative_to(examples_path)
+            except (ValueError, OSError):
+                raise ValueError(
+                    f"Example file path {self.example_file} is outside the examples directory"
+                )
+
+            # Ensure it's a Python file
+            if resolved_path.suffix != ".py":
+                raise ValueError(f"Example file must be a Python file: {self.example_file}")
+
             result = subprocess.run(
-                [sys.executable, str(self.example_file)],
-                cwd=str(self.example_file.parent),
+                [sys.executable, str(resolved_path)],
+                cwd=str(resolved_path.parent),
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -109,6 +134,13 @@ class ExampleItem(pytest.Item):
 
 def pytest_configure(config):
     """Setup browser instance for all tests."""
+    # Determine headless mode: --headless flag OR CI environment
+    headless = config.getoption("--headless") or os.getenv("CI", "false").lower() == "true"
+
+    # Set environment variable for browser_setup to use
+    os.environ["PLAYWRIGHT_HEADLESS"] = str(headless).lower()
+
     from browser_setup import browser
 
+    browser.refresh(wait_until="load")
     config._browser_instance = browser

@@ -53,7 +53,7 @@ view.action_form.enabled.fill(True)
 print(f"Action form values: {view.action_form.read()}")
 
 # Switch to action type 2 content
-print("\nFilling Action type 2 form:")
+print("Filling Action type 2 form:")
 view.action_type.fill("Action type 2")
 view.action_form.widget.fill("Test input for type 2")
 view.action_form.priority.fill("High")
@@ -61,7 +61,7 @@ view.action_form.notes.fill("Important notes")
 print(f"Action form values: {view.action_form.read()}")
 
 # Switch to action type 3 with multi-widget condition
-print("\nFilling Action type 3 form (requires foo='special'):")
+print("Filling Action type 3 form (requires foo='special'):")
 view.foo.fill("special")  # Required for condition
 view.action_type.fill("Action type 3")
 view.action_form.widget.fill("Test input for type 3")

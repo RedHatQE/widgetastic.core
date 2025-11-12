@@ -5,6 +5,7 @@ This is a complete, working example that demonstrates core widgetastic concepts.
 
 # first_script.py
 import json
+import os
 
 from playwright.sync_api import sync_playwright
 from widgetastic.browser import Browser
@@ -41,10 +42,13 @@ class DemoFormView(View):
 
 # Step: Main automation logic where actualy we are interacting with the page.
 def main():
+    # Get headless mode from environment (set by conftest or CI)
+    headless = os.getenv("PLAYWRIGHT_HEADLESS", "false").lower() == "true"
+
     with sync_playwright() as playwright:
         # Launch browser using Playwright
-        browser = playwright.chromium.launch(headless=False)  # headless=False to see it in action
-        # browser = playwright.chromium.launch(headless=False, slow_mo=500)  # uncomment this to see the slow motion in action.
+        browser = playwright.chromium.launch(headless=headless)
+        # Tip: Use slow_mo for debugging: browser = playwright.chromium.launch(headless=False, slow_mo=500)
         page = browser.new_page()
 
         # Create widgetastic browser instance

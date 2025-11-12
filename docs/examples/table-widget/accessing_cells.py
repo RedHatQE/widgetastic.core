@@ -22,6 +22,6 @@ cell = row.column_1
 print(f"Cell by attributized name 'column_1': {cell.text}")
 
 # You can also click on cells
-print("\nClicking on column_1 cell...")
+print("Clicking on column_1 cell...")
 row.column_1.click()
 print("Cell clicked successfully")

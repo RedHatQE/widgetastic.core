@@ -23,6 +23,7 @@ view = TestView(browser)  # noqa: F821
 
 # OUIA_COMPONENT_TYPE is used to generate ROOT for this view
 print(f"ROOT locator for this view: {view.ROOT}")
+
 print(f"View is displayed: {view.is_displayed}")
 
 print("Clicking button inside OUIA view...")

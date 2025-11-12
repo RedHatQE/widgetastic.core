@@ -5,6 +5,7 @@ This example demonstrates version-dependent widget definitions.
 """
 
 import inspect
+import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from widgetastic.browser import Browser
@@ -26,8 +27,11 @@ class BrowserV2(Browser):
 
 
 def get_pw_and_browser(version: str = "v1"):
+    # Get headless mode from environment (set by conftest or CI)
+    headless = os.getenv("PLAYWRIGHT_HEADLESS", "false").lower() == "true"
+
     p = sync_playwright().start()
-    browser_instance = p.chromium.launch(headless=False)
+    browser_instance = p.chromium.launch(headless=headless)
     context = browser_instance.new_context()
     page = context.new_page()
 
@@ -73,7 +77,7 @@ pw.stop()
 # Test with version 2.1.0 browser
 pw, browser_v2 = get_pw_and_browser("v2")
 view = VersionedView(browser_v2)
-print(f"\nBrowser version (v2): {browser_v2.product_version}")
+print(f"Browser version (v2): {browser_v2.product_version}")
 print(f"Input locator (v2): {view.input_field.locator}")
 print(f"Button locator (v2): {view.click_button.locator}")
 pw.stop()

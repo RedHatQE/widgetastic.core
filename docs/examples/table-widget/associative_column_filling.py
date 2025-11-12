@@ -23,12 +23,12 @@ for status, row_data in data.items():
     print(f"  {status}: {row_data}")
 
 # Fill rows by their Status value
-print("\nFilling rows by Status:")
+print("Filling rows by Status:")
 status_table.fill(
     {"Active": {"Input": "new_active_value"}, "Inactive": {"Input": "new_inactive_value"}}
 )
 
 # Read back to verify
 updated_data = status_table.read()
-print(f"\nAfter fill - Active row Input: {updated_data['Active']['Input']}")
+print(f"After fill - Active row Input: {updated_data['Active']['Input']}")
 print(f"After fill - Inactive row Input: {updated_data['Inactive']['Input']}")

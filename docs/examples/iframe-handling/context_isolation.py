@@ -26,7 +26,7 @@ print(f"Main page title: {main_view.main_title.read()}")
 print(f"IFrame title: {iframe_view.iframe_title.read()}")
 
 # Interactions don't affect each other
-print("\nTesting context isolation:")
+print("Testing context isolation:")
 main_view.main_checkbox.fill(True)
 iframe_view.iframe_select.fill("Bar")
 
@@ -39,3 +39,6 @@ print(f"IFrame select state: {iframe_select_state}")
 
 if main_checkbox_state is True and iframe_select_state == "Bar":
     print("✓ Context isolation verified")
+
+# Clean up: Return to main frame
+browser.switch_to_main_frame()  # noqa: F821

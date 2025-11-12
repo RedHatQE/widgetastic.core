@@ -23,10 +23,10 @@ print(f"Rows ending with '_y' in Column 2: {len(rows_ending)}")
 
 # Find a single row (returns first match or raises RowNotFound)
 row = table.row(column_1="qwer")
-print(f"\nSingle row where column_1='qwer': {row.read()}")
+print(f"Single row where column_1='qwer': {row.read()}")
 
 # Method 2: Tuple-based filtering
-print("\nTuple-based filtering:")
+print("Tuple-based filtering:")
 rows = list(table.rows((0, "asdf")))
 print(f"Rows where column 0 equals 'asdf': {len(rows)}")
 
@@ -34,6 +34,6 @@ rows = list(table.rows((1, "contains", "bar")))
 print(f"Rows where column 1 contains 'bar': {len(rows)}")
 
 # Method 3: Row attribute filtering
-print("\nRow attribute filtering:")
+print("Row attribute filtering:")
 rows = list(table.rows(_row__attr=("data-test", "abc-123")))
 print(f"Rows with data-test='abc-123': {len(rows)}")

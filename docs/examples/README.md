@@ -6,7 +6,10 @@ Executable Python examples for Widgetastic.Core documentation.
 
 ```bash
 # Run all examples just like normal pytest run.
-pytest
+pytest docs/examples
+
+# with headless mode
+pytest docs/examples --headless
 ```
 
 ## How It Works

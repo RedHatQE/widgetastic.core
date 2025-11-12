@@ -32,6 +32,6 @@ print(f"Value after filling: {column2_cell.widget.read()}")
 print(f"Cell value using read(): {column2_cell.read()}")
 
 # Fill multiple rows at once
-print("\nFilling multiple rows:")
+print("Filling multiple rows:")
 widget_table.fill([{"Column 2": "value1"}, {"Column 3": "value3"}])
 print(f"After batch fill: {widget_table.read()}")
