@@ -96,9 +96,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   docs:
-    name: Docs Build
+    name: 📚 Docs Build & Examples Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: setup-browsers
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,13 +107,27 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.13"
           cache: 'pip'
+
+      - name: Install Playwright
+        run: pip install playwright
+
+      - name: Restore Playwright browsers cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ needs.setup-browsers.outputs.playwright-version }}-browsers
+          fail-on-cache-miss: true
 
       - name: Install Deps
         run: |
           pip install -U pip wheel
-          pip install .[docs]
+          pip install -e .[docs,test]
+
+      - name: Run Example Tests (Headless)
+        run: |
+          pytest docs/examples --headless -vv
 
       - name: Build Docs
         run: sphinx-build -b html -d build/sphinx-doctrees docs build/htmldocs
