@@ -28,7 +28,19 @@ other contributors since 2016.
 
 Licensed under Apache license, Version 2.0
 
-*WARNING:* Until this library reaches v1.0, the interfaces may change!
+Documentation
+-------------
+Full documentation is available at https://widgetastic.readthedocs.io/en/latest/
+
+Browser Engine Support
+----------------------
+**Current Version (v2.x.x)**: Built on `Playwright <https://playwright.dev/>`_ for modern, reliable web automation.
+The main branch contains the Playwright implementation and will receive all future updates and features.
+
+**Legacy Version (v1.x.x)**: Based on Selenium WebDriver.
+For projects still using Selenium, legacy support is maintained on the `legacy-selenium-support <https://github.com/RedHatQE/widgetastic.core/tree/legacy-selenium-support>`_ branch.
+Please note that this branch receives only critical bug fixes and is not recommended for new projects.
+
 
 Projects using widgetastic
 ---------------------------
