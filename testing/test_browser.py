@@ -125,6 +125,50 @@ def test_save_screenshot(browser):
     assert filename.exists()
 
 
+def test_screenshot_returns_bytes(browser):
+    """Test unified screenshot method returns PNG bytes."""
+    data = browser.screenshot()
+    assert isinstance(data, bytes)
+    assert data[:4] == b"\x89PNG"
+
+
+def test_screenshot_saves_to_file(browser):
+    """Test screenshot method saves to file when path is given."""
+    tmp_dir = tempfile._get_default_tempdir()
+    filename = Path(tmp_dir) / f"screenshot_test_{datetime.now()}.png"
+    data = browser.screenshot(path=filename.as_posix(), full_page=True)
+    assert filename.exists()
+    assert isinstance(data, bytes)
+    assert len(data) > 0
+
+
+def test_page_content(browser):
+    """Test page_content property returns HTML."""
+    html = browser.page_content
+    assert isinstance(html, str)
+    assert "<html" in html.lower()
+    assert "Widgetastic.Core" in html
+
+
+def test_add_get_and_clear_cookies(browser):
+    """Test full cookie lifecycle: add, get, and clear."""
+    browser.clear_cookies()
+
+    browser.add_cookie({"name": "cookie_a", "value": "val_a", "url": "https://example.com"})
+    browser.add_cookie({"name": "cookie_b", "value": "val_b", "url": "https://example.com"})
+
+    cookies = browser.get_cookies()
+    names = {c["name"] for c in cookies}
+    assert "cookie_a" in names
+    assert "cookie_b" in names
+
+    matching = [c for c in cookies if c["name"] == "cookie_a"]
+    assert matching[0]["value"] == "val_a"
+
+    browser.clear_cookies()
+    assert browser.get_cookies() == []
+
+
 # ======================= ELEMENT DISCOVERY & WAITING TESTS =======================
 
 
@@ -696,7 +740,7 @@ def test_click_with_delay_parameter(browser):
         # Extract the delay value from result
         delay_value = int(result.split(":")[1].strip().replace("ms", ""))
         print(delay_value)
-        # Allow 10ms tolerance for browser timing variations
+        # Allow 10ms tolerance for CI runner timing variations
         assert delay_value >= delay_ms
         assert delay_value <= delay_ms + 10
 
@@ -1045,6 +1089,18 @@ def test_send_keys_with_file_input(browser):
             os.unlink(temp_file_path)
 
 
+def test_press_key_on_element(browser):
+    """Test press_key method with and without a locator."""
+    browser.fill("hello", "#input")
+    browser.press_key("End", "#input")
+    browser.press_key("Backspace", "#input")
+    assert browser.get_attribute("value", "#input") == "hell"
+
+    browser.element("#input").focus()
+    browser.press_key("Backspace")
+    assert browser.get_attribute("value", "#input") == "hel"
+
+
 def test_send_keys_to_focused_element(browser):
     """Test send_keys_to_focused_element method."""
     # Focus an input element first
@@ -1228,6 +1284,30 @@ def test_get_current_location_method(browser):
     current_location = browser.get_current_location()
     assert isinstance(current_location, str)
     assert "testing_page.html" in current_location
+
+
+# =================== NETWORK REQUEST INTERCEPTION TESTS ====================
+
+
+def test_expect_request(browser):
+    """Test expect_request captures a network request via route mock."""
+    mock_url = "https://example.com/api/v1/test"
+    browser.page.route(mock_url, lambda route: route.fulfill(body="ok"))
+    with browser.expect_request(lambda req: "example.com/api" in req.url) as req_info:
+        browser.execute_script(f"fetch('{mock_url}')")
+    assert "example.com/api" in req_info.value.url
+    browser.page.unroute(mock_url)
+
+
+def test_expect_response(browser):
+    """Test expect_response captures a network response via route mock."""
+    mock_url = "https://example.com/api/v1/test"
+    browser.page.route(mock_url, lambda route: route.fulfill(status=200, body="ok"))
+    with browser.expect_response(lambda resp: "example.com/api" in resp.url) as resp_info:
+        browser.execute_script(f"fetch('{mock_url}')")
+    assert resp_info.value.ok
+    assert resp_info.value.status == 200
+    browser.page.unroute(mock_url)
 
 
 # =================== OVERALL FUNCTIONALITY & BrowserParentWrapper TESTS ===================

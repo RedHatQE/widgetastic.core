@@ -341,14 +341,140 @@ class Browser:
         version_str = self.page.context.browser.version
         return int(version_str.split(".")[0])
 
-    def save_screenshot(self, filename: str) -> None:
-        """Saves a screenshot of the current page.
+    def screenshot(
+        self,
+        path: Optional[str] = None,
+        *,
+        full_page: bool = False,
+        type: Literal["png", "jpeg"] = "png",
+        quality: Optional[int] = None,
+        animations: Literal["disabled", "allow"] = "allow",
+        scale: Literal["css", "device"] = "device",
+        **kwargs,
+    ) -> bytes:
+        """Capture a screenshot of the current page.
+
+        Returns PNG/JPEG bytes and optionally saves to a file.
 
         Args:
-            filename: Path where the screenshot will be saved
+            path: File path to save the image.  When *None* the image is
+                not written to disk (bytes are still returned).
+            full_page: Capture the full scrollable page instead of just
+                the visible viewport.
+            type: Image format — ``"png"`` (default) or ``"jpeg"``.
+            quality: JPEG quality 0-100.  Ignored for PNG.
+            animations: ``"disabled"`` freezes CSS/web animations before
+                the capture; ``"allow"`` (default) leaves them running.
+            scale: ``"device"`` (default) produces device-pixel resolution;
+                ``"css"`` keeps one pixel per CSS pixel (smaller files on
+                HiDPI screens).
+            **kwargs: Additional Playwright screenshot options (``clip``,
+                ``mask``, ``style``, ``caret``, etc.).
+
+        Returns:
+            Screenshot image data as bytes.
+
+        Usage::
+
+            # Save to file and get bytes
+            data = browser.screenshot("report.png", full_page=True)
+
+            # Just get bytes (e.g. for a test report attachment)
+            png_bytes = browser.screenshot()
         """
-        self.logger.debug("Saving screenshot to -> %r", filename)
-        self.page.screenshot(path=filename)
+        self.logger.debug("screenshot(path=%r, full_page=%s, type=%s)", path, full_page, type)
+        opts: Dict[str, Any] = {
+            "full_page": full_page,
+            "type": type,
+            "animations": animations,
+            "scale": scale,
+            **kwargs,
+        }
+        if path is not None:
+            opts["path"] = path
+        if quality is not None:
+            opts["quality"] = quality
+        return self.page.screenshot(**opts)
+
+    def save_screenshot(self, filename: str) -> None:
+        """Save a screenshot to a file.
+
+        .. deprecated::
+            Use :py:meth:`screenshot` instead::
+
+                browser.screenshot(path="screenshot.png")
+        """
+        warnings.warn(
+            "save_screenshot() is deprecated, use screenshot(path=...) instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.screenshot(path=filename)
+
+    @property
+    def page_content(self) -> str:
+        """Return the full HTML content of the current page.
+
+        Useful for accessibility audits, DOM snapshots, or debugging page state.
+
+        Returns:
+            Full HTML content of the page as a string
+        """
+        return self.page.content()
+
+    def clear_cookies(self) -> None:
+        """Clear all cookies in the current browser context.
+
+        Removes all cookies from the context, effectively logging out
+        or resetting session state without restarting the browser.
+        """
+        self.logger.info("Clearing all browser cookies")
+        self.page.context.clear_cookies()
+
+    def add_cookie(self, cookie: Dict[str, Any]) -> None:
+        """Add a cookie to the current browser context.
+
+        Playwright requires either ``url`` or ``domain`` on every cookie.
+        When neither is supplied this method automatically sets ``url`` to
+        the current page URL, so callers can simply pass ``name`` and
+        ``value`` for the common case.
+
+        Args:
+            cookie: Cookie dictionary.  Required keys: ``name``, ``value``.
+                Optional keys: ``url``, ``domain``, ``path``, ``expires``,
+                ``httpOnly``, ``secure``, ``sameSite``.  If both ``url``
+                and ``domain`` are omitted the current page URL is used.
+
+        Usage::
+
+            browser.add_cookie({"name": "session", "value": "abc123"})
+            browser.add_cookie({"name": "token", "value": "xyz", "domain": ".example.com"})
+        """
+        if "url" not in cookie and "domain" not in cookie:
+            cookie = {**cookie, "url": self.url}
+        self.logger.debug("add_cookie: %r", cookie.get("name"))
+        self.page.context.add_cookies([cookie])
+
+    def get_cookies(self, urls: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """Return cookies from the current browser context.
+
+        Args:
+            urls: Optional list of URLs to filter cookies for.  When omitted
+                all context cookies are returned.
+
+        Returns:
+            List of cookie dictionaries, each containing keys like ``name``,
+            ``value``, ``domain``, ``path``, ``expires``, ``httpOnly``,
+            ``secure``, ``sameSite``.
+
+        Usage::
+
+            all_cookies = browser.get_cookies()
+            site_cookies = browser.get_cookies(urls=["https://example.com"])
+        """
+        if urls:
+            return self.page.context.cookies(urls=urls)
+        return self.page.context.cookies()
 
     # ======================= ELEMENT DISCOVERY & WAITING =======================
     @staticmethod
@@ -1197,6 +1323,45 @@ class Browser:
         self.plugin.after_keyboard_input(el, None)
         return (el.input_value() or "") == ""
 
+    def press_key(self, key: str, locator: LocatorAlias = None, **element_kwargs) -> None:
+        """Press a keyboard key, optionally targeting a specific element.
+
+        When a locator is provided the key press is scoped to that element
+        (``Locator.press``).  Without a locator the key is sent to whatever
+        element currently has focus (``page.keyboard.press``).
+
+        Args:
+            key: Key name — e.g. ``"Enter"``, ``"Escape"``, ``"Space"``,
+                ``"Backspace"``, ``"ArrowDown"``, ``"Control+A"``.
+            locator: Optional element locator to press the key on.
+            **element_kwargs: Additional keyword arguments forwarded to
+                :py:meth:`element` when *locator* is provided (e.g.
+                ``check_visibility``, ``timeout``).
+
+        Raises:
+            TypeError: If keyword arguments are passed without a locator.
+
+        Usage::
+
+            # Press Escape on the page (dismiss a modal, close a dropdown)
+            browser.press_key("Escape")
+
+            # Press Enter on a specific input field
+            browser.press_key("Enter", "//input[@id='search']")
+        """
+        if locator is None and element_kwargs:
+            raise TypeError(
+                "press_key() received keyword arguments without a locator; "
+                "pass locator=... when providing element lookup arguments."
+            )
+        if locator is not None:
+            el = self.element(locator, **element_kwargs)
+            self.logger.debug("press_key(%r) on %r", key, locator)
+            el.press(key)
+        else:
+            self.logger.debug("press_key(%r) on focused element", key)
+            self.page.keyboard.press(key)
+
     def send_keys_to_focused_element(self, *keys: str) -> None:
         """Sends keys to the current focused element.
 
@@ -1393,6 +1558,66 @@ class Browser:
             Current page or frame URL as a string
         """
         return self.execute_script("return self.location.toString()")
+
+    # =================== NETWORK REQUEST INTERCEPTION ====================
+    def expect_request(self, url_or_predicate, *, timeout: int = 10000):
+        """Context manager that captures an API request matching the pattern.
+
+        Waits for a network request that matches the given URL string or
+        predicate function while an action (e.g. a button click) is performed
+        inside the ``with`` block.
+
+        Args:
+            url_or_predicate: URL substring, ``re.Pattern``, or a callable
+                ``(Request) -> bool`` used to match the desired request.
+            timeout: Maximum time to wait for the matching request in
+                milliseconds.  Defaults to 10 000 ms (10 s).
+
+        Returns:
+            A context manager whose ``.value`` attribute holds the matched
+            ``Request`` object after the block exits.
+
+        Usage::
+
+            with browser.expect_request(
+                lambda req: "v1/reports" in req.url and "limit=0" in req.url,
+            ) as request_info:
+                view.export_button.click()
+
+            captured_url = request_info.value.url
+            assert "/reports/aws/costs/" in captured_url
+        """
+        self.logger.debug("expect_request(timeout=%d)", timeout)
+        return self.page.expect_request(url_or_predicate, timeout=timeout)
+
+    def expect_response(self, url_or_predicate, *, timeout: int = 10000):
+        """Context manager that captures an API response matching the pattern.
+
+        Similar to :py:meth:`expect_request` but waits for the **response**
+        instead.  Useful when you need to inspect status codes or response
+        bodies after an action triggers an API call.
+
+        Args:
+            url_or_predicate: URL substring, ``re.Pattern``, or a callable
+                ``(Response) -> bool`` used to match the desired response.
+            timeout: Maximum time to wait for the matching response in
+                milliseconds.  Defaults to 10 000 ms (10 s).
+
+        Returns:
+            A context manager whose ``.value`` attribute holds the matched
+            ``Response`` object after the block exits.
+
+        Usage::
+
+            with browser.expect_response(
+                lambda resp: "v1/reports" in resp.url and resp.status == 200,
+            ) as response_info:
+                view.submit_button.click()
+
+            assert response_info.value.ok
+        """
+        self.logger.debug("expect_response(timeout=%d)", timeout)
+        return self.page.expect_response(url_or_predicate, timeout=timeout)
 
     # ====================== ALERT HANDLING (TODO/FUTURE) ======================
     # TODO: Implement alert handling
@@ -1615,6 +1840,15 @@ class WindowManager:
         self.current: Browser = self._wrap_page(initial_page)
         self._context.on("page", self._on_new_page)
 
+    @property
+    def browser(self) -> Browser:
+        """The currently active :class:`Browser` instance.
+
+        Alias for :attr:`current` that provides a consistent interface
+        across the framework.
+        """
+        return self.current
+
     def _wrap_page(self, page: Page) -> Browser:
         if page not in self._browsers:
             self._browsers[page] = self._browser_class(page, **self._browser_kwargs)
@@ -1723,6 +1957,18 @@ class WindowManager:
                             "expect_page succeeded but no new page was found. "
                             "This may indicate a timing issue or the page was closed immediately."
                         )
+
+            @property
+            def browser(self) -> Browser:
+                """The wrapped :class:`Browser` for the new page.
+
+                Available after the ``with`` block exits.
+                """
+                if self._browser is None:
+                    raise RuntimeError(
+                        "Browser is not available yet. Access it after the 'with' block exits."
+                    )
+                return self._browser
 
             def __getattr__(self, name: str) -> Any:
                 """Delegate all attribute access to the wrapped Browser."""
