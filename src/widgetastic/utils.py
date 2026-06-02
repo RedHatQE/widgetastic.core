@@ -763,7 +763,7 @@ class WaitFillViewStrategy(DefaultFillViewStrategy):
     So such strategy gives next widget some time to turn up.
     """
 
-    def __init__(self, respect_parent=False, wait_widget="5s"):
+    def __init__(self, respect_parent=False, wait_widget=5):
         self.wait_widget = wait_widget
         super().__init__(respect_parent=respect_parent)
 

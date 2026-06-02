@@ -99,7 +99,7 @@ class DefaultPlugin:
         """Logger with prepended plugin name."""
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
-    def ensure_page_safe(self, timeout: str = "10s") -> None:
+    def ensure_page_safe(self, timeout=10) -> None:
         # THIS ONE SHOULD ALWAYS USE JAVASCRIPT ONLY, NO OTHER SELENIUM INTERACTION
 
         def _check():
@@ -431,7 +431,7 @@ class Browser:
         try:
             result = wait_for(
                 _element_lookup,
-                num_sec=timeout,
+                timeout=timeout,
                 delay=delay,
                 fail_condition=lambda elements: not bool(elements),
                 fail_func=self.plugin.ensure_page_safe if ensure_page_safe else None,
