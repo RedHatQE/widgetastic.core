@@ -523,7 +523,7 @@ class Widget(metaclass=WidgetMetaclass):
         return self.browser.element(self).is_enabled()
 
     @logged()
-    def wait_displayed(self, timeout="10s", delay=0.2):
+    def wait_displayed(self, timeout=10, delay=0.2):
         """Wait for the element to be displayed. Uses the :py:meth:`is_displayed`
 
         Args:
