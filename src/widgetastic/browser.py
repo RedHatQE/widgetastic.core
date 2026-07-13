@@ -82,13 +82,14 @@ class DefaultPlugin:
         """
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
-    def ensure_page_safe(self, timeout: Union[int, None] = None) -> None:
+    def ensure_page_safe(self, timeout: Optional[Union[int, float]] = None) -> None:
         """Waits for the page to be quiescent, replacing the old JS-based check.
 
         Args:
-            timeout: Provide timeout in seconds.
+            timeout: Maximum time in seconds to wait for networkidle.
+                     Accepts int or float. If None, Playwright's default timeout (30s) is used.
         """
-        timeout_ms = 0 if timeout is None else timeout * 1000
+        timeout_ms = timeout * 1000 if timeout is not None else None
         self.browser.page.wait_for_load_state("networkidle", timeout=timeout_ms)
 
     def after_click(self, element: Locator, locator: LocatorAlias) -> None:
@@ -1414,7 +1415,12 @@ class Browser:
         """
         self.logger.debug("check: %r", locator)
         el = self.element(locator, *args, **kwargs)
-        el.check()
+        # el.check()
+        if not el.is_checked():
+            # Use JS click instead of el.check() to avoid a coordinate-based
+            # click regression in Playwright 1.61+ / headless Chrome 149 where
+            # check() reports "did not change its state" on deeply scrolled pages.
+            el.evaluate("el => el.click()")
 
     def uncheck(self, locator: LocatorAlias, *args, **kwargs) -> None:
         """Uncheck an element (Checkboxes/ Radio buttons) specified by the locator.
@@ -1426,7 +1432,10 @@ class Browser:
         """
         self.logger.debug("uncheck: %r", locator)
         el = self.element(locator, *args, **kwargs)
-        el.uncheck()
+        # el.uncheck()
+        if el.is_checked():
+            # Use JS click instead of el.uncheck() — same reason as check() above.
+            el.evaluate("el => el.click()")
 
     # ========================= DRAG & DROP OPERATIONS =========================
     def drag_and_drop(self, source: LocatorAlias, target: LocatorAlias) -> None:

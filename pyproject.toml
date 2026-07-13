@@ -30,7 +30,7 @@ dependencies = [
   "anytree >= 2.9.0",
   "cached_property",
   "playwright >= 1.54.0",
-  "wait_for",
+  "wait-for>=2.0",
 ]
 
 [project.optional-dependencies]

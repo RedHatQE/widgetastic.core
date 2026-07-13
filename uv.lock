@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -630,15 +630,6 @@ wheels = [
 ]
 
 [[package]]
-name = "parsedatetime"
-version = "2.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a8/20/cb587f6672dbe585d101f590c3871d16e7aec5a576a1694997a3777312ac/parsedatetime-2.6.tar.gz", hash = "sha256:4cb368fbb18a0b7231f4d76119165451c8d2e35951455dfee97c62a87b04d455", size = 60114, upload-time = "2020-05-31T23:50:57.443Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/a4/3dd804926a42537bf69fb3ebb9fd72a50ba84f807d95df5ae016606c976c/parsedatetime-2.6-py3-none-any.whl", hash = "sha256:cb96edd7016872f58479e35879294258c71437195760746faffedb692aef000b", size = 42548, upload-time = "2020-05-31T23:50:56.315Z" },
-]
-
-[[package]]
 name = "platformdirs"
 version = "4.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1204,14 +1195,11 @@ wheels = [
 
 [[package]]
 name = "wait-for"
-version = "1.2.0"
+version = "2.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "parsedatetime" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/59/c9/d3421164561ecb2a30c63586530fe228a86ca19bd5523a5026571e7e29f9/wait_for-1.2.0.tar.gz", hash = "sha256:5642975f1fc5850acb55684b2d7842bd820fb068e725cd4ffff4bf3eba8e2788", size = 13434, upload-time = "2021-09-29T07:40:44.605Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/73/ad/e20f348aadb6d4542fc80e3e46274cccf83f807c318b05abd1944440cc7c/wait_for-2.0.tar.gz", hash = "sha256:d76af89ceea8745866ce11dd82a4d5bb335e317656e9e6cb08b8c514b20dfe14", size = 18634, upload-time = "2026-06-30T16:46:54.227Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/e7/8bdec28f3a0c8d6bce3c5130ca1d782dcd124d62b0c099c2ba71dc656d15/wait_for-1.2.0-py2.py3-none-any.whl", hash = "sha256:1129f3350e29b0600889e24328d685a6bff048c8f4cabce28ef7632ed40c5d91", size = 10681, upload-time = "2021-09-29T07:40:43.206Z" },
+    { url = "https://files.pythonhosted.org/packages/36/22/71a70e65386a71e0295b4b79e48f5bb73108b052e1142d3a567f36cac022/wait_for-2.0-py3-none-any.whl", hash = "sha256:b1799a8ef2060c676453497823682b80911e54aeefeb634dd1f2085348e42985", size = 13852, upload-time = "2026-06-30T16:46:52.852Z" },
 ]
 
 [[package]]
@@ -1445,6 +1433,6 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-autobuild", marker = "extra == 'docs'" },
     { name = "sphinx-rtd-theme", marker = "extra == 'docs'" },
-    { name = "wait-for" },
+    { name = "wait-for", specifier = ">=2.0" },
 ]
 provides-extras = ["dev", "docs", "test"]
