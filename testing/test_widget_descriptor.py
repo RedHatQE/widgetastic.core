@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from widgetastic.widget import WidgetDescriptor
 
 
@@ -27,7 +29,7 @@ def test_descriptor_on_class():
             self.parent = parent
 
     class HostClass:
-        _desc_name_mapping = {}
+        _desc_name_mapping: ClassVar[dict] = {}
 
         def __init__(self):
             self._widget_cache = {}

@@ -3,18 +3,17 @@ import re
 import pytest
 
 from widgetastic.exceptions import DoNotReadThisWidget
-from widgetastic.utils import Fillable
-from widgetastic.utils import ParametrizedString
-from widgetastic.utils import Version
-from widgetastic.utils import VersionPick
-from widgetastic.widget import Checkbox
-from widgetastic.widget import ColourInput
-from widgetastic.widget import FileInput
-from widgetastic.widget import Select
-from widgetastic.widget import Table
-from widgetastic.widget import Text
-from widgetastic.widget import TextInput
-from widgetastic.widget import View
+from widgetastic.utils import Fillable, ParametrizedString, Version, VersionPick
+from widgetastic.widget import (
+    Checkbox,
+    ColourInput,
+    FileInput,
+    Select,
+    Table,
+    Text,
+    TextInput,
+    View,
+)
 from widgetastic.widget.table import TableRow
 
 
@@ -344,7 +343,7 @@ def test_table(browser):
     assert view.table1[1].last_name.text == "Thornton"
 
     with pytest.raises(AttributeError):
-        row.papalala
+        _ = row.papalala
 
     with pytest.raises(TypeError):
         view.table["boom!"]
@@ -522,7 +521,7 @@ def test_table_multiple_tbody(browser):
     assert view.table1[1].last_name.text == "Thornton"
 
     with pytest.raises(AttributeError):
-        row.papalala
+        _ = row.papalala
 
     with pytest.raises(TypeError):
         view.table1["boom!"]
@@ -977,7 +976,7 @@ def test_parametrized_locator(browser):
     # This uses value defined on class so it should work
     assert good.header_cls.text == "test test"
     with pytest.raises(AttributeError):
-        bad.header.text
+        _ = bad.header.text
 
     with pytest.raises(AttributeError):
         bad.input.read()

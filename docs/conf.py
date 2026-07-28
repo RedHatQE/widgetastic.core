@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 # -- Project information -----------------------------------------------------
 
 project = "widgetastic.core"
 copyright = (
-    f"2016-2019, Milan Falešník; 2020-{datetime.now().year}, Red Hat, Inc. (Apache license 2)"
+    f"2016-2019, Milan Falešník; 2020-{datetime.now(tz=timezone.utc).year}, "
+    "Red Hat, Inc. (Apache license 2)"
 )
 author = "Milan Falešník, Red Hat, Inc."
 

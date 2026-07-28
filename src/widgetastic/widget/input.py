@@ -1,8 +1,9 @@
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 
-from .base import Widget
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.xpath import quote
+
+from .base import Widget
 
 
 class BaseInput(Widget):

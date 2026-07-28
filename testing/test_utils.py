@@ -1,9 +1,6 @@
 import pytest
 
-from widgetastic.utils import nested_getattr
-from widgetastic.utils import ParametrizedLocator
-from widgetastic.utils import ParametrizedString
-from widgetastic.utils import partial_match
+from widgetastic.utils import ParametrizedLocator, ParametrizedString, nested_getattr, partial_match
 from widgetastic.widget import View
 
 
@@ -27,8 +24,8 @@ def test_nested_getattr_single_level():
 
 def test_nested_getattr_multi_level():
     class Obj:
-        class foo:  # noqa
-            class bar:  # noqa
+        class foo:
+            class bar:
                 lol = "heh"
 
     assert nested_getattr(Obj, "foo.bar.lol") == "heh"
@@ -60,10 +57,10 @@ def test_parametrized_string_param_locator(browser):
 
 def test_parametrized_string_nested(browser):
     class MyView(View):
-        class child_item:  # noqa
+        class child_item:
             foo = "bar"
 
-        class owner(View):  # noqa
+        class owner(View):
             p_str1 = ParametrizedString("{@parent/child_item/foo}")
 
     view = MyView(browser)
