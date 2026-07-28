@@ -1,7 +1,6 @@
 from cached_property import cached_property
 
-from widgetastic.widget import Table
-from widgetastic.widget import View
+from widgetastic.widget import Table, View
 
 
 def test_table_cached_properties():

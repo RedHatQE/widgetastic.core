@@ -1,15 +1,12 @@
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
-from widgetastic.browser import BrowserParentWrapper
-from widgetastic.browser import WebElement
-from widgetastic.exceptions import LocatorNotImplemented
-from widgetastic.exceptions import NoSuchElementException
-from widgetastic.widget import Text
-from widgetastic.widget import View
+from widgetastic.browser import BrowserParentWrapper, WebElement
+from widgetastic.exceptions import LocatorNotImplemented, NoSuchElementException
+from widgetastic.widget import Text, View
 
 
 @pytest.fixture()
@@ -104,9 +101,12 @@ def test_wait_for_element_visible(browser):
 def test_wait_for_element_exception_control(browser, exception):
     # Click on the button, element will not appear
     browser.click("#invisible_appear_button")
-    wait_for_args = dict(
-        locator="#invisible_appear_p", visible=True, timeout=1.5, exception=exception
-    )
+    wait_for_args = {
+        "locator": "#invisible_appear_p",
+        "visible": True,
+        "timeout": 1.5,
+        "exception": exception,
+    }
     if exception:
         with pytest.raises(NoSuchElementException):
             browser.wait_for_element(**wait_for_args)
@@ -201,24 +201,24 @@ def test_nested_views_parent_injection(browser):
     class MyView(View):
         ROOT = "#proper"
 
-        class c1(View):  # noqa
+        class c1(View):
             ROOT = ".c1"
 
             w = Text(".lookmeup")
 
-        class c2(View):  # noqa
+        class c2(View):
             ROOT = ".c2"
 
             w = Text(".lookmeup")
 
-        class c3(View):  # noqa
+        class c3(View):
             ROOT = ".c3"
 
             w = Text(".lookmeup")
 
-        class without(View):  # noqa
+        class without(View):
             # This one receives the parent browser wrapper
-            class nested(View):  # noqa
+            class nested(View):
                 # and it should work in multiple levels
                 pass
 
@@ -311,7 +311,7 @@ def test_window_handles(browser, current_and_new_handle):
 
 def test_close_window(browser, current_and_new_handle):
     """Test close window"""
-    main_handle, new_handle = current_and_new_handle
+    _main_handle, new_handle = current_and_new_handle
 
     assert new_handle in browser.window_handles
     browser.close_window(new_handle)
@@ -369,7 +369,7 @@ def test_handle_alert(browser, cancel_text, prompt, invoke_alert):
 def test_save_screenshot(browser):
     """Test browser save screenshot method."""
     tmp_dir = tempfile._get_default_tempdir()
-    filename = Path(tmp_dir) / f"{datetime.now()}.png"
+    filename = Path(tmp_dir) / f"{datetime.now(tz=timezone.utc)}.png"
     assert not filename.exists()
     browser.save_screenshot(filename=filename.as_posix())
     assert filename.exists()

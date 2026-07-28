@@ -1,23 +1,22 @@
 import pytest
 
 from widgetastic.exceptions import NoSuchElementException
-from widgetastic.utils import Ignore
-from widgetastic.utils import Parameter
-from widgetastic.utils import ParametrizedLocator
-from widgetastic.utils import ParametrizedString
-from widgetastic.widget import Checkbox
-from widgetastic.widget import ConditionalSwitchableView
-from widgetastic.widget import do_not_read_this_widget
-from widgetastic.widget import FileInput
-from widgetastic.widget import ParametrizedView
-from widgetastic.widget import ParametrizedViewRequest
-from widgetastic.widget import Select
-from widgetastic.widget import Text
-from widgetastic.widget import TextInput
-from widgetastic.widget import View
-from widgetastic.widget import Widget
-from widgetastic.widget import WidgetDescriptor
-from widgetastic.widget import WTMixin
+from widgetastic.utils import Ignore, Parameter, ParametrizedLocator, ParametrizedString
+from widgetastic.widget import (
+    Checkbox,
+    ConditionalSwitchableView,
+    FileInput,
+    ParametrizedView,
+    ParametrizedViewRequest,
+    Select,
+    Text,
+    TextInput,
+    View,
+    Widget,
+    WidgetDescriptor,
+    WTMixin,
+    do_not_read_this_widget,
+)
 
 
 def test_can_create_view(browser):
@@ -162,7 +161,7 @@ def test_mixin_view(browser):
 
     view = AView2(browser)
     assert view.widget_names == ("a_mixin_widget", "widget1", "widget2")
-    view.a_mixin_widget
+    _ = view.a_mixin_widget
 
 
 def test_do_not_read_widget(browser):
@@ -190,7 +189,7 @@ def test_view_parameter(browser):
     assert MyView(browser, additional_context={"foo": "bar"}).my_param == "bar"
 
     with pytest.raises(AttributeError):
-        MyView(browser).my_param
+        _ = MyView(browser).my_param
 
 
 def test_view_parametrized_string(browser):
@@ -351,8 +350,8 @@ def test_cache(browser):
     assert len(view.nested1.nested2._widget_cache.keys()) == 0
     assert len(view.nested1.nested2.nested3._widget_cache.keys()) == 0
 
-    view.w
-    assert set(view._widget_cache.keys()) == {getattr(MyView, "w"), getattr(MyView, "nested1")}
+    _ = view.w
+    assert set(view._widget_cache.keys()) == {MyView.w, MyView.nested1}
     view.flush_widget_cache()
     assert len(view._widget_cache.keys()) == 0
 
@@ -484,15 +483,15 @@ def test_switchable_view_with_bad_reference_negative(browser):
     view = MyView(browser)
 
     with pytest.raises(NoSuchElementException):
-        view.the_switchable_view.widget.read()
+        _ = view.the_switchable_view.widget.read()
 
 
 def test_switchable_view_with_nested_reference(browser):
     class MyView(View):
         the_reference = Select(id="switchabletesting-select")
 
-        class nest1(View):  # noqa
-            class nest2(View):  # noqa
+        class nest1(View):
+            class nest2(View):
                 the_switchable_view = ConditionalSwitchableView(
                     reference="parent.parent.the_reference"
                 )
@@ -635,7 +634,7 @@ def test_switchable_view_string_without_reference(browser):
 
     view = MyView(browser)
     with pytest.raises(TypeError):
-        view.the_switchable_view
+        _ = view.the_switchable_view
 
 
 def test_switchable_view_string_bad_reference(browser):
@@ -650,7 +649,7 @@ def test_switchable_view_string_bad_reference(browser):
 
     view = MyView(browser)
     with pytest.raises(TypeError):
-        view.the_switchable_view
+        _ = view.the_switchable_view
 
 
 def test_switchable_view_string_nonsimple_lambda(browser):
@@ -665,7 +664,7 @@ def test_switchable_view_string_nonsimple_lambda(browser):
 
     view = MyView(browser)
     with pytest.raises(TypeError):
-        view.the_switchable_view
+        _ = view.the_switchable_view
 
 
 def test_switchable_view_string_lambda_bad_argument_widget(browser):
@@ -680,7 +679,7 @@ def test_switchable_view_string_lambda_bad_argument_widget(browser):
 
     view = MyView(browser)
     with pytest.raises(TypeError):
-        view.the_switchable_view
+        _ = view.the_switchable_view
 
 
 def test_ignore_decorator(browser):
@@ -732,8 +731,8 @@ def test_iframe_view(browser):
     assert iframe_view.is_displayed
     assert parent_view.is_displayed
 
-    assert all([getattr(iframe_view, name).is_displayed for name in iframe_view.widget_names])
-    assert all([getattr(parent_view, name).is_displayed for name in parent_view.widget_names])
+    assert all(getattr(iframe_view, name).is_displayed for name in iframe_view.widget_names)
+    assert all(getattr(parent_view, name).is_displayed for name in parent_view.widget_names)
 
     assert iframe_view.h3.text == "IFrame Tests"
     assert parent_view.h3.text == "footest"

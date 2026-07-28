@@ -1,10 +1,12 @@
-from selenium.common.exceptions import ElementNotInteractableException
-from selenium.common.exceptions import MoveTargetOutOfBoundsException
-from selenium.common.exceptions import NoAlertPresentException
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import UnexpectedAlertPresentException
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import (
+    ElementNotInteractableException,
+    MoveTargetOutOfBoundsException,
+    NoAlertPresentException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+    UnexpectedAlertPresentException,
+    WebDriverException,
+)
 
 
 class WidgetasticException(Exception):
@@ -28,15 +30,15 @@ class RowNotFound(IndexError, WidgetasticException):
 
 
 __all__ = [
+    "DoNotReadThisWidget",
     "ElementNotInteractableException",
     "MoveTargetOutOfBoundsException",
     "NoAlertPresentException",
     "NoSuchElementException",
+    "RowNotFound",
     "StaleElementReferenceException",
     "UnexpectedAlertPresentException",
     "WebDriverException",
-    "WidgetasticException",
     "WidgetOperationFailed",
-    "DoNotReadThisWidget",
-    "RowNotFound",
+    "WidgetasticException",
 ]

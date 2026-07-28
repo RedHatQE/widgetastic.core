@@ -1,17 +1,19 @@
 """This module contains some supporting classes."""
 
+from __future__ import annotations
+
 import functools
 import re
 import string
 import time
 from threading import Lock
+from typing import Callable, ClassVar
 
 from cached_property import cached_property
 from selenium.common.exceptions import StaleElementReferenceException
 from smartloc import Locator
 
-from . import log
-from . import xpath
+from . import log, xpath
 
 
 class Widgetable:
@@ -137,18 +139,16 @@ class Version:
         return self.vstring
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.vstring)})"
+        return f"{type(self).__name__}({self.vstring!r})"
 
     def __lt__(self, other):
         try:
             if not isinstance(other, Version):
                 other = Version(other)
-        except Exception:
-            raise ValueError(f"Cannot compare Version to {type(other).__name__}")
+        except (TypeError, ValueError, AttributeError):
+            raise ValueError(f"Cannot compare Version to {type(other).__name__}") from None
 
-        if self == other:
-            return False
-        elif self == self.latest() or other == self.lowest():
+        if self == other or self == self.latest() or other == self.lowest():
             return False
         elif self == self.lowest() or other == self.latest():
             return True
@@ -186,7 +186,7 @@ class Version:
             return (
                 self.version == other.version and self.normalized_suffix == other.normalized_suffix
             )
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return False
 
     def __contains__(self, ver):
@@ -201,7 +201,7 @@ class Version:
         """
         try:
             return Version(ver).is_in_series(self)
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return False
 
     def is_in_series(self, series):
@@ -217,10 +217,7 @@ class Version:
         if not isinstance(series, Version):
             series = Version(series)
         if self in {self.lowest(), self.latest()}:
-            if series == self:
-                return True
-            else:
-                return False
+            return series == self
         return series.version == self.version[: len(series.version)]
 
     def series(self, n=2):
@@ -279,7 +276,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
         self.version_dict = version_dict
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.version_dict)})"
+        return f"{type(self).__name__}({self.version_dict!r})"
 
     @property
     def child_items(self):
@@ -304,9 +301,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
             return v_dict.get(sorted_matching_versions[0])
         else:
             raise ValueError(
-                "When trying to version pick {!r} in {!r}, matching version was not found".format(
-                    version, versions
-                )
+                f"When trying to version pick {version!r} in {versions!r}, matching version was not found"
             )
 
     def __get__(self, o, type=None):
@@ -389,7 +384,7 @@ class ParametrizedString(ConstructorResolvable):
         template: String template in ``.format()`` format,
     """
 
-    OPERATIONS = {
+    OPERATIONS: ClassVar[dict[str, Callable[[str], str]]] = {
         "quote": xpath.quote,
         "lower": lambda s: s.lower(),
         "upper": lambda s: s.upper(),
@@ -537,9 +532,7 @@ def nested_getattr(o, steps):
         steps = steps.split(".")
     if not isinstance(steps, (list, tuple)):
         raise TypeError(
-            "nested_getattr only accepts strings, lists, or tuples!, You passed {}".format(
-                type(steps).__name__
-            )
+            f"nested_getattr only accepts strings, lists, or tuples!, You passed {type(steps).__name__}"
         )
     steps = [step.strip() for step in steps if step.strip()]
     if not steps:
@@ -611,7 +604,7 @@ def crop_string_middle(s, length=32, cropper="..."):
     return s[:half] + cropper + s[-half - 1 :]
 
 
-class partial_match:  # noqa
+class partial_match:
     """Use this to wrap values to be selected using partial matching in various objects.
 
     It proxies all ``get`` operations to the underlying ``item``.
@@ -693,8 +686,7 @@ def retry_stale_element(method):
                 return method(*args, **kwargs)
             except StaleElementReferenceException:
                 time.sleep(0.5)
-        else:
-            raise StaleElementReferenceException("Couldn't handle it")
+        raise StaleElementReferenceException("Couldn't handle it")
 
     return wrap
 

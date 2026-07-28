@@ -1,9 +1,7 @@
 import pytest
 
-from widgetastic.log import call_sig
-from widgetastic.log import call_unlogged
-from widgetastic.widget import Text
-from widgetastic.widget import View
+from widgetastic.log import call_sig, call_unlogged
+from widgetastic.widget import Text, View
 
 
 def test_override(browser):

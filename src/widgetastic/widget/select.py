@@ -3,9 +3,10 @@ from html import unescape
 
 from cached_property import cached_property
 
-from .base import Widget
 from widgetastic.utils import normalize_space
 from widgetastic.xpath import quote
+
+from .base import Widget
 
 
 class Select(Widget):
@@ -223,9 +224,7 @@ class Select(Widget):
             if not matched:
                 available = ", ".join(repr(opt.text) for opt in self.all_options)
                 raise ValueError(
-                    "Cannot locate option with visible text: {!r}. Available options: {}".format(
-                        text, available
-                    )
+                    f"Cannot locate option with visible text: {text!r}. Available options: {available}"
                 )
 
     def read(self):
@@ -256,10 +255,12 @@ class Select(Widget):
                 try:
                     mod, value = item
                     if not isinstance(mod, str):
-                        raise ValueError("The select modifier must be a string")
+                        raise TypeError("The select modifier must be a string")
                     mod = mod.lower()
-                except ValueError:
-                    raise ValueError("If passing tuples into the S.fill(), they must be 2-tuples")
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        "If passing tuples into the S.fill(), they must be 2-tuples"
+                    ) from None
             else:
                 mod = "by_text"
                 value = item
