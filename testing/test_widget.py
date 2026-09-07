@@ -1,8 +1,6 @@
 import pytest
 
-from widgetastic.widget import View
-from widgetastic.widget import Widget
-from widgetastic.widget import WidgetDescriptor
+from widgetastic.widget import View, Widget, WidgetDescriptor
 
 
 def test_widget_correctly_collapses_to_descriptor(browser):
