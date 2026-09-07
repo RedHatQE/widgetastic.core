@@ -3,7 +3,7 @@
 This example demonstrates creating nested views using View.nested().
 """
 
-from widgetastic.widget import View, Text, TextInput, Checkbox
+from widgetastic.widget import Checkbox, Text, TextInput, View
 
 
 class NormalViewTesting(View):

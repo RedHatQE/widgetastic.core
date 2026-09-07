@@ -1,5 +1,4 @@
-from widgetastic.ouia import OUIAGenericView
-from widgetastic.ouia import OUIAGenericWidget
+from widgetastic.ouia import OUIAGenericView, OUIAGenericWidget
 
 
 class Button(OUIAGenericWidget):

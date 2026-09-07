@@ -3,12 +3,12 @@
 This example demonstrates creating nested views using @View.nested decorator.
 """
 
-from widgetastic.widget import View, Text, TextInput, Checkbox
+from widgetastic.widget import Checkbox, Text, TextInput, View
 
 
 class ViewTesting(View):
     @View.nested
-    class normal_view(View):  # noqa
+    class normal_view(View):
         """Normal View under View testing."""
 
         ROOT = ".//div[contains(@class, 'normal-view')]"
@@ -19,7 +19,7 @@ class ViewTesting(View):
         submit = Text(locator=".//button[@id='normal_submit']")
 
     @View.nested
-    class parametrized_view(View):  # noqa
+    class parametrized_view(View):
         """Parametrized View under View testing."""
 
         ROOT = ".//div[contains(@class, 'parametrized-view')]"
@@ -27,7 +27,7 @@ class ViewTesting(View):
         # Some other widgets
 
     @View.nested
-    class conditional_switchable_view(View):  # noqa
+    class conditional_switchable_view(View):
         """Conditional Switchable View under View testing."""
 
         ROOT = ".//div[contains(@class, 'conditional-switchable-view')]"

@@ -1,18 +1,10 @@
 import functools
 import logging
 import time
-from typing import Any
-from typing import Callable
-from typing import cast
-from typing import Iterator
-from typing import MutableMapping
-from typing import Optional
-from typing import Tuple
-from typing import TypeVar
-from typing import Union
+from collections.abc import Callable, Iterator, MutableMapping
+from typing import Any, TypeVar, cast
 
 from .exceptions import DoNotReadThisWidget
-
 
 null_logger = logging.getLogger("widgetastic_null")
 null_logger.addHandler(logging.NullHandler())
@@ -42,7 +34,7 @@ class PrependParentsAdapter(logging.LoggerAdapter):
 
     def process(
         self, msg: str, kwargs: MutableMapping[str, Any]
-    ) -> Tuple[str, MutableMapping[str, Any]]:
+    ) -> tuple[str, MutableMapping[str, Any]]:
         assert self.extra is not None  # python 3.10+ type check
         widget_path = cast(str, self.extra["widget_path"])
         # Sanitizing %->%% for formatter working properly
@@ -57,7 +49,7 @@ class PrependParentsAdapter(logging.LoggerAdapter):
 
 
 def create_widget_logger(
-    widget_path: str, logger: Optional[logging.Logger] = None
+    widget_path: str, logger: logging.Logger | None = None
 ) -> PrependParentsAdapter:
     """Create a logger that prepends the ``widget_path`` to the log records.
 
@@ -96,9 +88,7 @@ def create_child_logger(parent_logger: logging.Logger, child_name: str) -> Prepe
     return _create_logger_appender(parent_logger, f"/{child_name}")
 
 
-def create_item_logger(
-    parent_logger: logging.Logger, item: Union[str, int]
-) -> PrependParentsAdapter:
+def create_item_logger(parent_logger: logging.Logger, item: str | int) -> PrependParentsAdapter:
     """Creates a logger for a widget that is inside iteration - referred to by index or key.
 
     Args:
