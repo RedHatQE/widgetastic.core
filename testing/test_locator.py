@@ -1,14 +1,13 @@
 import pytest
 
 from widgetastic.locator import (
-    SmartLocator,
-    LocatorStrategy,
     CSSStrategy,
-    XPathStrategy,
     KwargsStrategy,
     LocatorObjectStrategy,
+    LocatorStrategy,
+    SmartLocator,
+    XPathStrategy,
 )
-
 
 # === Core Functionality Tests ===
 

@@ -1,6 +1,5 @@
 import pytest
-from ouia_widgets import Button
-from ouia_widgets import Select
+from ouia_widgets import Button, Select
 
 from widgetastic.ouia import OUIAGenericView
 from widgetastic.ouia.checkbox import Checkbox
