@@ -3,7 +3,7 @@
 This example demonstrates handling nested iframes (iframe within iframe).
 """
 
-from widgetastic.widget import View, Text, Select, TextInput
+from widgetastic.widget import Select, Text, TextInput, View
 
 
 class NestedIFrameView(View):
@@ -13,14 +13,14 @@ class NestedIFrameView(View):
 
     # Nested iframe class (iframe within iframe)
     @View.nested
-    class nested_iframe(View):  # noqa
+    class nested_iframe(View):
         FRAME = './/iframe[@name="another_iframe"]'
         nested_title = Text(".//h3")
         nested_select = Select(id="iframe_select3")
 
         # Deeply nested view within the nested iframe
         @View.nested
-        class deep_nested(View):  # noqa
+        class deep_nested(View):
             ROOT = './/div[@id="nested_view"]'
             nested_input = TextInput(name="input222")
 

@@ -4,9 +4,7 @@ from typing import Optional
 from widgetastic.browser import Browser
 from widgetastic.types import ViewParent
 from widgetastic.utils import ParametrizedLocator
-from widgetastic.widget.base import ClickableMixin
-from widgetastic.widget.base import View
-from widgetastic.widget.base import Widget
+from widgetastic.widget.base import ClickableMixin, View, Widget
 from widgetastic.xpath import quote
 
 
@@ -67,16 +65,16 @@ class OUIAGenericView(OUIABase, View):
     """
 
     OUIA_COMPONENT_TYPE: str
-    OUIA_ID: Optional[str]
+    OUIA_ID: str | None
 
     def __init__(
         self,
         parent: ViewParent,
         component_id: str = "",
-        logger: Optional[Logger] = None,
+        logger: Logger | None = None,
         **kwargs,
     ) -> None:
-        component_type: Optional[str] = kwargs.pop("component_type", None)
+        component_type: str | None = kwargs.pop("component_type", None)
         self._set_attrs(
             component_type=component_type or self.OUIA_COMPONENT_TYPE or type(self).__name__,
             component_id=getattr(self, "OUIA_ID", component_id),
@@ -105,8 +103,8 @@ class OUIAGenericWidget(OUIABase, Widget, ClickableMixin):
         self,
         parent: ViewParent,
         component_id: str = "",
-        logger: Optional[Logger] = None,
-        component_type: Optional[str] = None,
+        logger: Logger | None = None,
+        component_type: str | None = None,
     ) -> None:
         self._set_attrs(
             component_type=component_type or self.OUIA_COMPONENT_TYPE or type(self).__name__,
