@@ -4,7 +4,7 @@ This example demonstrates iterating through all occurrences of a parametrized vi
 """
 
 from widgetastic.utils import ParametrizedLocator, ParametrizedString
-from widgetastic.widget import ParametrizedView, TextInput, Checkbox, View, Text
+from widgetastic.widget import Checkbox, ParametrizedView, Text, TextInput, View
 
 
 class ParametrizedViewTesting(View):
@@ -13,7 +13,7 @@ class ParametrizedViewTesting(View):
     ROOT = ".//div[contains(@class, 'parametrized-view')]"
     title = Text(locator=".//div[@class='widget-title']")
 
-    class thing_container_view(ParametrizedView):  # noqa
+    class thing_container_view(ParametrizedView):
         # Defining one parameter
         PARAMETERS = ("thing_id",)
         # ParametrizedLocator coerces to a string upon access
