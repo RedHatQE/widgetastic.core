@@ -4,7 +4,7 @@ This example demonstrates using ParametrizedView to handle repeated UI patterns.
 """
 
 from widgetastic.utils import ParametrizedLocator, ParametrizedString
-from widgetastic.widget import ParametrizedView, TextInput, Checkbox
+from widgetastic.widget import Checkbox, ParametrizedView, TextInput
 
 
 class ThingContainerView(ParametrizedView):
