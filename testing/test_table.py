@@ -1,11 +1,12 @@
-import pytest
 import re
+
+import pytest
 from cached_property import cached_property
 
+from widgetastic.exceptions import RowNotFound
 from widgetastic.widget import Table, View
 from widgetastic.widget.input import TextInput
-from widgetastic.exceptions import RowNotFound
-from widgetastic.widget.table import resolve_table_widget, TableReference
+from widgetastic.widget.table import TableReference, resolve_table_widget
 
 
 def test_table_cached_properties():
@@ -275,9 +276,10 @@ def test_table_duplicate_headers_warning(browser, caplog):
 
 def test_table_resolver():
     """Test TableResolver functionality"""
-    from widgetastic.widget.table import TableResolver
     from anytree import Node
     from anytree.resolver import ResolverError
+
+    from widgetastic.widget.table import TableResolver
 
     resolver = TableResolver()
     root = Node(name="root", position=0)

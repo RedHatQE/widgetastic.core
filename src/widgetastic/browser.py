@@ -15,45 +15,39 @@ Key Features:
 """
 
 import inspect
+import warnings
 from logging import Logger
 from textwrap import dedent
-from typing import Any
-from typing import cast
-from typing import Dict
-from typing import List
-from typing import NamedTuple
-from typing import Optional
-from typing import Set
-from typing import Type
-from typing import TYPE_CHECKING
-from typing import Union
-from typing import Literal
-import warnings
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    NamedTuple,
+    cast,
+)
 
 from cached_property import cached_property
-from playwright.sync_api import BrowserContext
-from playwright.sync_api import ElementHandle, FrameLocator
+from playwright.sync_api import (
+    BrowserContext,
+    ElementHandle,
+    FrameLocator,
+    Locator,
+    Page,
+    TimeoutError,
+)
 from playwright.sync_api import Error as PlaywrightError
-from playwright.sync_api import Locator
-from playwright.sync_api import Page
-from playwright.sync_api import TimeoutError
-
-from .locator import SmartLocator
 from wait_for import TimedOutError, wait_for
 
-from .exceptions import LocatorNotImplemented
-from .exceptions import NoSuchElementException
-from .exceptions import WidgetOperationFailed
-from .exceptions import FrameNotFoundError
-
-
-from .log import create_widget_logger
-from .log import null_logger
-from .types import ElementParent
-from .types import LocatorAlias
-from .types import LocatorProtocol
+from .exceptions import (
+    FrameNotFoundError,
+    LocatorNotImplemented,
+    NoSuchElementException,
+    WidgetOperationFailed,
+)
+from .locator import SmartLocator
+from .log import create_widget_logger, null_logger
+from .types import ElementParent, LocatorAlias, LocatorProtocol
 from .xpath import normalize_space
-
 
 if TYPE_CHECKING:
     from .widget.base import Widget
@@ -82,7 +76,7 @@ class DefaultPlugin:
         """
         return create_widget_logger(type(self).__name__, self.browser.logger)
 
-    def ensure_page_safe(self, timeout: Optional[Union[int, float]] = None) -> None:
+    def ensure_page_safe(self, timeout: float | None = None) -> None:
         """Waits for the page to be quiescent, replacing the old JS-based check.
 
         Args:
@@ -94,31 +88,26 @@ class DefaultPlugin:
 
     def after_click(self, element: Locator, locator: LocatorAlias) -> None:
         """Invoked after clicking on an element."""
-        pass
 
     def after_click_safe_timeout(self, element: Locator, locator: LocatorAlias) -> None:
         """Invoked after clicking on an element and `ensure_page_safe` failing to wait."""
-        pass
 
     def before_click(self, element: Locator, locator: LocatorAlias) -> None:
         """Invoked before clicking on an element."""
-        pass
 
-    def after_keyboard_input(self, element: Locator, keyboard_input: Optional[str]) -> None:
+    def after_keyboard_input(self, element: Locator, keyboard_input: str | None) -> None:
         """Invoked after sending keys into an element.
 
         Args:
             keyboard_input: String if any text typed in, None if the element is cleared.
         """
-        pass
 
-    def before_keyboard_input(self, element: Locator, keyboard_input: Optional[str]) -> None:
+    def before_keyboard_input(self, element: Locator, keyboard_input: str | None) -> None:
         """Invoked after sending keys into an element.
 
         Args:
             keyboard_input: String if any text typed in, None if the element is cleared.
         """
-        pass
 
     def highlight_element(
         self,
@@ -220,12 +209,12 @@ class Browser:
     def __init__(
         self,
         page: Page,
-        plugin_class: Optional[Type[DefaultPlugin]] = None,
-        logger: Optional[Logger] = None,
-        extra_objects: Optional[Dict[Any, Any]] = None,
+        plugin_class: type[DefaultPlugin] | None = None,
+        logger: Logger | None = None,
+        extra_objects: dict[Any, Any] | None = None,
     ) -> None:
         self.page = page
-        self.active_context: Union[Page, FrameLocator] = page
+        self.active_context: Page | FrameLocator = page
         plugin_class = plugin_class or DefaultPlugin
         self.plugin = plugin_class(self)
         self.logger = logger or null_logger
@@ -256,9 +245,7 @@ class Browser:
         """
         raise NotImplementedError("You have to implement product_version")
 
-    def goto(
-        self, address: str, *, wait_until: Optional[str] = "domcontentloaded", **kwargs
-    ) -> None:
+    def goto(self, address: str, *, wait_until: str | None = "domcontentloaded", **kwargs) -> None:
         """Navigate to the specified URL with config supported by playwright.
 
         Args:
@@ -344,11 +331,11 @@ class Browser:
 
     def screenshot(
         self,
-        path: Optional[str] = None,
+        path: str | None = None,
         *,
         full_page: bool = False,
         type: Literal["png", "jpeg"] = "png",
-        quality: Optional[int] = None,
+        quality: int | None = None,
         animations: Literal["disabled", "allow"] = "allow",
         scale: Literal["css", "device"] = "device",
         **kwargs,
@@ -384,7 +371,7 @@ class Browser:
             png_bytes = browser.screenshot()
         """
         self.logger.debug("screenshot(path=%r, full_page=%s, type=%s)", path, full_page, type)
-        opts: Dict[str, Any] = {
+        opts: dict[str, Any] = {
             "full_page": full_page,
             "type": type,
             "animations": animations,
@@ -432,7 +419,7 @@ class Browser:
         self.logger.info("Clearing all browser cookies")
         self.page.context.clear_cookies()
 
-    def add_cookie(self, cookie: Dict[str, Any]) -> None:
+    def add_cookie(self, cookie: dict[str, Any]) -> None:
         """Add a cookie to the current browser context.
 
         Playwright requires either ``url`` or ``domain`` on every cookie.
@@ -456,7 +443,7 @@ class Browser:
         self.logger.debug("add_cookie: %r", cookie.get("name"))
         self.page.context.add_cookies([cookie])
 
-    def get_cookies(self, urls: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_cookies(self, urls: list[str] | None = None) -> list[dict[str, Any]]:
         """Return cookies from the current browser context.
 
         Args:
@@ -479,7 +466,7 @@ class Browser:
 
     # ======================= ELEMENT DISCOVERY & WAITING =======================
     @staticmethod
-    def _process_locator(locator: LocatorAlias) -> Union[Locator, SmartLocator, None]:
+    def _process_locator(locator: LocatorAlias) -> Locator | SmartLocator | None:
         """Processes the locator so the :py:meth:`elements` gets exactly what it needs.
 
         Args:
@@ -507,7 +494,7 @@ class Browser:
             ) from None
 
     @staticmethod
-    def _locator_force_visibility_check(locator: LocatorAlias) -> Optional[bool]:
+    def _locator_force_visibility_check(locator: LocatorAlias) -> bool | None:
         if hasattr(locator, "__locator__") and hasattr(locator, "CHECK_VISIBILITY"):
             return cast(LocatorProtocol, locator).CHECK_VISIBILITY
         else:
@@ -516,13 +503,13 @@ class Browser:
     def elements(
         self,
         locator: LocatorAlias,
-        parent: Optional[ElementParent] = None,
+        parent: ElementParent | None = None,
         check_visibility: bool = False,
         check_safe: bool = True,
         force_check_safe: bool = False,
         *args,
         **kwargs,
-    ) -> List[Locator]:
+    ) -> list[Locator]:
         """Find all elements matching the given locator.
 
         Locates all elements that match the provided locator, with optional parent scoping
@@ -572,7 +559,7 @@ class Browser:
                 # Handle nonexistent iframe case - ensure consistent behavior across Playwright versions
                 if "Failed to find frame" in str(e):
                     # Raise a specific frame error with clear semantics
-                    raise FrameNotFoundError(f"Failed to find frame: {str(e)}") from e
+                    raise FrameNotFoundError(f"Failed to find frame: {e!s}") from e
                 else:
                     raise
 
@@ -618,21 +605,21 @@ class Browser:
             # the correct visibility filtering logic.
             elements = self.elements(locator, *args, **kwargs)
             if not elements:
-                raise NoSuchElementException(f"Could not find an element {repr(locator)}")
+                raise NoSuchElementException(f"Could not find an element {locator!r}")
 
             return elements[0]
         except IndexError:
-            raise NoSuchElementException(f"Could not find an element {repr(locator)}") from None
+            raise NoSuchElementException(f"Could not find an element {locator!r}") from None
 
     def wait_for_element(
         self,
         locator: str,
-        parent: Optional[ElementParent] = None,
+        parent: ElementParent | None = None,
         visible: bool = False,
-        timeout: Union[float, int] = 5,
+        timeout: float = 5,
         exception: bool = True,
         ensure_page_safe: bool = False,
-    ) -> Optional[Locator]:
+    ) -> Locator | None:
         """Waits for an element matching the locator to appear, optionally checking for visibility.
 
         Args:
@@ -657,7 +644,7 @@ class Browser:
         if ensure_page_safe:
             self.plugin.ensure_page_safe()
 
-        root_element: Union[Page, Locator] = self.page
+        root_element: Page | Locator = self.page
         if parent:
             root_element = self.element(parent)
 
@@ -851,7 +838,7 @@ class Browser:
         """
         return self.element(*args, **kwargs).evaluate("el=>el.type")
 
-    def classes(self, locator: LocatorAlias, *args, **kwargs) -> Set[str]:
+    def classes(self, locator: LocatorAlias, *args, **kwargs) -> set[str]:
         """Return a set of classes attached to the element.
 
         Args:
@@ -865,7 +852,7 @@ class Browser:
         class_string = self.get_attribute("class", locator, *args, **kwargs)
         return set(class_string.split()) if class_string else set()
 
-    def attributes(self, locator: LocatorAlias, *args, **kwargs) -> Dict:
+    def attributes(self, locator: LocatorAlias, *args, **kwargs) -> dict:
         """Return a dict of attributes attached to the element.
 
         This implementation uses Playwright's .evaluate() method to execute a
@@ -891,7 +878,7 @@ class Browser:
         self.logger.debug("css attributes for %r => %r", locator, result)
         return result
 
-    def get_attribute(self, attr: str, *args, **kwargs) -> Optional[str]:
+    def get_attribute(self, attr: str, *args, **kwargs) -> str | None:
         """Returns the value of an element's attribute.
 
         Uses .input_value() for the 'value' attribute for better reliability.
@@ -920,7 +907,7 @@ class Browser:
 
     def value_of_css_property(
         self, locator: LocatorAlias, property: str, *args, **kwargs
-    ) -> Optional[str]:
+    ) -> str | None:
         """Retrieves the value of specified computed style property of an element in the current browsing context.
 
         Args:
@@ -997,12 +984,12 @@ class Browser:
     def click(
         self,
         locator: LocatorAlias,
-        button: Optional[Literal["left", "middle", "right"]] = "left",
-        click_count: Optional[int] = None,
-        delay: Optional[float] = None,
-        force: Optional[bool] = None,
-        no_wait_after: Optional[bool] = None,
-        timeout: Optional[float] = None,
+        button: Literal["left", "middle", "right"] | None = "left",
+        click_count: int | None = None,
+        delay: float | None = None,
+        force: bool | None = None,
+        no_wait_after: bool | None = None,
+        timeout: float | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -1282,7 +1269,6 @@ class Browser:
                     self.logger.warning(
                         "Element detached after send_keys, skipping after_keyboard_input hook."
                     )
-                    pass
                 else:
                     raise
         else:
@@ -1478,8 +1464,8 @@ class Browser:
     def drag_and_drop_to(
         self,
         source: LocatorAlias,
-        to_x: Optional[int] = None,
-        to_y: Optional[int] = None,
+        to_x: int | None = None,
+        to_y: int | None = None,
     ) -> None:
         """Drags an element to a target location specified by ``to_x`` and ``to_y``.
 
@@ -1740,7 +1726,7 @@ class BrowserParentWrapper:
         self._o = o
         self._browser = browser
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, BrowserParentWrapper):
             return False
         return self._o == other._o and self._browser == other._browser
@@ -1748,11 +1734,11 @@ class BrowserParentWrapper:
     def elements(
         self,
         locator: LocatorAlias,
-        parent: Optional[ElementParent] = None,
+        parent: ElementParent | None = None,
         check_visibility: bool = False,
         check_safe: bool = True,
         force_check_safe: bool = False,
-    ) -> List[Locator]:
+    ) -> list[Locator]:
         return self._browser.elements(
             locator,
             parent=parent or self._o,
@@ -1884,7 +1870,7 @@ class WindowManager:
         self._context = context
         self._browser_class = browser_class
         self._browser_kwargs = browser_kwargs
-        self._browsers: Dict[Page, Browser] = {}
+        self._browsers: dict[Page, Browser] = {}
 
         self.current: Browser = self._wrap_page(initial_page)
         self._context.on("page", self._on_new_page)
@@ -1951,9 +1937,9 @@ class WindowManager:
                 self.window_manager = window_manager
                 self.context = window_manager._context
                 self.timeout_ms = timeout_ms
-                self.page_info: Optional[Any] = None
-                self._browser: Optional[Browser] = None
-                self._initial_browsers: Optional[Set[Browser]] = None
+                self.page_info: Any | None = None
+                self._browser: Browser | None = None
+                self._initial_browsers: set[Browser] | None = None
 
             def __enter__(self) -> "_BrowserWaiter":
                 # Capture initial browsers before setting up expectation
@@ -1962,7 +1948,7 @@ class WindowManager:
                 self.page_info.__enter__()
                 return self
 
-            def __exit__(self, *args: Any) -> None:
+            def __exit__(self, *args: object) -> None:
                 # Exit Playwright's context manager to get the Page/Browser
                 if not self.page_info:
                     # If page_info was never set, something went wrong in __enter__
@@ -2027,7 +2013,7 @@ class WindowManager:
                     )
                 return getattr(self._browser, name)
 
-            def __eq__(self, other: Any) -> bool:
+            def __eq__(self, other: object) -> bool:
                 """Compare by page identity for 'in' checks to work."""
                 if self._browser is None:
                     return False
@@ -2038,7 +2024,7 @@ class WindowManager:
         return _BrowserWaiter(self, int(timeout * 1000))
 
     @property
-    def all_browsers(self) -> List[Browser]:
+    def all_browsers(self) -> list[Browser]:
         """Get all managed Browser instances with automatic cleanup.
 
         Returns a list of all currently active widgetastic Browser instances. This property
@@ -2140,7 +2126,7 @@ class WindowManager:
         return active_browsers
 
     @property
-    def all_pages(self) -> List[Page]:
+    def all_pages(self) -> list[Page]:
         """Get all active Playwright Page objects from the browser context.
 
         Returns the raw Playwright Page instances managed by the browser context.
@@ -2201,7 +2187,7 @@ class WindowManager:
             self.switch_to(new_browser_instance)
         return new_browser_instance
 
-    def switch_to(self, browser_or_page: Union[Browser, Page]):
+    def switch_to(self, browser_or_page: Browser | Page):
         """Switch focus to a different browser tab/window.
 
         Changes the currently active browser to the specified Browser or Page instance.
@@ -2249,7 +2235,7 @@ class WindowManager:
         target_page.bring_to_front()
         self.current = self._browsers[target_page]
 
-    def close_browser(self, browser_or_page: Optional[Union[Browser, Page]] = None):
+    def close_browser(self, browser_or_page: Browser | Page | None = None):
         """Close a browser tab/window with automatic cleanup and focus management.
 
         Closes the specified browser tab/window or the current one if none specified.

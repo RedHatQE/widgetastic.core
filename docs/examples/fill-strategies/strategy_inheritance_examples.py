@@ -5,7 +5,7 @@ This example demonstrates how child views inherit parent's fill strategy.
 
 # Example: Without Inheritance
 from widgetastic.utils import WaitFillViewStrategy
-from widgetastic.widget import View, TextInput
+from widgetastic.widget import TextInput, View
 
 
 # Example: Without respect_parent (default behavior)

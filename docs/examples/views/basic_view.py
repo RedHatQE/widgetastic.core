@@ -3,7 +3,7 @@
 This example demonstrates creating and using a basic View.
 """
 
-from widgetastic.widget import View, Text
+from widgetastic.widget import Text, View
 
 
 class TestingPageView(View):

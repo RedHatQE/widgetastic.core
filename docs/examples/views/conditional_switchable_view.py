@@ -3,7 +3,7 @@
 This example demonstrates using ConditionalSwitchableView to handle dynamic UI sections.
 """
 
-from widgetastic.widget import ConditionalSwitchableView, View, TextInput, Select, Checkbox
+from widgetastic.widget import Checkbox, ConditionalSwitchableView, Select, TextInput, View
 
 
 class ConditionalSwitchableViewTesting(View):

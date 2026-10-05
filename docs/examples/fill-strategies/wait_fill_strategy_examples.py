@@ -5,7 +5,7 @@ This comprehensive example demonstrates WaitFillViewStrategy usage.
 """
 
 from widgetastic.utils import WaitFillViewStrategy
-from widgetastic.widget import View, TextInput, Checkbox
+from widgetastic.widget import Checkbox, TextInput, View
 
 
 class DynamicForm(View):
