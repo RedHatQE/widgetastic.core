@@ -1,14 +1,15 @@
-import pytest
 from unittest.mock import Mock
 
+import pytest
+
 from widgetastic.utils import (
+    DefaultFillViewStrategy,
     Fillable,
     FillContext,
-    DefaultFillViewStrategy,
     WaitFillViewStrategy,
     log,
 )
-from widgetastic.widget import View, TextInput, Checkbox, Widget
+from widgetastic.widget import Checkbox, TextInput, View, Widget
 
 
 def test_basic_fillable():
@@ -222,8 +223,6 @@ def test_default_fill_view_strategy_widget_without_fill_method(browser, caplog):
 
     class NoFillWidget(Widget):
         """Widget that doesn't implement fill method."""
-
-        pass
 
     class TestForm(View):
         input1 = TextInput(name="input1")
@@ -541,8 +540,6 @@ def test_fill_strategy_error_tolerance(browser, caplog):
     # Let's test the case that actually works - widget without fill method
     class NoFillMethodWidget(Widget):
         """Widget without fill method."""
-
-        pass
 
     class TestForm2(View):
         input1 = TextInput(name="input1")

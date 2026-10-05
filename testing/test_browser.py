@@ -8,10 +8,8 @@ import playwright
 import pytest
 
 from widgetastic.browser import BrowserParentWrapper
-from widgetastic.exceptions import LocatorNotImplemented
-from widgetastic.exceptions import NoSuchElementException
-from widgetastic.widget import Text
-from widgetastic.widget import View
+from widgetastic.exceptions import LocatorNotImplemented, NoSuchElementException
+from widgetastic.widget import Text, View
 
 
 @pytest.fixture()
@@ -279,7 +277,7 @@ def test_elements_with_browser_parent(browser):
 
 def test_elements_with_widget_parent(browser):
     """Test elements method with widget as parent."""
-    from widgetastic.widget import Widget, View
+    from widgetastic.widget import View, Widget
 
     class TestView(View):
         pass
@@ -1352,24 +1350,24 @@ def test_nested_views_parent_injection(browser):
     class MyView(View):
         ROOT = "#proper"
 
-        class c1(View):  # noqa
+        class c1(View):
             ROOT = ".c1"
 
             w = Text(".lookmeup")
 
-        class c2(View):  # noqa
+        class c2(View):
             ROOT = ".c2"
 
             w = Text(".lookmeup")
 
-        class c3(View):  # noqa
+        class c3(View):
             ROOT = ".c3"
 
             w = Text(".lookmeup")
 
-        class without(View):  # noqa
+        class without(View):
             # This one receives the parent browser wrapper
-            class nested(View):  # noqa
+            class nested(View):
                 # and it should work in multiple levels
                 pass
 
@@ -1396,7 +1394,7 @@ def test_nested_views_parent_injection(browser):
 def test_browser_parent_wrapper_equality(browser):
     """Test BrowserParentWrapper equality method."""
     from widgetastic.browser import BrowserParentWrapper
-    from widgetastic.widget import Widget, View
+    from widgetastic.widget import View, Widget
 
     class TestView(View):
         pass
@@ -1421,7 +1419,7 @@ def test_browser_parent_wrapper_equality(browser):
 def test_browser_parent_wrapper_repr(browser):
     """Test BrowserParentWrapper __repr__ method."""
     from widgetastic.browser import BrowserParentWrapper
-    from widgetastic.widget import Widget, View
+    from widgetastic.widget import View, Widget
 
     class TestView(View):
         pass
@@ -1441,7 +1439,7 @@ def test_browser_parent_wrapper_repr(browser):
 def test_browser_parent_wrapper_method_delegation(browser):
     """Test BrowserParentWrapper delegates methods correctly."""
     from widgetastic.browser import BrowserParentWrapper
-    from widgetastic.widget import Widget, View
+    from widgetastic.widget import View, Widget
 
     class TestView(View):
         pass

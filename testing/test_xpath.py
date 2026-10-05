@@ -1,7 +1,6 @@
 import pytest
 
-from widgetastic.xpath import normalize_space
-from widgetastic.xpath import quote
+from widgetastic.xpath import normalize_space, quote
 
 
 @pytest.mark.parametrize(

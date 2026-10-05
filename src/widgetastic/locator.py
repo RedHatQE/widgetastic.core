@@ -64,20 +64,14 @@ Supported Locator Types
 import re
 from collections import namedtuple
 from typing import Any
-from typing import Optional
-from typing import Tuple
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Type
 
 
 class LocatorStrategy:
     """Abstract base class for all locator resolution strategies."""
 
-    locator_class: "Type[SmartLocator]"  # This will be injected to avoid circular imports
+    locator_class: "type[SmartLocator]"  # This will be injected to avoid circular imports
 
-    def create_locator(self, value: Any) -> Optional[Tuple[str, str]]:
+    def create_locator(self, value: Any) -> tuple[str, str] | None:
         """
         Tries to create a (by, locator) tuple from the given value.
         Returns the tuple if successful, otherwise None.
@@ -90,7 +84,7 @@ class CSSStrategy(LocatorStrategy):
 
     CSS_SELECTOR_RE = re.compile(r"^(?:[a-zA-Z][a-zA-Z0-9-]*)?(?:[#.][a-zA-Z0-9_-]+)+$")
 
-    def create_locator(self, value: Any) -> Optional[Tuple[str, str]]:
+    def create_locator(self, value: Any) -> tuple[str, str] | None:
         if isinstance(value, str) and self.CSS_SELECTOR_RE.match(value):
             return "css", value
         return None
@@ -99,7 +93,7 @@ class CSSStrategy(LocatorStrategy):
 class XPathStrategy(LocatorStrategy):
     """Handles simple XPath expressions."""
 
-    def create_locator(self, value: Any) -> Optional[Tuple[str, str]]:
+    def create_locator(self, value: Any) -> tuple[str, str] | None:
         if isinstance(value, str) and value.strip().startswith(("/", "(", ".")):
             return "xpath", value
         return None
@@ -120,7 +114,7 @@ class KwargsStrategy(LocatorStrategy):
         "css",
     }
 
-    def create_locator(self, value: Any) -> Optional[Tuple[str, str]]:
+    def create_locator(self, value: Any) -> tuple[str, str] | None:
         if isinstance(value, dict):
             if "by" in value and "locator" in value:
                 engine, locator_value = value["by"], value["locator"]
@@ -137,7 +131,7 @@ class KwargsStrategy(LocatorStrategy):
 class LocatorObjectStrategy(LocatorStrategy):
     """Handles cases where a locatable object is passed in."""
 
-    def create_locator(self, value: Any) -> Optional[Tuple[str, str]]:
+    def create_locator(self, value: Any) -> tuple[str, str] | None:
         if isinstance(value, self.locator_class):
             return value.by, value.locator
         if hasattr(value, "__locator__"):
@@ -224,8 +218,8 @@ class SmartLocator(namedtuple("SmartLocator", ["by", "locator"])):
     ]
 
     def __new__(cls, *args: Any, **kwargs: Any):
-        by: Optional[str] = None
-        locator: Optional[str] = None
+        by: str | None = None
+        locator: str | None = None
 
         if args and len(args) == 2 and not kwargs:
             # Handle tuple-style: SmartLocator("xpath", "//h1")
