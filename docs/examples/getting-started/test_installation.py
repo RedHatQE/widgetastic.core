@@ -1,9 +1,11 @@
 # test_installation.py
 
 import os
+
 from playwright.sync_api import sync_playwright
+
 from widgetastic.browser import Browser
-from widgetastic.widget import View, Text
+from widgetastic.widget import Text, View
 
 
 class TestView(View):
