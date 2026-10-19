@@ -1,6 +1,5 @@
 import re
-from xml.sax.saxutils import quoteattr
-from xml.sax.saxutils import unescape
+from xml.sax.saxutils import quoteattr, unescape
 
 
 def quote(s):
