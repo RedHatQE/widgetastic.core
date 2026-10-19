@@ -3,7 +3,7 @@
 This example demonstrates registering a simple widget directly with ConditionalSwitchableView.
 """
 
-from widgetastic.widget import ConditionalSwitchableView, View, TextInput, Select
+from widgetastic.widget import ConditionalSwitchableView, Select, TextInput, View
 
 
 class SimpleConditionalWidgetView(View):

@@ -3,7 +3,7 @@
 This example demonstrates how ROOT locators affect is_displayed behavior.
 """
 
-from widgetastic.widget import View, TextInput
+from widgetastic.widget import TextInput, View
 
 
 # Example 1: Without ROOT locator
