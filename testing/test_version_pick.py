@@ -1,12 +1,7 @@
 import pytest
 
-from widgetastic.utils import Version
-from widgetastic.utils import VersionPick
-from widgetastic.widget import Checkbox
-from widgetastic.widget import Select
-from widgetastic.widget import Table
-from widgetastic.widget import TextInput
-from widgetastic.widget import View
+from widgetastic.utils import Version, VersionPick
+from widgetastic.widget import Checkbox, Select, Table, TextInput, View
 
 
 def test_empty_verpick_fails():
@@ -31,7 +26,7 @@ def basic_verpick():
 @pytest.fixture(scope="function")
 def descriptor_verpick():
     class MyClass:
-        class browser:  # NOQA
+        class browser:
             product_version = None
 
         verpicked = VersionPick(

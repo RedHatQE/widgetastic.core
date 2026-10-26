@@ -3,7 +3,7 @@
 This example demonstrates how ROOT locators scope widget searches.
 """
 
-from widgetastic.widget import View, Text, TextInput
+from widgetastic.widget import Text, TextInput, View
 
 
 class NormalViewTesting(View):

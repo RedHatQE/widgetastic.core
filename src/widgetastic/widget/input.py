@@ -1,6 +1,7 @@
-from .base import Widget
 from widgetastic.exceptions import DoNotReadThisWidget
 from widgetastic.xpath import quote
+
+from .base import Widget
 
 
 class BaseInput(Widget):
