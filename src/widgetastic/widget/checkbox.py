@@ -1,6 +1,7 @@
+from widgetastic.exceptions import WidgetOperationFailed
+
 from .base import ClickableMixin
 from .input import BaseInput
-from widgetastic.exceptions import WidgetOperationFailed
 
 
 class Checkbox(BaseInput, ClickableMixin):
