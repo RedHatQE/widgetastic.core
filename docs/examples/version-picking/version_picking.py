@@ -7,10 +7,12 @@ This example demonstrates version-dependent widget definitions.
 import inspect
 import os
 from pathlib import Path
+
 from playwright.sync_api import sync_playwright
+
 from widgetastic.browser import Browser
-from widgetastic.utils import VersionPick, Version
-from widgetastic.widget import View, Text, TextInput
+from widgetastic.utils import Version, VersionPick
+from widgetastic.widget import Text, TextInput, View
 
 
 # Browser setup (from previous example)

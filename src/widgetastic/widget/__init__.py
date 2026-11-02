@@ -1,28 +1,23 @@
 """This module contains the base classes that are used to implement the more specific behaviour."""
 
-from .base import *  # noqa: F403 F401
+from .base import *
 from .checkbox import Checkbox
 from .image import Image
-from .input import BaseInput
-from .input import ColourInput
-from .input import FileInput
-from .input import TextInput
+from .input import BaseInput, ColourInput, FileInput, TextInput
 from .select import Select
-from .table import Table
-from .table import TableColumn
-from .table import TableRow
+from .table import Table, TableColumn, TableRow
 from .text import Text
 
 __all__ = [
-    "Image",
     "BaseInput",
     "Checkbox",
     "ColourInput",
     "FileInput",
-    "TextInput",
+    "Image",
     "Select",
     "Table",
     "TableColumn",
     "TableRow",
     "Text",
+    "TextInput",
 ]
