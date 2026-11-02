@@ -3,21 +3,20 @@ import re
 import pytest
 
 from widgetastic.exceptions import DoNotReadThisWidget
-from widgetastic.utils import Fillable
-from widgetastic.utils import ParametrizedString
-from widgetastic.utils import Version
-from widgetastic.utils import VersionPick
-from widgetastic.widget import Checkbox
-from widgetastic.widget import ColourInput
-from widgetastic.widget import FileInput
-from widgetastic.widget import Select
-from widgetastic.widget import Table
-from widgetastic.widget import Text
-from widgetastic.widget import TextInput
-from widgetastic.widget import View
-from widgetastic.widget import Widget
-from widgetastic.widget import BaseInput
-from widgetastic.widget import Image
+from widgetastic.utils import Fillable, ParametrizedString, Version, VersionPick
+from widgetastic.widget import (
+    BaseInput,
+    Checkbox,
+    ColourInput,
+    FileInput,
+    Image,
+    Select,
+    Table,
+    Text,
+    TextInput,
+    View,
+    Widget,
+)
 from widgetastic.widget.table import TableRow
 
 
