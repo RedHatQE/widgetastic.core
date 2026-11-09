@@ -3,10 +3,10 @@ from html import unescape
 
 from cached_property import cached_property
 
-from .base import ClickableMixin
-from .base import Widget
 from widgetastic.utils import normalize_space
 from widgetastic.xpath import quote
+
+from .base import ClickableMixin, Widget
 
 
 class Select(Widget, ClickableMixin):
@@ -213,9 +213,7 @@ class Select(Widget, ClickableMixin):
         if not values_to_select and items:
             available = ", ".join(repr(opt.text) for opt in self.all_options)
             raise ValueError(
-                "Cannot locate option with visible text: {!r}. Available options: {}".format(
-                    items[0], available
-                )
+                f"Cannot locate option with visible text: {items[0]!r}. Available options: {available}"
             )
         self.select_by_value(*values_to_select)
 

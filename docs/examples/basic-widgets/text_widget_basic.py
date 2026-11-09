@@ -3,8 +3,8 @@
 This example demonstrates how to use the Text widget to extract text content.
 """
 
-from widgetastic.widget import Text
 from widgetastic.exceptions import NoSuchElementException
+from widgetastic.widget import Text
 
 # In-line Initialization of Text widget
 main_title = Text(parent=browser, locator=".//h1[@id='wt-core-title']")  # noqa: F821

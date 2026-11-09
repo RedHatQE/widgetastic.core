@@ -1,9 +1,10 @@
 """Pytest configuration for documentation examples."""
 
 import os
-import pytest
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 EXCLUDED_NAMES = {"__init__.py", "conftest.py"}
 

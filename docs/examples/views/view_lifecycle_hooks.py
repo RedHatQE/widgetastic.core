@@ -3,7 +3,7 @@
 This example demonstrates using before_fill and after_fill hooks.
 """
 
-from widgetastic.widget import View, TextInput, Checkbox
+from widgetastic.widget import Checkbox, TextInput, View
 
 
 class FormView(View):

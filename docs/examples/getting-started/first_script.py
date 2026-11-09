@@ -9,8 +9,9 @@ import os
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
 from widgetastic.browser import Browser
-from widgetastic.widget import View, Text, TextInput, Checkbox
+from widgetastic.widget import Checkbox, Text, TextInput, View
 
 
 # Define your widgets and views i.e. Modeling of the testing page.
@@ -21,13 +22,13 @@ class DemoFormView(View):
     email = TextInput(locator='.//input[@name="custemail"]')
 
     @View.nested
-    class pizza_size(View):  # noqa
+    class pizza_size(View):
         small = Checkbox(locator=".//input[@value='small']")
         medium = Checkbox(locator=".//input[@value='medium']")
         large = Checkbox(locator=".//input[@value='large']")
 
     @View.nested
-    class pizza_toppings(View):  # noqa
+    class pizza_toppings(View):
         bacon = Checkbox(locator=".//input[@value='bacon']")
         extra_cheese = Checkbox(locator=".//input[@value='cheese']")
         onion = Checkbox(locator=".//input[@value='onion']")

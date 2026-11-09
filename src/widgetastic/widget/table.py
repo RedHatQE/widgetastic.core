@@ -2,32 +2,20 @@
 
 import itertools
 import re
-from collections import defaultdict
-from collections import deque
+from collections import defaultdict, deque
 from copy import copy
 from operator import attrgetter
 
-from anytree import AsciiStyle
-from anytree import ChildResolverError
-from anytree import Node
-from anytree import RenderTree
-from anytree import Resolver
-from anytree import ResolverError
+from anytree import AsciiStyle, ChildResolverError, Node, RenderTree, Resolver, ResolverError
 from cached_property import cached_property
 
-from .base import ClickableMixin
-from .base import Widget
-from .base import Widgetable
-from .base import WidgetDescriptor
 from widgetastic.browser import Browser
-from widgetastic.exceptions import RowNotFound
-from widgetastic.exceptions import NoSuchElementException
-from widgetastic.log import create_child_logger
-from widgetastic.log import create_item_logger
-from widgetastic.utils import attributize_string
-from widgetastic.utils import ConstructorResolvable
-from widgetastic.utils import ParametrizedLocator
+from widgetastic.exceptions import NoSuchElementException, RowNotFound
+from widgetastic.log import create_child_logger, create_item_logger
+from widgetastic.utils import ConstructorResolvable, ParametrizedLocator, attributize_string
 from widgetastic.xpath import quote
+
+from .base import ClickableMixin, Widget, Widgetable, WidgetDescriptor
 
 # Python 3.7 formalised the RE pattern type, so let's use that if we can
 try:
@@ -149,10 +137,8 @@ class TableColumn(Widget, ClickableMixin):
                 return False
             else:
                 raise TypeError(
-                    (
-                        "Cannot fill column {}, no widget and the value differs "
-                        "(wanted to fill {!r} but there is {!r}"
-                    ).format(self.column_name or self.position, value, self.text)
+                    f"Cannot fill column {self.column_name or self.position}, no widget and the value differs "
+                    f"(wanted to fill {value!r} but there is {self.text!r}"
                 )
 
 
@@ -217,16 +203,12 @@ class TableRow(Widget, ClickableMixin):
             # We could find either a TableColumn or a TableReference node at this position...
             cols = self.table.resolver.glob(
                 self.table.table_tree,
-                "{}[{}]{}[{}]".format(
-                    self.table.ROW_RESOLVER_PATH, self.index, self.table.COLUMN_RESOLVER_PATH, index
-                ),
+                f"{self.table.ROW_RESOLVER_PATH}[{self.index}]{self.table.COLUMN_RESOLVER_PATH}[{index}]",
                 handle_resolver_error=True,
             )
             if not cols:
                 raise IndexError(
-                    "Row {} has no TableColumn or TableReference node at position {}".format(
-                        repr(self), index
-                    )
+                    f"Row {self!r} has no TableColumn or TableReference node at position {index}"
                 )
             return cols[0].obj
 
@@ -472,15 +454,8 @@ class Table(Widget):
 
     def __repr__(self):
         return (
-            "{}({!r}, column_widgets={!r}, assoc_column={!r}, rows_ignore_top={!r}, "
-            "rows_ignore_bottom={!r})"
-        ).format(
-            type(self).__name__,
-            self.locator,
-            self.column_widgets,
-            self.assoc_column,
-            self.rows_ignore_top,
-            self.rows_ignore_bottom,
+            f"{type(self).__name__}({self.locator!r}, column_widgets={self.column_widgets!r}, assoc_column={self.assoc_column!r}, rows_ignore_top={self.rows_ignore_top!r}, "
+            f"rows_ignore_bottom={self.rows_ignore_bottom!r})"
         )
 
     def _process_negative_index(self, nindex):
@@ -579,18 +554,14 @@ class Table(Widget):
                 row = self.row((self.assoc_column, item))
             except RowNotFound:
                 raise KeyError(
-                    "Row {!r} not found in table by associative column {!r}".format(
-                        item, self.assoc_column
-                    )
+                    f"Row {item!r} not found in table by associative column {self.assoc_column!r}"
                 )
             at_index = row.index
         elif isinstance(item, int):
             at_index = item
             if at_index >= self.row_count:
                 raise IndexError(
-                    "Integer row index {} is greater than max index {}".format(
-                        at_index, self.row_count - 1
-                    )
+                    f"Integer row index {at_index} is greater than max index {self.row_count - 1}"
                 )
         else:
             raise TypeError("Table [] accepts only strings or integers.")
@@ -732,9 +703,7 @@ class Table(Widget):
                     q = f"contains(normalize-space(.), normalize-space({quote(value)}))"
                 elif method == "startswith":
                     # starts with
-                    q = ("starts-with(normalize-space(.), normalize-space({}))").format(
-                        quote(value)
-                    )
+                    q = f"starts-with(normalize-space(.), normalize-space({quote(value)}))"
                 elif method == "endswith":
                     # ends with
                     # This needs to be faked since selenium does not support this feature.
@@ -942,8 +911,7 @@ class Table(Widget):
                 # But the value didn't match, keep looping
                 else:
                     continue
-            else:
-                raise RowNotFound(f"Row not found by {column!r}/{value!r}")
+            raise RowNotFound(f"Row not found by {column!r}/{value!r}")
 
     def read(self):
         """Reads the table. Returns a list, every item in the list is contents read from the row."""
@@ -969,9 +937,7 @@ class Table(Widget):
                             key = row_read.pop(self.assoc_column)
                         except KeyError:
                             raise ValueError(
-                                "The assoc_column={!r} could not be retrieved".format(
-                                    self.assoc_column
-                                )
+                                f"The assoc_column={self.assoc_column!r} could not be retrieved"
                             )
                 if key in result:
                     raise ValueError(f"Duplicate value for {key}={result[key]!r}")
@@ -1219,17 +1185,14 @@ class TableResolver(Resolver):
         matching_nodes = self._Resolver__find(node, part, None)
         for node_at_pos in filter(lambda n: n.position == int(position), matching_nodes):
             return node_at_pos
-        else:
-            names = [
-                f"{repr(getattr(c, self.pathattr, None))}[{c.position}]" for c in node.children
-            ]
-            raise ResolverError(
-                node,
-                part,
-                "{} has no child '{}' with position={}. Children are: {}".format(
-                    repr(node), part, position, ", ".join(names)
-                ),
-            )
+        names = [f"{getattr(c, self.pathattr, None)!r}[{c.position}]" for c in node.children]
+        raise ResolverError(
+            node,
+            part,
+            "{} has no child '{}' with position={}. Children are: {}".format(
+                repr(node), part, position, ", ".join(names)
+            ),
+        )
 
     def __find(self, node, pat, remainder):
         matches = []

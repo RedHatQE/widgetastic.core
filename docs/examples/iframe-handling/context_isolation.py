@@ -3,7 +3,7 @@
 This example demonstrates that iframe contexts are completely isolated.
 """
 
-from widgetastic.widget import View, Text, Select, Checkbox
+from widgetastic.widget import Checkbox, Select, Text, View
 
 
 class MainPageView(View):
