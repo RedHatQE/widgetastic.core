@@ -1,8 +1,11 @@
-import pytest
+from collections.abc import Iterator
 from pathlib import Path
-from playwright.sync_api import sync_playwright, Page, Browser as PlaywrightBrowser, BrowserContext
+
+import pytest
+from playwright.sync_api import Browser as PlaywrightBrowser
+from playwright.sync_api import BrowserContext, Page, sync_playwright
+
 from widgetastic.browser import Browser, WindowManager
-from typing import Iterator
 
 
 # custom browser class

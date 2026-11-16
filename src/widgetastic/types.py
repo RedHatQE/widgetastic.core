@@ -3,39 +3,31 @@ Widgetastic Core Type Declarations
 ==================================
 """
 
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Protocol
-from typing import Tuple
-from typing import TYPE_CHECKING
-from typing import Union
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Protocol, Union
 
-from playwright.sync_api import ElementHandle
-from playwright.sync_api import Locator
+from playwright.sync_api import ElementHandle, Locator
 
 from .locator import SmartLocator
 
 if TYPE_CHECKING:
     from .browser import Browser
     from .utils import Version
-    from .widget.base import View
-    from .widget.base import Widget
-    from .widget.base import ClickableMixin
+    from .widget.base import ClickableMixin, View, Widget
 
 
 class LocatorProtocol(Protocol):
     CHECK_VISIBILITY: bool
 
-    def __locator__(self) -> Union[str, SmartLocator, Locator, ElementHandle]: ...
+    def __locator__(self) -> str | SmartLocator | Locator | ElementHandle: ...
 
 
-LocatorAlias = Union[str, Dict[str, str], Locator, ElementHandle, LocatorProtocol, "Widget"]
+LocatorAlias = Union[str, dict[str, str], Locator, ElementHandle, LocatorProtocol, "Widget"]
 
 ElementParent = Union[LocatorAlias, "Browser"]
 
 ViewParent = Union["Browser", "View"]
 
-VString = Union[str, "Version", List[Union[int, str]], Tuple[Union[int, str]]]
+VString = Union[str, "Version", list[int | str], tuple[int | str]]
 
 Handler = Union[str, "ClickableMixin", Callable]
