@@ -3,7 +3,7 @@
 This example demonstrates accessing elements inside an iframe.
 """
 
-from widgetastic.widget import View, Text, Select
+from widgetastic.widget import Select, Text, View
 
 
 class BasicIFrameView(View):

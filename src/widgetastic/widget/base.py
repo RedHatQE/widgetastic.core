@@ -3,32 +3,34 @@ import inspect
 import types
 from copy import copy
 
-from playwright.sync_api import ElementHandle
-from playwright.sync_api import Locator
-
-
-from widgetastic.locator import SmartLocator
+from playwright.sync_api import ElementHandle, Locator
 from wait_for import wait_for
 
-from widgetastic.browser import Browser
-from widgetastic.browser import BrowserParentWrapper
-from widgetastic.exceptions import DoNotReadThisWidget
-from widgetastic.exceptions import LocatorNotImplemented
-from widgetastic.exceptions import NoSuchElementException
-from widgetastic.log import call_sig
-from widgetastic.log import create_child_logger
-from widgetastic.log import create_widget_logger
-from widgetastic.log import logged
-from widgetastic.log import PrependParentsAdapter
-from widgetastic.utils import ConstructorResolvable
-from widgetastic.utils import DefaultFillViewStrategy
-from widgetastic.utils import deflatten_dict
-from widgetastic.utils import Fillable
-from widgetastic.utils import FillContext
-from widgetastic.utils import nested_getattr
-from widgetastic.utils import ParametrizedLocator
-from widgetastic.utils import ParametrizedString
-from widgetastic.utils import Widgetable
+from widgetastic.browser import Browser, BrowserParentWrapper
+from widgetastic.exceptions import (
+    DoNotReadThisWidget,
+    LocatorNotImplemented,
+    NoSuchElementException,
+)
+from widgetastic.locator import SmartLocator
+from widgetastic.log import (
+    PrependParentsAdapter,
+    call_sig,
+    create_child_logger,
+    create_widget_logger,
+    logged,
+)
+from widgetastic.utils import (
+    ConstructorResolvable,
+    DefaultFillViewStrategy,
+    Fillable,
+    FillContext,
+    ParametrizedLocator,
+    ParametrizedString,
+    Widgetable,
+    deflatten_dict,
+    nested_getattr,
+)
 
 
 def do_not_read_this_widget():
@@ -453,8 +455,7 @@ class Widget(metaclass=WidgetMetaclass):
         for locatable in list(reversed(self.hierarchy))[1:]:
             if hasattr(locatable, "__locator__") and not getattr(locatable, "INDIRECT", False):
                 return locatable
-        else:
-            return None
+        return None
 
     @property
     def root_browser(self):
@@ -576,7 +577,6 @@ class Widget(metaclass=WidgetMetaclass):
         Args:
             widget: The widget being accessed or :py:class:`ParametrizedViewRequest`.
         """
-        pass
 
     def fill(self, *args, **kwargs):
         """Interactive objects like inputs, selects, checkboxes, et cetera should implement fill.
@@ -695,7 +695,7 @@ class Widget(metaclass=WidgetMetaclass):
 def _gen_locator_meth(loc):
     """Generate a __locator__ method for a widget."""
 
-    def __locator__(self):  # noqa
+    def __locator__(self):
         return loc
 
     return __locator__
@@ -704,7 +704,7 @@ def _gen_locator_meth(loc):
 def _gen_locator_root():
     """Generate a __locator__ method for a widget that returns the ROOT locator."""
 
-    def __locator__(self):  # noqa
+    def __locator__(self):
         return self.ROOT
 
     return __locator__
@@ -838,9 +838,7 @@ class ConditionalSwitchableView(Widgetable):
                 or (inspect.isclass(cls_or_descriptor) and issubclass(cls_or_descriptor, Widget))
             ):
                 raise TypeError(
-                    "Unsupported object registered into the selector ({!r})".format(
-                        cls_or_descriptor
-                    )
+                    f"Unsupported object registered into the selector ({cls_or_descriptor!r})"
                 )
             self.registered_views.append((condition, cls_or_descriptor))
             if default:
@@ -848,7 +846,6 @@ class ConditionalSwitchableView(Widgetable):
                     raise TypeError("Multiple default views specified")
                 self.default_view = cls_or_descriptor
             # We explicitly return None
-            return None
 
         if widget is None:
             return view_process
@@ -879,9 +876,7 @@ class ConditionalSwitchableView(Widgetable):
                             condition_arg_cache[self.reference] = ref_value
                         except AttributeError:
                             raise TypeError(
-                                "Wrong widget name specified as reference=: {}".format(
-                                    self.reference
-                                )
+                                f"Wrong widget name specified as reference=: {self.reference}"
                             )
                         except NoSuchElementException:
                             if self.ignore_bad_reference:
@@ -1087,7 +1082,6 @@ class View(Widget):
         Args:
             values: The same values that are passed to :py:meth:`fill`
         """
-        pass
 
     def after_fill(self, was_change):
         """A hook invoked after all the widgets were filled.
@@ -1098,7 +1092,6 @@ class View(Widget):
         Args:
             was_change: :py:class:`bool` signalizing whether the :py:meth:`fill` changed anything,
         """
-        pass
 
     def child_widget_accessed(self, widget):
         """This hook is called when a child widget of current view is accessed.
@@ -1111,7 +1104,7 @@ class View(Widget):
         self.browser.switch_to_main_frame()
         parents = [p for p in self.hierarchy if getattr(p, "FRAME", None)]
         for parent in parents:
-            self.browser.switch_to_frame(getattr(parent, "FRAME"))
+            self.browser.switch_to_frame(parent.FRAME)
 
 
 class ParametrizedView(View):
@@ -1219,9 +1212,7 @@ class ParametrizedViewRequest:
         for param in self.view_class.PARAMETERS:
             if param not in param_dict:
                 raise TypeError(
-                    "You did not pass the required parameter {} into {}".format(
-                        param, self.view_class.__name__
-                    )
+                    f"You did not pass the required parameter {param} into {self.view_class.__name__}"
                 )
 
         new_kwargs = copy(self.kwargs)
@@ -1267,8 +1258,8 @@ class ParametrizedViewRequest:
 
     def __getattr__(self, attr):
         raise AttributeError(
-            "This is not an instance of {}. You need to call this object and pass the required "
-            "parameters of the view.".format(self.view_class.__name__)
+            f"This is not an instance of {self.view_class.__name__}. You need to call this object and pass the required "
+            "parameters of the view."
         )
 
     def read(self):

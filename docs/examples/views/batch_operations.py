@@ -3,7 +3,7 @@
 This example demonstrates batch fill and read operations on views.
 """
 
-from widgetastic.widget import View, TextInput, Checkbox
+from widgetastic.widget import Checkbox, TextInput, View
 
 
 class NormalView(View):

@@ -11,9 +11,8 @@ from threading import Lock
 
 from cached_property import cached_property
 
+from . import log, xpath
 from .locator import SmartLocator
-from . import log
-from . import xpath
 
 
 class Widgetable:
@@ -163,7 +162,7 @@ class Version:
         return self.vstring
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.vstring)})"
+        return f"{type(self).__name__}({self.vstring!r})"
 
     def __lt__(self, other):
         try:
@@ -172,9 +171,7 @@ class Version:
         except Exception:
             raise ValueError(f"Cannot compare Version to {type(other).__name__}")
 
-        if self == other:
-            return False
-        elif self == self.latest() or other == self.lowest():
+        if self == other or self == self.latest() or other == self.lowest():
             return False
         elif self == self.lowest() or other == self.latest():
             return True
@@ -333,7 +330,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
         self.version_dict = version_dict
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.version_dict)})"
+        return f"{type(self).__name__}({self.version_dict!r})"
 
     @property
     def child_items(self):
@@ -358,9 +355,7 @@ class VersionPick(Widgetable, ConstructorResolvable):
             return v_dict.get(sorted_matching_versions[0])
         else:
             raise ValueError(
-                "When trying to version pick {!r} in {!r}, matching version was not found".format(
-                    version, versions
-                )
+                f"When trying to version pick {version!r} in {versions!r}, matching version was not found"
             )
 
     def __get__(self, o, type=None):
@@ -777,9 +772,7 @@ def nested_getattr(o, steps):
         steps = steps.split(".")
     if not isinstance(steps, (list, tuple)):
         raise TypeError(
-            "nested_getattr only accepts strings, lists, or tuples!, You passed {}".format(
-                type(steps).__name__
-            )
+            f"nested_getattr only accepts strings, lists, or tuples!, You passed {type(steps).__name__}"
         )
     steps = [step.strip() for step in steps if step.strip()]
     if not steps:
@@ -851,7 +844,7 @@ def crop_string_middle(s, length=32, cropper="..."):
     return s[:half] + cropper + s[-half - 1 :]
 
 
-class partial_match:  # noqa
+class partial_match:
     """Use this to wrap values to be selected using partial matching in various objects.
 
     It proxies all ``get`` operations to the underlying ``item``.
