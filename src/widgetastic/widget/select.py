@@ -1,5 +1,4 @@
 from collections import namedtuple
-from html import unescape
 
 from cached_property import cached_property
 
@@ -58,7 +57,7 @@ class Select(Widget, ClickableMixin):
                     var option = opt_elements[i];
                     var value = option.getAttribute("value");
                     result_arr.push([
-                        option.innerHTML,
+                        option.label || option.text,
                         value === null ? option.textContent : value
                     ]);
                 }
@@ -71,7 +70,8 @@ class Select(Widget, ClickableMixin):
                 var result_arr = [];
                 var opt_elements = select.selectedOptions;
                 for(var i = 0; i < opt_elements.length; i++){
-                    result_arr.push(opt_elements[i].innerHTML);
+                    var option = opt_elements[i];
+                    result_arr.push(option.label || option.text);
                 }
                 return result_arr;
             }
@@ -128,7 +128,7 @@ class Select(Widget, ClickableMixin):
         options = select_element.evaluate(self.ALL_OPTIONS)
 
         return [
-            self.Option(normalize_space(unescape(option[0])), option[1]) for option in options
+            self.Option(normalize_space(option[0]), option[1]) for option in options
         ]  # pragma: no cover
 
     @property
@@ -137,7 +137,7 @@ class Select(Widget, ClickableMixin):
         select_element = self.browser.element(self)
         selected_texts = select_element.evaluate(self.SELECTED_OPTIONS_TEXT)
 
-        return [normalize_space(unescape(option)) for option in selected_texts]  # pragma: no cover
+        return [normalize_space(option) for option in selected_texts]  # pragma: no cover
 
     @property
     def all_selected_values(self):

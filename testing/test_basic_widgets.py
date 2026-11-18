@@ -994,6 +994,21 @@ def test_simple_select(browser):
     assert not view.no_pre_select.fill("Beta")  # No change needed
 
 
+def test_select_uses_visible_option_labels(browser):
+    browser.page.set_content(
+        '<select id="languages">'
+        '<option value="literal" label="">Print &amp;copy;</option>'
+        '<option value="cpp" label="C &amp; C++">Internal name</option>'
+        "</select>"
+    )
+    widget = Select(browser, id="languages")
+    assert widget.read() == "Print &copy;"
+    assert widget.all_options == [("Print &copy;", "literal"), ("C & C++", "cpp")]
+    widget.select_by_visible_text("C & C++")
+    assert widget.read() == "C & C++"
+    assert widget.all_selected_values == ["cpp"]
+
+
 def test_multi_select(browser):
     class TestForm(View):
         select = Select(name="testselect2")
