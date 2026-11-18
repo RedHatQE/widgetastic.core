@@ -999,14 +999,22 @@ def test_select_uses_visible_option_labels(browser):
         '<select id="languages">'
         '<option value="literal" label="">Print &amp;copy;</option>'
         '<option value="cpp" label="C &amp; C++">Internal name</option>'
+        '<option label="Implicit">  Internal\n  value  </option>'
         "</select>"
     )
     widget = Select(browser, id="languages")
     assert widget.read() == "Print &copy;"
-    assert widget.all_options == [("Print &copy;", "literal"), ("C & C++", "cpp")]
+    assert widget.all_options == [
+        ("Print &copy;", "literal"),
+        ("C & C++", "cpp"),
+        ("Implicit", "Internal value"),
+    ]
     widget.select_by_visible_text("C & C++")
     assert widget.read() == "C & C++"
     assert widget.all_selected_values == ["cpp"]
+    widget.select_by_visible_text("Implicit")
+    assert widget.read() == "Implicit"
+    assert browser.page.locator("#languages").input_value() == "Internal value"
 
 
 def test_multi_select(browser):

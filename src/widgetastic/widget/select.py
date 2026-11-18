@@ -55,11 +55,7 @@ class Select(Widget, ClickableMixin):
                 var opt_elements = select.options;
                 for(var i = 0; i < opt_elements.length; i++){
                     var option = opt_elements[i];
-                    var value = option.getAttribute("value");
-                    result_arr.push([
-                        option.label || option.text,
-                        value === null ? option.textContent : value
-                    ]);
+                    result_arr.push([option.label || option.text, option.value]);
                 }
                 return result_arr;
             }
