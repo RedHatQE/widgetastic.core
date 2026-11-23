@@ -1,8 +1,10 @@
 """Tests for WindowManager functionality."""
 
-import pytest
 import time
 from pathlib import Path
+
+import pytest
+
 from widgetastic.browser import Browser, WindowManager
 from widgetastic.exceptions import NoSuchElementException
 
@@ -384,7 +386,7 @@ def test_js_window_open_detection(
     - JavaScript window.open() for new tabs
     - HTML anchor tags with target="_blank"
     """
-    from widgetastic.widget import View, Text
+    from widgetastic.widget import Text, View
 
     class PopupPageView(View):
         """View for popup_test_page.html"""
@@ -440,6 +442,5 @@ def test_expect_new_page_timeout_no_action(
 
     isolated_window_manager.current.url = popup_test_page_url
 
-    with pytest.raises(TimeoutError):
-        with isolated_window_manager.expect_new_page(timeout=1.0):
-            pass
+    with pytest.raises(TimeoutError), isolated_window_manager.expect_new_page(timeout=1.0):
+        pass
