@@ -5,7 +5,7 @@ This comprehensive example demonstrates all aspects of DefaultFillViewStrategy.
 """
 
 from widgetastic.utils import DefaultFillViewStrategy
-from widgetastic.widget import View, TextInput, Checkbox, Widget
+from widgetastic.widget import Checkbox, TextInput, View, Widget
 
 
 class BasicForm(View):
@@ -39,7 +39,7 @@ print(f"After filling with None values: {view.read()}")
 # End Example: Filtering None Values
 
 # Example: Handling Extra Keys
-import logging  # noqa: E402
+import logging
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -58,8 +58,6 @@ view.fill(values_with_extras)
 # Example: Handling Widgets Without Fill
 class NoFillWidget(Widget):
     """Widget without fill method."""
-
-    pass
 
 
 class TestForm(View):

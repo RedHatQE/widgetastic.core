@@ -1,12 +1,9 @@
 """Basic iframe testing for widgetastic.core."""
 
 import pytest
-from widgetastic.widget import View
-from widgetastic.widget import Text
-from widgetastic.widget import Select
-from widgetastic.widget import TextInput
-from widgetastic.widget import Checkbox
+
 from widgetastic.exceptions import FrameNotFoundError
+from widgetastic.widget import Checkbox, Select, Text, TextInput, View
 
 
 def test_basic_iframe_access(browser):
